@@ -1,0 +1,140 @@
+---
+title: "Bayes factors for interval hypotheses: A tutorial"
+author: "Timo Roettger & Michael Franke"
+format: 
+  html:
+    code-fold: true
+    self-contained: true
+    highlight-style: atom-one
+    theme:
+      light: materia
+      dark: darkly
+execute:
+  error: false
+  warning: false
+  message: false
+  cache: true
+editor:
+  markdown:
+    wrap: sentence
+---
+
+# Preamble: Loading packages and configuration
+
+First load required packages and set some global parameters.
+
+```{r loads-preps}
+#| echo: true
+#| error: false
+#| warning: false
+#| message: false
+
+####################
+## install packages
+#####################
+
+# package for convenience functions (e.g. plotting)
+library(tidyverse)
+
+# package for Bayesian regression modeling
+library(brms)
+
+# option for Bayesian regression models:
+# use all available cores for parallel computing
+options(mc.cores = parallel::detectCores())
+
+# package for credible interval computation
+library(HDInterval)
+
+# set the random seed in order to make sure
+# you can reproduce the same results
+set.seed(1702)
+
+# project colors
+project_colors = c(
+  "#7581B3", "#99C2C2", "#C65353", "#E2BA78", "#5C7457", "#575463",
+  "#B0B7D4", "#66A3A3", "#DB9494", "#D49735", "#9BB096", "#D4D3D9",
+  "#414C76", "#993333"
+  )
+```
+
+# Read & inspect the data
+
+Read the data to be analyzed and inspect it.
+
+```{r read-data}
+#| warning: false
+#| message: false
+
+
+##################
+## load the data
+##################
+
+# load the data into variable "politedata"
+politedata = read_csv("https://raw.githubusercontent.com/michael-franke/bayes_mixed_regression_tutorial/master/code/politeness_data.csv")
+
+# inspect head of data
+head(politedata)
+```
+
+Here is a plot:
+
+```{r data-plot-basic}
+politedata.agg <- 
+  politedata %>% 
+  group_by(gender, context, sentence) %>% 
+  summarize(mean_frequency = mean(pitch))
+
+politedata.agg2 <- 
+  politedata %>%
+  group_by(gender, context) %>% 
+  summarize(mean_frequency = round(mean(pitch), 0))
+
+ggplot(data = politedata.agg, 
+       aes(x = gender, 
+           y = mean_frequency, 
+           colour = context)) + 
+  geom_point(position = position_dodge(0.5), 
+             alpha = 0.3, 
+             size = 3) +
+  geom_point(data = politedata.agg2, 
+             aes(x = gender, 
+                 y = mean_frequency, 
+                 fill = context),
+             position = position_dodge(0.5), 
+             pch = 21, 
+             colour = "black",
+             size = 5) +
+  scale_x_discrete(breaks = c("F", "M"),
+                   labels = c("female", "male")) +
+  scale_y_continuous(expand = c(0, 0), breaks = (c(50,100,150,200,250,300)), limits = c(50,300)) +
+  scale_colour_manual(breaks = c("inf", "pol"),
+                      labels = c("informal", "polite"),
+                      values = c(project_colors[1], project_colors[3])) +
+  scale_fill_manual(breaks = c("inf", "pol"),
+                    labels = c("informal", "polite"),
+                    values = c(project_colors[1], project_colors[3])) +
+  ylab("pitch in Hz\n") +
+  xlab("\ngender")
+```
+
+
+# Run regression
+
+Run the regression analysis.
+
+```{r vanilla-regression}
+#| output: false
+
+fit <- brms::brm(
+  pitch ~ gender * context, 
+  data = politedata)
+```
+
+Look at the summary:
+
+```{r regression-summary}
+summary(fit)
+```
+
