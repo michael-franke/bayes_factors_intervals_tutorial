@@ -39,6 +39,9 @@ library(tidyverse)
 # package for Bayesian regression modeling
 library(brms)
 
+# package for posterior wrangling and plotting
+library(tidybayes)
+
 # option for Bayesian regression models:
 # use all available cores for parallel computing
 options(mc.cores = parallel::detectCores())
@@ -76,39 +79,45 @@ politedata = read_csv("https://raw.githubusercontent.com/michael-franke/bayes_mi
 
 # inspect head of data
 head(politedata)
+
+# only female speakers
+politeF <- politedata |> 
+  filter(gender == "F") |> 
+  # calculate semitones
+  mutate(pitch_ST = 12 * log2(pitch / 50))
+
 ```
 
 Here is a plot:
 
 ```{r data-plot-basic}
+
 politedata.agg <- 
-  politedata %>% 
-  group_by(gender, context, sentence) %>% 
-  summarize(mean_frequency = mean(pitch))
+  politeF %>% 
+  group_by(context, sentence) %>% 
+  summarize(mean_frequency = mean(pitch_ST))
 
 politedata.agg2 <- 
-  politedata %>%
-  group_by(gender, context) %>% 
-  summarize(mean_frequency = round(mean(pitch), 0))
+  politeF %>%
+  group_by(context) %>% 
+  summarize(mean_frequency = round(mean(pitch_ST), 0))
 
 ggplot(data = politedata.agg, 
-       aes(x = gender, 
+       aes(x = context, 
            y = mean_frequency, 
            colour = context)) + 
   geom_point(position = position_dodge(0.5), 
              alpha = 0.3, 
              size = 3) +
   geom_point(data = politedata.agg2, 
-             aes(x = gender, 
+             aes(x = context, 
                  y = mean_frequency, 
                  fill = context),
              position = position_dodge(0.5), 
              pch = 21, 
              colour = "black",
              size = 5) +
-  scale_x_discrete(breaks = c("F", "M"),
-                   labels = c("female", "male")) +
-  scale_y_continuous(expand = c(0, 0), breaks = (c(50,100,150,200,250,300)), limits = c(50,300)) +
+  #scale_y_continuous(expand = c(0, 0), breaks = (c(150,200,250,300)), limits = c(150,300)) +
   scale_colour_manual(breaks = c("inf", "pol"),
                       labels = c("informal", "polite"),
                       values = c(project_colors[1], project_colors[3])) +
@@ -116,7 +125,9 @@ ggplot(data = politedata.agg,
                     labels = c("informal", "polite"),
                     values = c(project_colors[1], project_colors[3])) +
   ylab("pitch in Hz\n") +
-  xlab("\ngender")
+  xlab("\nsocial context") +
+  theme_minimal()
+
 ```
 
 
@@ -124,17 +135,173 @@ ggplot(data = politedata.agg,
 
 Run the regression analysis.
 
-```{r vanilla-regression}
+```{r priors}
 #| output: false
 
-fit <- brms::brm(
-  pitch ~ gender * context, 
-  data = politedata)
+# formula
+formula <- bf(pitch_ST ~ context + (1 + context | sentence))
+
+# get prior
+get_prior(formula, politeF)
+
+# close to default priors which are uninformed but sensible
+priors <- c(prior(normal(28, 2), class = Intercept),
+            prior(normal(0, 1), class = b, coef = "contextpol"),
+            prior(lkj(2), class = cor),
+            prior(normal(0, 2), class = sd))
+
+```
+
+
+```{r regression}
+
+#| output: false
+
+fit <- brm(formula,
+           prior = priors,
+           family = gaussian(),
+           # common sampling specifications
+           seed = 1234,
+           #file  = "models/fit",
+           iter = 4000,
+           chains = 4,
+           cores = 4,
+           backend = "cmdstanr",
+           data = politeF)
+
 ```
 
 Look at the summary:
 
 ```{r regression-summary}
+
 summary(fit)
+
 ```
 
+```{r posterior_predictive}
+
+pp_check(fit, ndraws = 100)
+
+```
+
+```{r plot_posterior}
+
+fit |> 
+  spread_draws(b_contextpol) |> 
+  ggplot(aes(x = b_contextpol)) +
+    geom_density(fill = project_colors[2],
+                 alpha = 0.8) +
+    xlab("pitch difference in semitones\n") +
+    theme_minimal()
+
+```
+
+```{r regression_priors_only}
+
+#| output: false
+
+fit_null <- brm(formula,
+           prior = priors,
+           family = gaussian(),
+           # sample prior only
+           sample_prior = "only",
+           # common sampling specifications
+           seed = 1234,
+           #file  = "models/fit_null",
+           iter = 4000,
+           chains = 4,
+           cores = 4,
+           backend = "cmdstanr",
+           data = politeF)
+
+```
+
+```{r plot_posterior_null}
+
+# extract prior-only posteriors
+fit_prior <- fit_null |> 
+  spread_draws(b_contextpol) |> 
+  mutate(model = "prior only")
+
+# merge with full model
+fit_posterior <- fit |> 
+  spread_draws(b_contextpol) |> 
+  mutate(model = "posterior")
+
+fit_all <- 
+  full_join(fit_prior,fit_posterior) 
+
+# plot
+plot_prior <- data.frame(density(fit_prior$b_contextpol)[c("x", "y")]) |> 
+  mutate(model = "prior")
+plot_posterior <- data.frame(density(fit_posterior$b_contextpol)[c("x", "y")]) |> 
+  mutate(model = "posterior")
+plot_all <- 
+  full_join(plot_prior,plot_posterior) 
+
+
+ggplot(plot_all, aes(x, y)) + 
+      facet_wrap(model ~ ., nrow = 2,
+                 strip.position = "right") +
+      geom_area(data = plot_all |> filter(x >= ropes[[1]] & x <= ropes[[2]]), 
+                fill = project_colors[14]) +
+      geom_area(data = plot_all |> filter(x < ropes[[1]]), 
+                fill = project_colors[2]) +
+      geom_area(data = plot_all |> filter(x > ropes[[2]]), 
+                fill = project_colors[2]) +
+      geom_vline(xintercept = c(ropes[[1]], ropes[[2]]),
+               lty = "dashed") +
+      labs(x = "\npredicted pitch difference in semitones\n",
+           y = "") +
+      theme_minimal()
+
+
+```
+
+```{r dots_plot_with_rope}
+
+# dot_plot
+fit_all |> 
+  ggplot(aes(x = b_contextpol, y = model, fill = after_stat(x >= ropes[[1]] & x <= ropes[[2]]))) +
+  stat_dots(quantiles = 500, 
+            color = NA) +
+  labs(x = "\npredicted pitch difference in semitones\n",
+       y = "",
+       fill = "") +
+  scale_fill_manual(values = c(project_colors[4], project_colors[14]),
+                    labels = c("outside", "inside")) +
+  theme_minimal() + 
+  theme(
+    legend.position = "none"
+  )
+
+```
+
+
+```{r extract_posteriors_rope}
+
+posterior_prob <- fit %>% 
+    spread_draws(b_contextpol) |> 
+    filter(b_contextpol > ropes$x & b_contextpol < ropes$y) |> 
+    count()
+
+prior_prob <- fit_null %>% 
+    spread_draws(b_contextpol) |> 
+    filter(b_contextpol > ropes$x & b_contextpol < ropes$y) |> 
+    count()
+
+posterior_prob / prior_prob
+
+```
+
+
+```{r define_ropes}
+
+# lenient ROPE: according to t'Hart 1981, the average JND’s for pitch perception in speech is about 1.5 to 2
+# very conservative ROPE: according to t'Hart 1981 "only differences of more than 3 semitones play a part in communicative situations"
+
+ropes <- tibble(x = -1.5,
+                y = 1.5)
+
+```
