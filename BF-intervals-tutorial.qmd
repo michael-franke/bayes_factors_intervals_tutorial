@@ -69,7 +69,6 @@ Read the data to be analyzed and inspect it.
 #| warning: false
 #| message: false
 
-
 ##################
 ## load the data
 ##################
@@ -83,31 +82,59 @@ head(politedata)
 # only female speakers
 politeF <- politedata |> 
   filter(gender == "F") |> 
-  # calculate semitones
+  # calculate semitones (because JND literature is usually in semitones and it reflects perception better than hz)
   mutate(pitch_ST = 12 * log2(pitch / 50))
 
 ```
 
-Here is a plot:
+
+```{r read-alt_data}
+#| warning: false
+#| message: false
+
+# load full dataset
+
+# function to ignoring the setting of the relative path below when knitting
+run_if_not_knitting <- function(expr) {
+  if (!isTRUE(getOption("knitr.in.progress"))) {
+    eval(expr)
+  }
+}
+
+# set the current working directory to the one where this file is
+run_if_not_knitting(current_working_dir <- dirname(rstudioapi::getActiveDocumentContext()$path))
+run_if_not_knitting(setwd(current_working_dir))
+polite = read_csv("data/polite.csv")
+
+# only female speakers
+politeF <- polite |> 
+  filter(gender == "F") |> 
+  # calculate semitones
+  mutate(pitch_ST = 12 * log2(pitch / 50))
+
+# check
+table(politeF$subject, politeF$context)
+
+```
 
 ```{r data-plot-basic}
 
 politedata.agg <- 
   politeF %>% 
-  group_by(context, sentence) %>% 
+  group_by(context, subject) %>% 
   summarize(mean_frequency = mean(pitch_ST))
 
 politedata.agg2 <- 
   politeF %>%
   group_by(context) %>% 
-  summarize(mean_frequency = round(mean(pitch_ST), 0))
+  summarize(mean_frequency = mean(pitch_ST, na.rm = TRUE))
 
 ggplot(data = politedata.agg, 
        aes(x = context, 
            y = mean_frequency, 
            colour = context)) + 
   geom_point(position = position_dodge(0.5), 
-             alpha = 0.3, 
+             alpha = 0.5, 
              size = 3) +
   geom_point(data = politedata.agg2, 
              aes(x = context, 
@@ -117,52 +144,48 @@ ggplot(data = politedata.agg,
              pch = 21, 
              colour = "black",
              size = 5) +
-  #scale_y_continuous(expand = c(0, 0), breaks = (c(150,200,250,300)), limits = c(150,300)) +
-  scale_colour_manual(breaks = c("inf", "pol"),
-                      labels = c("informal", "polite"),
+  scale_colour_manual(breaks = c("informal", "formal"),
                       values = c(project_colors[1], project_colors[3])) +
-  scale_fill_manual(breaks = c("inf", "pol"),
-                    labels = c("informal", "polite"),
-                    values = c(project_colors[1], project_colors[3])) +
-  ylab("pitch in Hz\n") +
+  scale_fill_manual(breaks = c("informal", "formal"),
+                      values = c(project_colors[1], project_colors[3])) +
+  ylab("pitch in semitones\n") +
   xlab("\nsocial context") +
   theme_minimal()
 
 ```
 
-
 # Run regression
 
-Run the regression analysis.
+Run a simple multilinear regression analysis.
 
 ```{r priors}
 #| output: false
 
 # formula
-formula <- bf(pitch_ST ~ context + (1 + context | sentence))
+formula <- bf(pitch_ST ~ context + (1 + context | subject))
 
 # get prior
 get_prior(formula, politeF)
 
 # close to default priors which are uninformed but sensible
 priors <- c(prior(normal(28, 2), class = Intercept),
-            prior(normal(0, 1), class = b, coef = "contextpol"),
+            prior(normal(0, 1), class = b, coef = "contextinformal"),
             prior(lkj(2), class = cor),
             prior(normal(0, 2), class = sd))
 
 ```
 
-
 ```{r regression}
-
 #| output: false
+
+options(mc.cores = parallel::detectCores())
 
 fit <- brm(formula,
            prior = priors,
            family = gaussian(),
            # common sampling specifications
            seed = 1234,
-           #file  = "models/fit",
+           file  = "models/fit",
            iter = 4000,
            chains = 4,
            cores = 4,
@@ -179,17 +202,21 @@ summary(fit)
 
 ```
 
-```{r posterior_predictive}
+Posterior predictive check:
+
+```{r posterior-predictive}
 
 pp_check(fit, ndraws = 100)
 
 ```
 
-```{r plot_posterior}
+Plot posteriors:
+
+```{r plot-posterior}
 
 fit |> 
-  spread_draws(b_contextpol) |> 
-  ggplot(aes(x = b_contextpol)) +
+  spread_draws(b_contextinformal) |> 
+  ggplot(aes(x = b_contextinformal)) +
     geom_density(fill = project_colors[2],
                  alpha = 0.8) +
     xlab("pitch difference in semitones\n") +
@@ -197,8 +224,9 @@ fit |>
 
 ```
 
-```{r regression_priors_only}
+Run prior-only model:
 
+```{r regression-priors-only}
 #| output: false
 
 fit_null <- brm(formula,
@@ -208,7 +236,7 @@ fit_null <- brm(formula,
            sample_prior = "only",
            # common sampling specifications
            seed = 1234,
-           #file  = "models/fit_null",
+           file  = "models/fit_null",
            iter = 4000,
            chains = 4,
            cores = 4,
@@ -217,30 +245,44 @@ fit_null <- brm(formula,
 
 ```
 
-```{r plot_posterior_null}
+# ROPEs and Bayes Factor
+
+Define a region of practical equivalence. Here we pick a lenient ROPE: According to t'Hart (1981), the average JND’s for pitch perception in speech is about 1.5 to 2. A more conservative ROPE would be a semitone difference of 3 which according to t'Hart "only differences of more than 3 semitones play a part in communicative situations"
+
+```{r define-rope}
+
+ropes <- tibble(x = -1.5,
+                y = 1.5)
+
+```
+
+Plot posterior distributions of full and null model, highlighting the samples within the ROPE:
+
+```{r plot-samples-in-rope}
 
 # extract prior-only posteriors
 fit_prior <- fit_null |> 
-  spread_draws(b_contextpol) |> 
+  spread_draws(b_contextinformal) |> 
   mutate(model = "prior only")
 
-# merge with full model
+# extract full model posteriors
 fit_posterior <- fit |> 
-  spread_draws(b_contextpol) |> 
+  spread_draws(b_contextinformal) |> 
   mutate(model = "posterior")
 
+# merge with full model
 fit_all <- 
   full_join(fit_prior,fit_posterior) 
 
-# plot
-plot_prior <- data.frame(density(fit_prior$b_contextpol)[c("x", "y")]) |> 
+# extract densities from posterior distributions
+plot_prior <- data.frame(density(fit_prior$b_contextinformal)[c("x", "y")]) |> 
   mutate(model = "prior")
-plot_posterior <- data.frame(density(fit_posterior$b_contextpol)[c("x", "y")]) |> 
+plot_posterior <- data.frame(density(fit_posterior$b_contextinformal)[c("x", "y")]) |> 
   mutate(model = "posterior")
 plot_all <- 
   full_join(plot_prior,plot_posterior) 
 
-
+# plot
 ggplot(plot_all, aes(x, y)) + 
       facet_wrap(model ~ ., nrow = 2,
                  strip.position = "right") +
@@ -259,49 +301,278 @@ ggplot(plot_all, aes(x, y)) +
 
 ```
 
-```{r dots_plot_with_rope}
+An alternative visualization would be a quantile dot plot. Intuitive for pedagogic purposes: The BF is basically the amount of red dots of posterior model divided by the amount of red dots of prior model
 
-# dot_plot
+```{r dots-plot-with-rope}
+
+
 fit_all |> 
-  ggplot(aes(x = b_contextpol, y = model, fill = after_stat(x >= ropes[[1]] & x <= ropes[[2]]))) +
-  stat_dots(quantiles = 500, 
+  ggplot(aes(x = b_contextinformal, y = model, fill = after_stat(x >= ropes[[1]] & x <= ropes[[2]]))) +
+  stat_dots(quantiles = 100, 
             color = NA) +
   labs(x = "\npredicted pitch difference in semitones\n",
        y = "",
        fill = "") +
-  scale_fill_manual(values = c(project_colors[4], project_colors[14]),
+  scale_fill_manual(values = c(project_colors[2], project_colors[14]),
                     labels = c("outside", "inside")) +
   theme_minimal() + 
   theme(
     legend.position = "none"
   )
 
+
 ```
 
+Calculate BF after Savage-Dickey which is pretty much 1, so very inconclusive evidence.
 
-```{r extract_posteriors_rope}
+```{r extract-posteriors-rope}
 
+# count samples in rope full model
 posterior_prob <- fit %>% 
-    spread_draws(b_contextpol) |> 
-    filter(b_contextpol > ropes$x & b_contextpol < ropes$y) |> 
+    spread_draws(b_contextinformal) |> 
+    filter(b_contextinformal > ropes$x & b_contextinformal < ropes$y) |> 
     count()
 
+# count samples in rope null model
 prior_prob <- fit_null %>% 
-    spread_draws(b_contextpol) |> 
-    filter(b_contextpol > ropes$x & b_contextpol < ropes$y) |> 
+    spread_draws(b_contextinformal) |> 
+    filter(b_contextinformal > ropes$x & b_contextinformal < ropes$y) |> 
     count()
 
+# BF after Savage-Dickey is pretty much 1
 posterior_prob / prior_prob
 
 ```
 
+# Loop through prior x rope combinations
 
-```{r define_ropes}
+This way of inference is dependent on both the priors of the relevant model parameters and the chosen ROPE. So ideally we run this analysis across a variety of sensible combinations of these two degrees of freedom. We chose sensible prior widths for the difference between formal and informal contexts (ranging from sd = 1 to sd = 3):
 
-# lenient ROPE: according to t'Hart 1981, the average JND’s for pitch perception in speech is about 1.5 to 2
-# very conservative ROPE: according to t'Hart 1981 "only differences of more than 3 semitones play a part in communicative situations"
+(Do not run)
 
-ropes <- tibble(x = -1.5,
-                y = 1.5)
+```{r loop-priors-for-full-models}
+
+# Define priors for all parameter except the critical one
+priors <- c(prior(normal(28, 2), class = Intercept),
+            prior(lkj(2), class = cor),
+            prior(normal(0, 2), class = sd))
+
+# define 5 different priors that make sense
+priors_1 <- c(priors, 
+              prior(normal(0, 1), class = b, coef = "contextinformal"))
+priors_1.5 <- c(priors, 
+              prior(normal(0, 1.5), class = b, coef = "contextinformal"))
+priors_2 <- c(priors, 
+              prior(normal(0, 2), class = b, coef = "contextinformal"))
+priors_2.5 <- c(priors, 
+              prior(normal(0, 2.5), class = b, coef = "contextinformal"))
+priors_3 <- c(priors, 
+              prior(normal(0, 3), class = b, coef = "contextinformal"))
+
+# Define a list of these prior specifications
+prior_list <- list(priors_1,
+                   priors_1.5,
+                   priors_2,
+                   priors_2.5,
+                   priors_3
+)
+
+
+# Initialize a list to store models
+model_list <- list()
+
+# Loop over the priors
+# for (i in seq_along(prior_list)) {
+#     model_list[[i]] <- 
+#       brm(
+#         formula = formula,
+#         data = politeF,
+#         prior = prior_list[[i]],
+#         # common sampling specifications
+#         seed = 1234,
+#         iter = 4000,
+#         chains = 4,
+#         cores = 4,
+#         backend = "cmdstanr"
+#   )
+# }
+
+# name models
+# names(model_list) <- paste0("full_model_with_prior_", c(1,1.5,2,2.5,3))
+
+```
+
+Same for null models:
+
+(Do not run)
+
+```{r loop-priors-for_null-models}
+
+# Initialize a list to store models
+model_list_null <- list()
+
+# Loop over the priors
+# for (i in seq_along(prior_list)) {
+#     model_list_null[[i]] <- 
+#       brm(
+#         formula = formula,
+#         sample_prior = "only",
+#         data = politeF,
+#         prior = prior_list[[i]],
+#         # common sampling specifications
+#         seed = 1234,
+#         iter = 4000,
+#         chains = 4,
+#         cores = 4,
+#         backend = "cmdstanr"
+#   )
+# }
+
+# name models
+#names(model_list_null) <- paste0("null_model_with_prior_", c(1,1.5,2,2.5,3))
+
+```
+
+```{r merge-model-dfs}
+
+#model_list_all <- c(model_list, model_list_null)
+#saveRDS(model_list_all, "models/model_loop.RDS")
+
+model_list_all <- readRDS("models/model_loop.RDS")
+
+```
+
+Now that we have the models, we can loop through different ROPEs
+
+```{r loop-through-ropes}
+
+# Extract posterior draws for a specific parameter, e.g., "b_treatment"
+# "b_" prefix is used by brms for fixed effects
+target_param <- "b_contextinformal"
+
+model_names <- names(model_list_all)  # Optional: give names
+
+# Use imap (indexed map) to keep track of model names
+posterior_draws <- imap_dfr(
+  model_list_all,
+    ~ spread_draws(.x, !!sym(target_param)) %>%
+      mutate(model = model_names[.y]),
+  .id = "model_id"
+)
+
+# wrangle 
+posterior_draws <- posterior_draws |> 
+  separate(model_id, sep = "_", into = c("model_type", NA, NA, NA, "prior_sd")) |> 
+  select(-model, -.chain, -.iteration, -.draw)
+
+# specify different rope intervals
+ropes <- list(c(-3,3),
+              c(-2.5,2.5),
+              c(-2,2),
+              c(-1.5,1.5),
+              c(-1,1))
+
+# loop through ranges and models
+results <- map_dfr(ropes, ~{
+  lower <- .x[1]
+  upper <- .x[2]
+  
+  posterior_draws |> 
+    group_by(model_type, prior_sd)  |> 
+    summarise(
+      prob_in_rope = mean(b_contextinformal >= lower & b_contextinformal <= upper),
+      .groups = "drop"
+    )  |> 
+    mutate(rope = paste0("[", lower, ", ", upper, "]"))
+})
+
+# make wide and calculate bf after Savage-Dickey
+results <- results |> 
+  pivot_wider(names_from = model_type, values_from = prob_in_rope) |> 
+  mutate(bayes_factor = full / null)
+
+```
+
+Visualize combination in raster:
+
+```{r visualize-raster}
+
+# plot raster
+
+ggplot(results,
+       aes(x = as.factor(prior_sd),
+           y = as.factor(rope),
+           fill = bayes_factor)) +
+  geom_tile(colour = "grey") +
+  geom_text(aes(label = round(bayes_factor,2))) +
+  scale_fill_gradient2(limits = c(0,5), 
+                      midpoint = 1, 
+                      low = "#7581B3", 
+                      high = "#FA8100") +
+  labs(title = "(A) Bayes factor in favour of null", 
+       subtitle = "anecdotal evidence for the null: inconclusive",
+       fill = "BF",
+       y = "ROPE in semi tones centered on 0\n ",
+       x = "\nprior standard deviation") +
+  theme_minimal()
+
+```
+
+Now if we do not test perceptual / function hypotheses about the pitch differences, we can be more liberal with the ROPE intervals. We might be interested in testing merely if there are differences in production regardless of whether they are consistently perceptible.
+
+(not sure what to do here, could go standardized effect sizes and use cohens D of 0.1)
+
+```{r loop-through-liberal-ropes}
+
+# specify different rope intervals
+ropes_liberal <- list(c(-0.5,0.5),
+              c(-0.4,0.4),
+              c(-0.3,0.4),
+              c(-0.2,0.2),
+              c(-0.1,0.1))
+
+# loop through ranges and models
+results_liberal <- map_dfr(ropes_liberal, ~{
+  lower <- .x[1]
+  upper <- .x[2]
+  
+  posterior_draws |> 
+    group_by(model_type, prior_sd)  |> 
+    summarise(
+      prob_in_rope = mean(b_contextinformal >= lower & b_contextinformal <= upper),
+      .groups = "drop"
+    )  |> 
+    mutate(rope = paste0("[", lower, ", ", upper, "]"))
+})
+
+# make wide and calculate bf after Savage-Dickey
+results_liberal <- results_liberal |> 
+  pivot_wider(names_from = model_type, values_from = prob_in_rope) |> 
+  mutate(bayes_factor = full / null)
+
+```
+
+Visualize combination in raster:
+
+```{r visualize_raster}
+
+# plot raster
+
+ggplot(results_liberal,
+       aes(x = as.factor(prior_sd),
+           y = as.factor(rope),
+           fill = bayes_factor)) +
+  geom_tile(colour = "grey") +
+  geom_text(aes(label = round(bayes_factor,2))) +
+  scale_fill_gradient2(limits = c(0,5), 
+                      midpoint = 1, 
+                      low = "#7581B3", 
+                      high = "#FA8100") +
+  labs(title = "(A) Bayes factor in favour of null", 
+       subtitle = "anecdotal to moderate evidence against the null",
+       fill = "BF",
+       y = "ROPE in semi tones centered on 0\n ",
+       x = "\nprior standard deviation") +
+  theme_minimal()
 
 ```
