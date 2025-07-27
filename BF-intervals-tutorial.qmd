@@ -42,6 +42,10 @@ library(brms)
 # package for posterior wrangling and plotting
 library(tidybayes)
 
+# package for BF calculation and plotting
+library(bayestestR)
+library(see)
+
 # option for Bayesian regression models:
 # use all available cores for parallel computing
 options(mc.cores = parallel::detectCores())
@@ -119,44 +123,48 @@ table(politeF$subject, politeF$context)
 
 ```{r data-plot-basic}
 
-politedata.agg <- 
-  politeF %>% 
-  group_by(context, subject) %>% 
-  summarize(mean_frequency = mean(pitch_ST))
-
 politedata.agg2 <- 
   politeF %>%
   group_by(context) %>% 
   summarize(mean_frequency = mean(pitch_ST, na.rm = TRUE))
 
-ggplot(data = politedata.agg, 
-       aes(x = context, 
-           y = mean_frequency, 
+
+empirical <- 
+ggplot(data = politeF, 
+       aes(y= context, 
+           x = pitch_ST, 
+           fill = context,
            colour = context)) + 
   geom_point(position = position_dodge(0.5), 
              alpha = 0.5, 
              size = 3) +
+  geom_density_ridges(alpha = 0.5,
+                      scale = 0.5) +
   geom_point(data = politedata.agg2, 
-             aes(x = context, 
-                 y = mean_frequency, 
+             aes(y = context, 
+                 x = mean_frequency, 
                  fill = context),
              position = position_dodge(0.5), 
              pch = 21, 
              colour = "black",
              size = 5) +
+
   scale_colour_manual(breaks = c("informal", "formal"),
                       values = c(project_colors[1], project_colors[3])) +
   scale_fill_manual(breaks = c("informal", "formal"),
                       values = c(project_colors[1], project_colors[3])) +
-  ylab("pitch in semitones\n") +
-  xlab("\nsocial context") +
-  theme_minimal()
+  labs(x = "\npitch in semitones",
+       y = "social context\n") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+empirical
 
 ```
 
 # Run regression
 
-Run a simple multilinear regression analysis.
+Run a simple multi level regression analysis.
 
 ```{r priors}
 #| output: false
@@ -178,7 +186,7 @@ priors <- c(prior(normal(28, 2), class = Intercept),
 ```{r regression}
 #| output: false
 
-options(mc.cores = parallel::detectCores())
+# question: sample number should be high for BFs, right?
 
 fit <- brm(formula,
            prior = priors,
@@ -214,13 +222,31 @@ Plot posteriors:
 
 ```{r plot-posterior}
 
-fit |> 
-  spread_draws(b_contextinformal) |> 
-  ggplot(aes(x = b_contextinformal)) +
-    geom_density(fill = project_colors[2],
-                 alpha = 0.8) +
-    xlab("pitch difference in semitones\n") +
-    theme_minimal()
+posteriors <- 
+  fit |> 
+  spread_draws(b_Intercept, b_contextinformal) |> 
+  mutate(formal = b_Intercept,
+         informal = b_Intercept + b_contextinformal) |> 
+  select(formal, informal) |> 
+  pivot_longer(cols = c(formal, informal),
+               values_to = "pitch_ST", 
+               names_to = "context") 
+
+ggplot(data = posteriors, 
+       aes(y= context, 
+           x = pitch_ST, 
+           fill = context,
+           colour = context)) + 
+  geom_density_ridges(alpha = 0.5,
+                      scale = 0.5) +
+  scale_colour_manual(breaks = c("informal", "formal"),
+                      values = c(project_colors[1], project_colors[3])) +
+  scale_fill_manual(breaks = c("informal", "formal"),
+                      values = c(project_colors[1], project_colors[3])) +
+  labs(x = "\npitch in semitones",
+       y = "social context\n") +
+  theme_minimal() +
+  theme(legend.position = "none")
 
 ```
 
@@ -245,14 +271,34 @@ fit_null <- brm(formula,
 
 ```
 
+# Simple Bayes Factor against a point null
+
+Calculate BF using Savage-Dickey approximation against a point-0-hypothesis, in other words how much more evidence does a full model with information about the predictor provide over a model that is based on priors only:
+
+```{r calculcate_SD_BF}
+
+BF <- bayesfactor_parameters(fit, null = 0)
+BF
+
+```
+
+The Bayes factor indicates 5.5 times more evidence for the null model over the alternative model. 
+
+We can conveniently plot this using the `plot()` function of the `see` package. 
+
+```{r visualize_BF_test}
+
+plot(BF)
+
+```
+
 # ROPEs and Bayes Factor
 
 Define a region of practical equivalence. Here we pick a lenient ROPE: According to t'Hart (1981), the average JND’s for pitch perception in speech is about 1.5 to 2. A more conservative ROPE would be a semitone difference of 3 which according to t'Hart "only differences of more than 3 semitones play a part in communicative situations"
 
 ```{r define-rope}
 
-ropes <- tibble(x = -1.5,
-                y = 1.5)
+ropes <- c(-1.5, 1.5)
 
 ```
 
@@ -323,26 +369,22 @@ fit_all |>
 
 ```
 
-Calculate BF after Savage-Dickey which is pretty much 1, so very inconclusive evidence.
 
-```{r extract-posteriors-rope}
+```{r calculcate_SD_BF}
 
-# count samples in rope full model
-posterior_prob <- fit %>% 
-    spread_draws(b_contextinformal) |> 
-    filter(b_contextinformal > ropes$x & b_contextinformal < ropes$y) |> 
-    count()
-
-# count samples in rope null model
-prior_prob <- fit_null %>% 
-    spread_draws(b_contextinformal) |> 
-    filter(b_contextinformal > ropes$x & b_contextinformal < ropes$y) |> 
-    count()
-
-# BF after Savage-Dickey is pretty much 1
-posterior_prob / prior_prob
+BF_ropes <- bayesfactor_parameters(fit, null = 0, parameters = "b_contextinformal")
+BF_ropes
 
 ```
+
+The Bayes factor indicates that 1.07 times more evidence for the null model over the alternative model. 
+
+```{r visualize_BF_test}
+
+plot(BF_ropes)
+
+```
+
 
 # Loop through prior x rope combinations
 
@@ -357,7 +399,7 @@ priors <- c(prior(normal(28, 2), class = Intercept),
             prior(lkj(2), class = cor),
             prior(normal(0, 2), class = sd))
 
-# define 5 different priors that make sense
+# define 5 different priors widths that make sense
 priors_1 <- c(priors, 
               prior(normal(0, 1), class = b, coef = "contextinformal"))
 priors_1.5 <- c(priors, 
@@ -381,9 +423,9 @@ prior_list <- list(priors_1,
 # Initialize a list to store models
 model_list <- list()
 
-# Loop over the priors
+# # Loop over the priors
 # for (i in seq_along(prior_list)) {
-#     model_list[[i]] <- 
+#     model_list[[i]] <-
 #       brm(
 #         formula = formula,
 #         data = politeF,
@@ -396,48 +438,16 @@ model_list <- list()
 #         backend = "cmdstanr"
 #   )
 # }
-
-# name models
+# 
+# # name models
 # names(model_list) <- paste0("full_model_with_prior_", c(1,1.5,2,2.5,3))
 
 ```
 
-Same for null models:
 
-(Do not run)
+```{r store-results}
 
-```{r loop-priors-for_null-models}
-
-# Initialize a list to store models
-model_list_null <- list()
-
-# Loop over the priors
-# for (i in seq_along(prior_list)) {
-#     model_list_null[[i]] <- 
-#       brm(
-#         formula = formula,
-#         sample_prior = "only",
-#         data = politeF,
-#         prior = prior_list[[i]],
-#         # common sampling specifications
-#         seed = 1234,
-#         iter = 4000,
-#         chains = 4,
-#         cores = 4,
-#         backend = "cmdstanr"
-#   )
-# }
-
-# name models
-#names(model_list_null) <- paste0("null_model_with_prior_", c(1,1.5,2,2.5,3))
-
-```
-
-```{r merge-model-dfs}
-
-#model_list_all <- c(model_list, model_list_null)
-#saveRDS(model_list_all, "models/model_loop.RDS")
-
+#saveRDS(model_list, "models/model_loop.RDS")
 model_list_all <- readRDS("models/model_loop.RDS")
 
 ```
@@ -446,25 +456,6 @@ Now that we have the models, we can loop through different ROPEs
 
 ```{r loop-through-ropes}
 
-# Extract posterior draws for a specific parameter, e.g., "b_treatment"
-# "b_" prefix is used by brms for fixed effects
-target_param <- "b_contextinformal"
-
-model_names <- names(model_list_all)  # Optional: give names
-
-# Use imap (indexed map) to keep track of model names
-posterior_draws <- imap_dfr(
-  model_list_all,
-    ~ spread_draws(.x, !!sym(target_param)) %>%
-      mutate(model = model_names[.y]),
-  .id = "model_id"
-)
-
-# wrangle 
-posterior_draws <- posterior_draws |> 
-  separate(model_id, sep = "_", into = c("model_type", NA, NA, NA, "prior_sd")) |> 
-  select(-model, -.chain, -.iteration, -.draw)
-
 # specify different rope intervals
 ropes <- list(c(-3,3),
               c(-2.5,2.5),
@@ -472,24 +463,34 @@ ropes <- list(c(-3,3),
               c(-1.5,1.5),
               c(-1,1))
 
-# loop through ranges and models
-results <- map_dfr(ropes, ~{
-  lower <- .x[1]
-  upper <- .x[2]
+results <- map_dfr(names(model_list_all), function(model_name) {
+  model <- model_list_all[[model_name]]
   
-  posterior_draws |> 
-    group_by(model_type, prior_sd)  |> 
-    summarise(
-      prob_in_rope = mean(b_contextinformal >= lower & b_contextinformal <= upper),
-      .groups = "drop"
-    )  |> 
-    mutate(rope = paste0("[", lower, ", ", upper, "]"))
+  map_dfr(ropes, function(interval) {
+    lower <- interval[1]
+    upper <- interval[2]
+    
+    bayesfactor_parameters(
+      model,
+      null = c(lower, upper),
+      parameter = "b_contextinformal"
+    ) %>%
+      as_tibble() %>%
+      mutate(
+        model = model_name,
+        interval_range = paste0("[", lower, ", ", upper, "]")
+      ) %>%
+      select(model, everything())
+  })
 })
 
-# make wide and calculate bf after Savage-Dickey
+
+# wrangle
 results <- results |> 
-  pivot_wider(names_from = model_type, values_from = prob_in_rope) |> 
-  mutate(bayes_factor = full / null)
+  filter(Parameter == "b_contextinformal") |> 
+  separate(model, sep = "_", into = c(NA, NA, NA, NA, "prior_sd")) |> 
+  mutate(BF = exp(log_BF)) |> 
+  select(prior_sd, BF, interval_range)
 
 ```
 
@@ -501,11 +502,11 @@ Visualize combination in raster:
 
 ggplot(results,
        aes(x = as.factor(prior_sd),
-           y = as.factor(rope),
-           fill = bayes_factor)) +
+           y = as.factor(interval_range),
+           fill = BF)) +
   geom_tile(colour = "grey") +
-  geom_text(aes(label = round(bayes_factor,2))) +
-  scale_fill_gradient2(limits = c(0,5), 
+  geom_text(aes(label = round(BF,2))) +
+  scale_fill_gradient2(limits = c(0,10), 
                       midpoint = 1, 
                       low = "#7581B3", 
                       high = "#FA8100") +
