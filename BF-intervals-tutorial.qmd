@@ -505,11 +505,16 @@ ggplot(results,
            y = as.factor(interval_range),
            fill = BF)) +
   geom_tile(colour = "grey") +
-  geom_text(aes(label = round(BF,2))) +
-  scale_fill_gradient2(limits = c(0,10), 
-                      midpoint = 1, 
-                      low = "#7581B3", 
-                      high = "#FA8100") +
+  geom_text(aes(label = round(BF,3))) +
+  scale_fill_gradient2(transform = "log",
+                       limits = c(0.1,10),
+                       midpoint = 1, 
+                       low = "#5C7457", 
+                       high = "#FA8100",
+                       breaks = c(0.00000,0.03,0.1,0.33,0,3,10),
+                       labels = c("0","0.03","0.1","0.33","1","3","10"),
+                       oob = scales::squish
+                       ) +
   labs(title = "(A) Bayes factor in favour of null", 
        subtitle = "anecdotal evidence for the null: inconclusive",
        fill = "BF",
@@ -528,28 +533,38 @@ Now if we do not test perceptual / function hypotheses about the pitch differenc
 # specify different rope intervals
 ropes_liberal <- list(c(-0.5,0.5),
               c(-0.4,0.4),
-              c(-0.3,0.4),
+              c(-0.3,0.3),
               c(-0.2,0.2),
               c(-0.1,0.1))
 
-# loop through ranges and models
-results_liberal <- map_dfr(ropes_liberal, ~{
-  lower <- .x[1]
-  upper <- .x[2]
+results_liberal <- map_dfr(names(model_list_all), function(model_name) {
+  model <- model_list_all[[model_name]]
   
-  posterior_draws |> 
-    group_by(model_type, prior_sd)  |> 
-    summarise(
-      prob_in_rope = mean(b_contextinformal >= lower & b_contextinformal <= upper),
-      .groups = "drop"
-    )  |> 
-    mutate(rope = paste0("[", lower, ", ", upper, "]"))
+  map_dfr(ropes_liberal, function(interval) {
+    lower <- interval[1]
+    upper <- interval[2]
+    
+    bayesfactor_parameters(
+      model,
+      null = c(lower, upper),
+      parameter = "b_contextinformal"
+    ) %>%
+      as_tibble() %>%
+      mutate(
+        model = model_name,
+        interval_range = paste0("[", lower, ", ", upper, "]")
+      ) %>%
+      select(model, everything())
+  })
 })
 
-# make wide and calculate bf after Savage-Dickey
+
+# wrangle
 results_liberal <- results_liberal |> 
-  pivot_wider(names_from = model_type, values_from = prob_in_rope) |> 
-  mutate(bayes_factor = full / null)
+  filter(Parameter == "b_contextinformal") |> 
+  separate(model, sep = "_", into = c(NA, NA, NA, NA, "prior_sd")) |> 
+  mutate(BF = exp(log_BF)) |> 
+  select(prior_sd, BF, interval_range)
 
 ```
 
@@ -561,16 +576,21 @@ Visualize combination in raster:
 
 ggplot(results_liberal,
        aes(x = as.factor(prior_sd),
-           y = as.factor(rope),
-           fill = bayes_factor)) +
+           y = as.factor(interval_range),
+           fill = BF)) +
   geom_tile(colour = "grey") +
-  geom_text(aes(label = round(bayes_factor,2))) +
-  scale_fill_gradient2(limits = c(0,5), 
-                      midpoint = 1, 
-                      low = "#7581B3", 
-                      high = "#FA8100") +
+  geom_text(aes(label = round(BF,2))) +
+  scale_fill_gradient2(transform = "log",
+                       limits = c(0.1,10),
+                       midpoint = 1, 
+                       low = "#5C7457", 
+                       high = "#FA8100",
+                       breaks = c(0.00000,0.03,0.1,0.33,0,3,10),
+                       labels = c("0","0.03","0.1","0.33","1","3","10"),
+                       oob = scales::squish
+                       ) +
   labs(title = "(A) Bayes factor in favour of null", 
-       subtitle = "anecdotal to moderate evidence against the null",
+       subtitle = "anecdotal to moderate evidence for the alternative",
        fill = "BF",
        y = "ROPE in semi tones centered on 0\n ",
        x = "\nprior standard deviation") +
