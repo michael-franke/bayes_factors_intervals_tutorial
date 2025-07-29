@@ -1,5 +1,5 @@
 \documentclass[
-  jou,
+  doc,
   longtable,
   nolmodern,
   notxfonts,
@@ -9,6 +9,8 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 
+\geometry{inner=1in, outer=1in}
+\fancyhfoffset[LE,RO]{0cm}
 
 
 
@@ -68,6 +70,46 @@
 
 
 
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{241,243,245}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.40,0.45,0.13}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\BuiltInTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\ExtensionTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.28,0.35,0.67}{#1}}
+\newcommand{\ImportTok}[1]{\textcolor[rgb]{0.00,0.46,0.62}{#1}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.07,0.07,0.07}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
 
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
@@ -166,46 +208,13 @@ B.
 Roettger, Email: \href{mailto:timo.roettger@iln.uio.no}{timo.roettger@iln.uio.no}}
 }
 
-\usepackage{pbalance}
-% \usepackage{float}
 \makeatletter
-\let\oldtpt\ThreePartTable
-\let\endoldtpt\endThreePartTable
-\def\ThreePartTable{\@ifnextchar[\ThreePartTable@i \ThreePartTable@ii}
-\def\ThreePartTable@i[#1]{\begin{figure}[!htbp]
-\onecolumn
-\begin{minipage}{0.485\textwidth}
-\oldtpt[#1]
-}
-\def\ThreePartTable@ii{\begin{figure}[!htbp]
-\onecolumn
-\begin{minipage}{0.48\textwidth}
-\oldtpt
-}
-\def\endThreePartTable{
-\endoldtpt
-\end{minipage}
-\twocolumn
-\end{figure}}
-\makeatother
-
-
-\makeatletter
-\let\endoldlt\endlongtable		
+\let\endoldlt\endlongtable
 \def\endlongtable{
 \hline
-\endoldlt}
+\endoldlt
+}
 \makeatother
-
-\newenvironment{twocolumntable}% environment name
-{% begin code
-\begin{table*}[!htbp]%
-\onecolumn%
-}%
-{%
-\twocolumn%
-\end{table*}%
-}% end code
 
 \urlstyle{same}
 
@@ -300,9 +309,9 @@ Roettger, Email: \href{mailto:timo.roettger@iln.uio.no}{timo.roettger@iln.uio.no
 
 To date, the most common quantitative approach across the experimental
 sciences is to run an experiment with one or more predictors and
-statistically test if there is evidence that these predictors affect the
-measured variables. Traditionally, this process has been done by form of
-null hypothesis significance testing. Over the last decade or so,
+statistically test whether the predictors affect the measured variables.
+Traditionally, these statistical tests have been done within the null
+hypothesis significance testing framework. Over the last decade or so,
 however, we have seen more and more statistical approaches within an
 alternative inferential framework: Bayesian inference. Testing
 hypothesis within the Bayesian framework is often considered either
@@ -318,64 +327,528 @@ Core Team, 2025). We wrote this tutorial with a particular reader in
 mind. If you have used R before and if you have a basic understanding of
 linear regression, and Bayesian inference, this tutorial is for you. We
 will remain mostly conceptual to provide you with a conceptual tool to
-approach hypothesis testing within Bayesian inference.
+approach hypothesis testing within Bayesian inference. The form of
+hypothesis testing that we would like to introduce to you is, however,
+different from the traditional null hypothesis significance testing in
+that it requires more thinking about the quantitative nature of your
+data. This is not a bug but, at least for us, a feature that will allow
+you to understand both your data and what you can learn from them
+better. This work stands on the shoulders of giants with many fantastic
+resources out there. Importantly this tutorial and the accompanying
+scripts will make use of a few wonderful R package:
 
-We just want to give you an impression of how a Bayesian regression
-analysis looks and feels. The tutorial covers the essential concepts and
-explains how to run and interpret the out- put of a Bayesian regression
-analysis using the wonderful R package brms written by Paul Buerkner
-(2016). If you don't have any experience with regression modeling, you
-will probably still be able to follow, but you might also want to
-consider doing a crash course. To bring you up to speed, we recommend
-the excellent two-part tutorial by Bodo Winter (2013) on mixed eﬀects
-regression in a non-Bayesian ---a.k.a. frequentist--- paradigm. In a
-sense, this tutorial could be considered part three of the series
-started by Winter. We will for example use the same data set. To
-actively follow this tutorial, you should have R installed on your com-
-puter (https://www.r-project.org). Unless you already have a favorite
-editor for tinkering with R scripts, we recommend to try out RStu- dio
+\begin{itemize}
+\item
+  The extraordinary \texttt{brms} package to run our Bayesian models,
+  written by Paul Buerkner (2016).
+\item
+  The \texttt{bayestestR} package to calculate the Bayes Factors,
+  written by Makowski et al.~(2019)
+\item
+  \ldots{}
+\end{itemize}
+
+If you don't have any experience with regression modeling, you will
+probably still be able to follow, but you might also want to consider
+doing a crash course. To bring you up to speed, we recommend the
+excellent tutorial by Bodo Winter (2013) on mixed eﬀects regression in a
+non-Bayesian ---a.k.a. frequentist---paradigm. To then make the
+transition to Bayesian versions of these regression models, we
+shamelessly suggest our own tutorial on ``Bayesian Regression for
+Factorial Designs'' as a natural follow-up using the same data and
+Winter (Franke \& Roettger 2019). In a sense, the present tutorial on
+hypothesis testing could be considered the long-awaited sequel of the
+series started by Winter. For continuity, we will continue to use the
+original data set.
+
+To actively follow this tutorial, you should have R installed on your
+computer (https://www.r-project.org). Unless you already have a favorite
+editor for tinkering with R scripts, we recommend to try out RStudio
 (https://www.rstudio.com). You will also need some packages, which you
 can import with the following code:
 
-\subsection{Bayesian inference}\label{bayesian-inference}
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# package for convenience functions (e.g. plotting)}
+\FunctionTok{library}\NormalTok{(tidyverse)}
+\FunctionTok{library}\NormalTok{(ggdist)}
 
-Evaluating evidence quantitatively
+\CommentTok{\# package for Bayesian regression modeling}
+\FunctionTok{library}\NormalTok{(brms)}
 
-\subsection{Goals}\label{goals}
+\CommentTok{\# package for posterior wrangling and plotting}
+\FunctionTok{library}\NormalTok{(tidybayes)}
+
+\CommentTok{\# package for BF calculation and plotting}
+\FunctionTok{library}\NormalTok{(bayestestR)}
+\FunctionTok{library}\NormalTok{(see)}
+\end{Highlighting}
+\end{Shaded}
+
+\section{Data, research questions \&
+hypotheses}\label{data-research-questions-hypotheses}
+
+This tutorial looks at a data set relevant for investigating whether
+voice pitch diﬀers across social contexts in Korean. Korean is a
+language in which the social distance between speakers plays a central
+role. The way Korean speakers speak depends for example on whether they
+are in a formal context (e.g.~during a consultation with a professor) or
+an informal context (e.g.~chatting with a friend about the holidays)
+(e.g.~Winter et al.~2012)
+
+To load the data into your R environment, run the following code
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# TO DO: STORE ONLINE}
+\CommentTok{\# TO DO: SIMPLIFY STORED DATA}
+\NormalTok{polite }\OtherTok{=} \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"../data/polite.csv"}\NormalTok{) }\SpecialCharTok{|\textgreater{}} 
+  \CommentTok{\# remove men}
+  \FunctionTok{filter}\NormalTok{(gender }\SpecialCharTok{==} \StringTok{"F"}\NormalTok{) }\SpecialCharTok{|\textgreater{}} 
+  \CommentTok{\# calculate semitones (reference 50 Hz)}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pitch\_ST =} \DecValTok{12} \SpecialCharTok{*} \FunctionTok{log2}\NormalTok{(pitch }\SpecialCharTok{/} \DecValTok{50}\NormalTok{))}
+
+\NormalTok{polite}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+# A tibble: 126 x 5
+   subject gender context  pitch pitch_ST
+   <chr>   <chr>  <chr>    <dbl>    <dbl>
+ 1 F1      F      formal    215.     25.2
+ 2 F1      F      informal  211.     24.9
+ 3 F1      F      formal    285.     30.1
+ 4 F1      F      informal  266.     28.9
+ 5 F1      F      formal    211.     24.9
+ 6 F1      F      informal  286.     30.2
+ 7 F1      F      formal    252.     28.0
+ 8 F1      F      informal  282.     29.9
+ 9 F1      F      formal    230.     26.4
+10 F1      F      informal  250.     27.9
+# i 116 more rows
+\end{verbatim}
+
+This data set contains anonymous identifiers for individual speakers
+stored in the variable \texttt{subject.} In this tutorial we will only
+be looking at female speakers btw. Subjects produced diﬀerent sentences,
+and the experiment manipulated whether the sentences were produced in a
+\texttt{formal} or an \texttt{informal} social context, indicated by the
+variable \texttt{context.} Crucially, each row contains a measurement of
+pitch in Hz stored in the variable \texttt{pitch}. Here we have
+calculated a derived scale (semitones) of pitch which more closely
+resembles the way people perceive pitch (\texttt{pitch\_ST})
+
+For most analyses of behavioral experiments, researchers are interested
+in whether an outcome variable is meaningfully affected by at least one
+manipulated variable and if so how the outcome variable is affected by
+it. In this case, Winter et al.~(2012) wanted to test whether pitch is
+meaningfully affected by the social context of the utterance.
+
+As a first step, we can explore this question visually:
+
+\begin{figure}[H]
+
+\caption{Empirical distribution of pitch values across contexts}
+
+{\centering \includegraphics{manuscript_files/figure-pdf/descriptive-dataviz-1.pdf}
+
+}
+
+\end{figure}%
+
+Figure 1 displays the pitch values for all utterances in the dataset
+across contexts (semi-transparent points). The solid points indicate the
+average pitch values across all sentences and speakers. Looking at the
+plot, we can see that voice pitch from utterances in formal contexts are
+on average slightly lower than those in informal contexts. The red
+distribution is slightly shifted to the left of the blue distribution by
+around 1.3 semitones. In other words, speakers tend to slightly lower
+their voice pitch when speaking in a formal context. But there is also a
+lot of overlap between the two contexts. Now as Bayesians, we would like
+to translate the data into an expression of evidence: does the data
+provide evidence for our research hypotheses?
+
+Let us build a Bayesian linear model to approach an answer to this
+question. Our first step is to specify the model formula and check which
+priors need to be specified:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# define linear model formula}
+\CommentTok{\# predict pitch by context and allow for that relationship }
+\CommentTok{\# to vary between subjects}
+\NormalTok{formula }\OtherTok{\textless{}{-}} \FunctionTok{bf}\NormalTok{(pitch\_ST }\SpecialCharTok{\textasciitilde{}}\NormalTok{ context }\SpecialCharTok{+}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{+}\NormalTok{ context }\SpecialCharTok{|}\NormalTok{ subject))}
+
+\CommentTok{\# get priors for this model}
+\FunctionTok{get\_prior}\NormalTok{(formula, polite)}
+\end{Highlighting}
+\end{Shaded}
+
+The default priors that brms picks for the Intercept and the variance
+parameters are mostly reasonable as they are derived from the data,
+weakly informative and symmetrical. However the prior for our critical
+parameter \texttt{contextinformal} should also be weakly informative
+(REFERENCE), i.e.~the prior assumption about the difference between
+informal and formal contexts should be that we don't know, but our best
+guess is that it is close to zero and equally likely to be more or less
+than zero. So we specify a normal distribution centered on zero for this
+parameter.
+
+Note: Only for demonstration purposes, we will use default priors for
+the other parameters. You always should critically reflect on all of
+your priors.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# }\AlertTok{NOTE}\CommentTok{: TO MAKE IT EASIER TO FOLLOW WE COULD CONTRAST CODE THE PREDICTOR}
+
+\CommentTok{\# pick a weakly informative prior for the critical parameter}
+\NormalTok{priors }\OtherTok{\textless{}{-}} \FunctionTok{prior}\NormalTok{(}\FunctionTok{normal}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{2}\NormalTok{), }
+                \AttributeTok{class =}\NormalTok{ b, }
+                \AttributeTok{coef =} \StringTok{"contextinformal"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Now we do a so-called prior predictive check, in other words we want to
+know what the posterior distribution looks like before having seen the
+data, based on the priors only. This is a useful exercise to make sure
+that the priors results in reasonable quantitative assumptions. We
+usually do it for all parameters, but here we will focus only on the
+critical parameter \texttt{contextinformal}, i.e.~the difference between
+formal and informal contexts. Let us also have a look at the predictions
+for the prior-only model.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# }\AlertTok{NOTE}\CommentTok{: CAN WE STORE THE SAMPLING PARAMETERS (seed, iter, chains, cores, backend, data)? }
+\CommentTok{\#       TO MAKE THE CODE CHUNKS SMALLER?}
+
+\CommentTok{\# run the model}
+\NormalTok{fit\_prior }\OtherTok{\textless{}{-}} \FunctionTok{brm}\NormalTok{(formula,}
+           \AttributeTok{prior =}\NormalTok{ priors,}
+           \AttributeTok{family =} \FunctionTok{gaussian}\NormalTok{(),}
+           \CommentTok{\# sample prior only}
+           \AttributeTok{sample\_prior =} \StringTok{"only"}\NormalTok{,}
+           \CommentTok{\# common sampling specifications}
+           \AttributeTok{file  =} \StringTok{"../models/fit\_prior"}\NormalTok{,}
+           \AttributeTok{seed =} \DecValTok{1234}\NormalTok{,}
+           \AttributeTok{iter =} \DecValTok{8000}\NormalTok{,}
+           \AttributeTok{chains =} \DecValTok{4}\NormalTok{,}
+           \AttributeTok{cores =} \DecValTok{4}\NormalTok{,}
+           \AttributeTok{backend =} \StringTok{"cmdstanr"}\NormalTok{,}
+           \AttributeTok{data =}\NormalTok{ polite)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# extract prior samples}
+\NormalTok{prior\_samples }\OtherTok{\textless{}{-}} 
+\NormalTok{  fit\_prior }\SpecialCharTok{|\textgreater{}} 
+  \FunctionTok{spread\_draws}\NormalTok{(b\_contextinformal)}
+  
+\CommentTok{\# plot  }
+\FunctionTok{ggplot}\NormalTok{(prior\_samples,}
+       \FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ b\_contextinformal)) }\SpecialCharTok{+} 
+  \FunctionTok{stat\_histinterval}\NormalTok{(}\AttributeTok{slab\_color =}\NormalTok{ project\_colors[}\DecValTok{11}\NormalTok{],}
+                    \AttributeTok{slab\_fill =} \FunctionTok{alpha}\NormalTok{(project\_colors[}\DecValTok{11}\NormalTok{], }\FloatTok{0.5}\NormalTok{),}
+                    \AttributeTok{fill =} \ConstantTok{NA}\NormalTok{,}
+                    \AttributeTok{color =} \ConstantTok{NA}\NormalTok{,}
+                    \AttributeTok{outline\_bars =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{ pitch difference in semitones"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"density }\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{limits =}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{4}\NormalTok{,}\DecValTok{4}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{() }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{figure}[H]
+
+\caption{Prior probability of the effect of context on pitch,
+i.e.~before seeing the data}
+
+{\centering \includegraphics{manuscript_files/figure-pdf/plot-priors-1.pdf}
+
+}
+
+\end{figure}%
+
+Looking at the distribution, the priors for the effect of context on
+pitch seems sensible. The most plausible value is zero. Values that are
+smaller or larger than zero become less plausible the further they are
+away from zero and values being smaller or larger than zero are equally
+likely. Good. Before we have seen the data, our model is somewhat
+pessimistic about the effect of context on on pitch. Now we can run the
+full model that integrates the likelihood (our data) with the priors and
+visualize the posteriors for the critical parameter.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# run the model}
+\NormalTok{fit }\OtherTok{\textless{}{-}} \FunctionTok{brm}\NormalTok{(formula,}
+           \AttributeTok{prior =}\NormalTok{ priors,}
+           \AttributeTok{family =} \FunctionTok{gaussian}\NormalTok{(),}
+           \CommentTok{\# common sampling specifications}
+           \AttributeTok{file  =} \StringTok{"../models/fit"}\NormalTok{,}
+           \AttributeTok{seed =} \DecValTok{1234}\NormalTok{,}
+           \AttributeTok{iter =} \DecValTok{4000}\NormalTok{,}
+           \AttributeTok{chains =} \DecValTok{4}\NormalTok{,}
+           \AttributeTok{cores =} \DecValTok{4}\NormalTok{,}
+           \AttributeTok{backend =} \StringTok{"cmdstanr"}\NormalTok{,}
+           \AttributeTok{data =}\NormalTok{ polite)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{posterior\_plot }\OtherTok{\textless{}{-}} 
+\NormalTok{  fit }\SpecialCharTok{|\textgreater{}} 
+  \FunctionTok{spread\_draws}\NormalTok{(b\_contextinformal) }\SpecialCharTok{|\textgreater{}} 
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ b\_contextinformal)) }\SpecialCharTok{+} 
+    \FunctionTok{stat\_histinterval}\NormalTok{(}\AttributeTok{data =}\NormalTok{ prior\_samples,}
+                     \AttributeTok{slab\_color =}\NormalTok{ project\_colors[}\DecValTok{11}\NormalTok{],}
+                     \AttributeTok{slab\_fill =} \FunctionTok{alpha}\NormalTok{(project\_colors[}\DecValTok{11}\NormalTok{], }\FloatTok{0.5}\NormalTok{),}
+                     \AttributeTok{fill =} \ConstantTok{NA}\NormalTok{,}
+                     \AttributeTok{color =} \ConstantTok{NA}\NormalTok{,}
+                     \AttributeTok{outline\_bars =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{+}
+    \FunctionTok{stat\_histinterval}\NormalTok{(}\AttributeTok{slab\_color =}\NormalTok{ project\_colors[}\DecValTok{14}\NormalTok{],}
+                      \AttributeTok{slab\_fill =} \FunctionTok{alpha}\NormalTok{(project\_colors[}\DecValTok{14}\NormalTok{], }\FloatTok{0.5}\NormalTok{),}
+                      \AttributeTok{color =} \ConstantTok{NA}\NormalTok{,}
+                      \AttributeTok{outline\_bars =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{+}
+  \CommentTok{\# stat\_slab(data = prior\_samples,}
+  \CommentTok{\#           lwd = 1,}
+  \CommentTok{\#           colour = project\_colors[11],}
+  \CommentTok{\#           fill = NA) +}
+  \FunctionTok{scale\_thickness\_shared}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{limits =}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{4}\NormalTok{,}\DecValTok{4}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{ pitch difference in semitones"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"density }\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \StringTok{"top"}\NormalTok{)}
+
+\NormalTok{posterior\_plot}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{figure}[H]
+
+\caption{Posterior probability of the effect of context on pitch,
+i.e.~after seeing the data}
+
+{\centering \includegraphics{manuscript_files/figure-pdf/plot-posterior-1.pdf}
+
+}
+
+\end{figure}%
+
+The posterior samples suggests that the majority of plausible values
+after seeing the data are positive, or in other words, informal contexts
+elicit larger pitch values. Negative values are not very plausible
+values, but also not completely implausible. We can visually access the
+amount of of posteriors that fall on the left side of zero by relating
+the dark blue part of the density curve to the yellow part. Compared to
+our prior probability (green distribution) for which roughly 50\% of
+posteriors were negative, this decrease in plausibility of negative
+values is quite noteworthy already.
+
+What we have done here should be quite familiar. We compare our model
+predictions to a reference point. It is a single point value: zero.But
+do we really care that much for such point hypotheses? Is zero really
+that special? We might think so because years of using null hypothesis
+significance testing has conditioned us to think that way. But this
+tutorial would like to break this cycle and move forward. Bear with us
+and let's approach hypothesis testing a bit differently today.
+
+\subsection{Grounding hypotheses in regions of practical
+equivalences}\label{grounding-hypotheses-in-regions-of-practical-equivalences}
+
+NOTE NEED TO FIND A BETTER JND SOURCE
+
+Above we claimed that we wanted to test ``whether pitch is
+\textbf{meaningfully affected} by the social context of the utterance''.
+We snuck the word meaningfully in there for a reason. But what does
+``meaningful'' mean? This is really a good questions and (un)fortunately
+requires quite a bit of thinking. This tutorial deals with speech data.
+Speech is, in spoken languages at least, THE vehicle to transmit
+linguistic information in order to communicate with each other. Speech
+is also very complex and very noisy: Not everything that can be measured
+in the acoustic signal matters for the listener. For example, if
+something cannot be perceived reliably, it is at least conceivable that
+it might play little to no role in communication. While speech sciences
+has a rich research tradition to estimate what can and what cannot be
+reliably heard, exact estimates depends on a lot of moving parts. But
+there is evidence that pitch in static conditions with resynthesised
+speech might be around 5\% (Isačenko and Schädlich 1970). That means,
+pitch changes below 0.05 semitones can not be used to discriminate two
+sounds reliably. Such thresholds are referred to as Just Noticeable
+Differences (JNDs) and can be used to define what constitutes meaningful
+differences when we look at speech data. So we could interpret the
+original hypothesis the following way: If a pitch difference is below
+the JND, it is not meaningful. So instead of testing against a
+point-zero hypothesis, we can test against a range of parameter values
+that are equivalent to the null value for practical purposes. In our
+case, let us be extra conservative and double the reported JND to 0.1,
+so values between \texttt{-0.1} and \texttt{0.1} are simply meaningless.
+Such ranges are called regions of practical equivalence (ROPEs,
+Kruschke, 2010, 2018).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{rope }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.1}\NormalTok{,}\FloatTok{0.1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+With a ROPE being defined, we can now test our hypothesis ``whether
+pitch is \textbf{meaningfully affected} by the social context of the
+utterance'' using Bayes Factor:
+
+\section{Testing hypothesis using Bayes
+Factor}\label{testing-hypothesis-using-bayes-factor}
 
 \subsection{What is Bayes Factor}\label{what-is-bayes-factor}
+
+Bayes Factors (henceforth: BFs) allow us to quantify relative evidence
+of one model compared to another.
 
 \subsection{Approximating BF with Savage
 Dickey}\label{approximating-bf-with-savage-dickey}
 
-Politeness Data
+\subsection{BF for a specified Region of Practical Equivalence
+(ROPE)}\label{bf-for-a-specified-region-of-practical-equivalence-rope}
 
-\subsection{BF for point null}\label{bf-for-point-null}
+Instead of doing it by hand, we can calculate the Savage Dickey ratio
+with the \texttt{bayesfactor\_parameters()} function from the
+\texttt{bayesfactorR} package. What happens behind the scenes is that
+the function will sample posteriors from your specified model based on
+priors only (so before seeing any data) and calculates the posterior
+probability of the specified \texttt{null} hypothesis (here the range
+specified by our ROPE).
 
-\subsection{Sensitivity analysis for different
-priors}\label{sensitivity-analysis-for-different-priors}
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#|warning: FALSE}
+\CommentTok{\#|message: FALSE}
 
-\subsection{BF for a Region of Practical Equivalence
-(ROPE)}\label{bf-for-a-region-of-practical-equivalence-rope}
+\NormalTok{BF\_1 }\OtherTok{\textless{}{-}} \FunctionTok{bayesfactor\_parameters}\NormalTok{(}\AttributeTok{posterior =}\NormalTok{ fit, }
+                               \AttributeTok{null =}\NormalTok{ rope, }
+                               \AttributeTok{parameter =} \StringTok{"b\_contextinformal"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
 
-\subsection{How to chose a ROPE?}\label{how-to-chose-a-rope}
+\begin{verbatim}
+Sampling priors, please wait...
+\end{verbatim}
 
-\begin{itemize}
-\tightlist
-\item
-  theoretically derived?
+Before interpreting the number we get, let us visually explore what our
+BF corresponds to.
 
-  \begin{itemize}
-  \tightlist
-  \item
-    communicatively relevant?
-  \end{itemize}
-\item
-  standardized effect sizes?
-\end{itemize}
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{posterior\_plot }\SpecialCharTok{+} 
+  \FunctionTok{geom\_vline}\NormalTok{(}\AttributeTok{xintercept =} \FunctionTok{c}\NormalTok{(rope[}\DecValTok{1}\NormalTok{], rope[}\DecValTok{2}\NormalTok{]),}
+             \AttributeTok{lty =} \StringTok{"dashed"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
 
-\subsection{Sensitivity analysis for different priors and
-ROPEs}\label{sensitivity-analysis-for-different-priors-and-ropes}
+\begin{figure}[H]
+
+\caption{Prior and posterior probability of the effect of context on
+pitch relative to the ROPE (-0.1, 0.1)}
+
+{\centering \includegraphics{manuscript_files/figure-pdf/plot-ropes-1.pdf}
+
+}
+
+\end{figure}%
+
+What the BF does is relating two numbers: (a) The prior probability of
+parameter values outside the rope, i.e.~the proportion of the green
+distribution that falls outside the dashed lines, and (b) the posterior
+probability of parameter values outside the rope, i.e.~the proportion of
+the red distribution that falls outside the dashed lines. Eye-balling
+the plot, we can maybe already see that more of the red distribution is
+outside the ROPE than of the green distribution.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{BF\_1}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+Bayes Factor (Null-Interval)
+
+Parameter       |   BF
+----------------------
+contextinformal | 5.63
+
+* Evidence Against The Null: [-0.100, 0.100]
+\end{verbatim}
+
+To be exact, 5.6 times for of the red distribution is outside the ROPE
+than of the green distribution.
+
+That means the model that has seen the data provide 5.6 times more
+evidence for pitch being outside of the ROPE, or in other words, it is
+5.6 times more likely (after having seen the data), that context affects
+pitch meaningfully. According to Jeffrey's (1961) criteria for
+interpreting BFs, this value corresponds to moderate evidence for the
+alternative hypothesis.
+
+Now as you probably have guessed already, all these probabilities are
+very much dependent on the priors of the model, so it is important to
+evaluate the robustness of our BF-based interpretation across a range of
+sensible priors. And as long as we are not a 100\% sure about our ROPEs,
+we might as well explore the robustness of the BF across different
+ROPEs. We won't bore you with the code for that process, but you can
+follow it along in our scripts. Let us assume the following five ROPE
+intervals centered on zero: 0.05, 0.1, 0.5, 1, 2. We assume the
+following five prior values for the width of the standard deviation of
+the critical parameter (centered on zero): 1 1.5, 2, 2.5, 3. These are
+all sensible prior widths assuming that medium to strong effects in
+either direction are plausible.
+
+\begin{verbatim}
+Rows: 200 Columns: 3
+-- Column specification --------------------------------------------------------
+Delimiter: ","
+chr (1): interval_range
+dbl (2): prior_sd, BF
+
+i Use `spec()` to retrieve the full column specification for this data.
+i Specify the column types or set `show_col_types = FALSE` to quiet this message.
+\end{verbatim}
+
+\begin{figure}[H]
+
+\caption{Bayes Factors for a range of priors and a range of ROPEs}
+
+{\centering \includegraphics{manuscript_files/figure-pdf/visualize-raster-1.pdf}
+
+}
+
+\end{figure}%
+
+The matrix of BFs is visualized in Figure X. By comparing the BF values
+along the y-axis, we can see that the calculated BFs are heavily
+dependent on the chosen ROPE. We here chose theoretically quite
+different ROPEs. For ROPEs above one semitone, BF values become less
+stable and range from anecdotal evidence for the alternative to strong
+evidence for the null hypothesis, dependent on the prior.
+
+By comparing the BF values along the x-axis, we can see that the
+calculated BFs are relatively robust for different standard deviations
+of the critical prior. However, we can also see that the BF values
+decrease with the width of the priors. This is not surprising and a
+known phenomenon, often discussed under the Jeffreys-Lindley paradox
+(Lindley 1957). The more diffuse the priors are (i.e.~wider priors), the
+larger is the probability that a specific parameter values is not
+compatible with the data.
+
+\subsection{BF for point hypothesis}\label{bf-for-point-hypothesis}
+
+don't lol
 
 \subsection{Write up}\label{write-up}
 
