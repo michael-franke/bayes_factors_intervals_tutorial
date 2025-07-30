@@ -1,0 +1,66 @@
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+[H]
+
+\caption{Empirical distribution of pitch values across contexts}
+
+{\centering \includegraphics{manuscript_files/figure-pdf/descriptive-dataviz-1.pdf}
+
+}
+
+\end{figure*}
+\efloatseparator
+ 
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+[H]
+
+\caption{Prior probability of the effect of context on pitch,
+i.e.~before seeing the data}
+
+{\centering \includegraphics{manuscript_files/figure-pdf/plot-priors-1.pdf}
+
+}
+
+\end{figure*}
+\efloatseparator
+ 
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+[H]
+
+\caption{Posterior probability of the effect of context on pitch,
+i.e.~after seeing the data}
+
+{\centering \includegraphics{manuscript_files/figure-pdf/plot-posterior-1.pdf}
+
+}
+
+\end{figure*}
+\efloatseparator
+ 
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+[H]
+
+\caption{Prior and posterior probability of the effect of context on
+pitch relative to the ROPE (-0.1, 0.1)}
+
+{\centering \includegraphics{manuscript_files/figure-pdf/plot-ropes-1.pdf}
+
+}
+
+\end{figure*}
+\efloatseparator
+ 
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+[H]
+
+\caption{Bayes Factors for a range of priors and a range of ROPEs}
+
+{\centering \includegraphics{manuscript_files/figure-pdf/visualize-raster-1.pdf}
+
+}
+
+\end{figure*}

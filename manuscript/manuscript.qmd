@@ -1,5 +1,5 @@
 ---
-title: "How to test hypothesis using Bayes Factor in behavioral sciences"
+title: "Hypothesis Testing Using Bayes Factor in Behavioral Sciences"
 shorttitle: "Test Bayes Factor"
 number-sections: true
 author:
@@ -46,6 +46,7 @@ format:
 #header-includes: \usepackage{annotate-equations}
 execute:
   echo: true
+  warning: false
   message: false
   error: false
   cache: true
@@ -70,19 +71,11 @@ If you have used R before and if you have a basic understanding of linear regres
 We will remain mostly conceptual to provide you with a conceptual tool to approach hypothesis testing within Bayesian inference.
 The form of hypothesis testing that we would like to introduce to you is, however, different from the traditional null hypothesis significance testing in that it requires more thinking about the quantitative nature of your data.
 This is not a bug but, at least for us, a feature that will allow you to understand both your data and what you can learn from them better.
-This work stands on the shoulders of giants with many fantastic resources out there.
-Importantly this tutorial and the accompanying scripts will make use of a few wonderful R package:
-
--   The extraordinary `brms` package to run our Bayesian models, written by Paul Buerkner (2016).
-
--   The `bayestestR` package to calculate the Bayes Factors, written by Makowski et al. (2019)
-
--   ...
 
 If you don’t have any experience with regression modeling, you will probably still be able to follow, but you might also want to consider doing a crash course.
-To bring you up to speed, we recommend the excellent tutorial by Bodo Winter (2013) on mixed eﬀects regression in a non-Bayesian —a.k.a.
+To bring you up to speed, we recommend the excellent tutorial by Bodo @winter_Linear_preprint_2013 on mixed eﬀects regression in a non-Bayesian —a.k.a.
 frequentist—paradigm.
-To then make the transition to Bayesian versions of these regression models, we shamelessly suggest our own tutorial on "Bayesian Regression for Factorial Designs" as a natural follow-up using the same data and Winter (Franke & Roettger 2019).
+To then make the transition to Bayesian versions of these regression models, we shamelessly suggest our own tutorial on "Bayesian Regression for Factorial Designs" as a natural follow-up using the same data and Winter [@franke-roettger_Bayesian_preprint_2019].
 In a sense, the present tutorial on hypothesis testing could be considered the long-awaited sequel of the series started by Winter.
 For continuity, we will continue to use the original data set.
 
@@ -121,7 +114,6 @@ library(tidybayes)
 
 # package for BF calculation and plotting
 library(bayestestR)
-library(see)
 
 ```
 
@@ -129,7 +121,7 @@ library(see)
 
 This tutorial looks at a data set relevant for investigating whether voice pitch diﬀers across social contexts in Korean.
 Korean is a language in which the social distance between speakers plays a central role.
-The way Korean speakers speak depends for example on whether they are in a formal context (e.g. during a consultation with a professor) or an informal context (e.g. chatting with a friend about the holidays) (e.g. Winter et al. 2012)
+The way Korean speakers speak depends for example on whether they are in a formal context (e.g. during a consultation with a professor) or an informal context (e.g. chatting with a friend about the holidays) [@winter-grawunder_Phonetic_journalarticle_2012].
 
 To load the data into your R environment, run the following code
 
@@ -153,7 +145,7 @@ Subjects produced diﬀerent sentences, and the experiment manipulated whether t
 Here we have calculated a derived scale (semitones) of pitch which more closely resembles the way people perceive pitch (`pitch_ST`)
 
 For most analyses of behavioral experiments, researchers are interested in whether an outcome variable is meaningfully affected by at least one manipulated variable and if so how the outcome variable is affected by it.
-In this case, Winter et al. (2012) wanted to test whether pitch is meaningfully affected by the social context of the utterance.
+In this case, @winter-grawunder_Phonetic_journalarticle_2012 wanted to test whether pitch is meaningfully affected by the social context of the utterance.
 
 As a first step, we can explore this question visually:
 
@@ -227,7 +219,7 @@ get_prior(formula, polite)
 ```
 
 The default priors that brms picks for the Intercept and the variance parameters are mostly reasonable as they are derived from the data, weakly informative and symmetrical.
-However the prior for our critical parameter `contextinformal` should also be weakly informative (REFERENCE), i.e. the prior assumption about the difference between informal and formal contexts should be that we don't know, but our best guess is that it is close to zero and equally likely to be more or less than zero.
+However the prior for our critical parameter `contextinformal` should also be weakly informative [@gelman-etal_Prior_journalarticle_2017], i.e. the prior assumption about the difference between informal and formal contexts should be that we don't know, but our best guess is that it is close to zero and equally likely to be more or less than zero.
 So we specify a normal distribution centered on zero for this parameter.
 
 Note: Only for demonstration purposes, we will use default priors for the other parameters.
@@ -244,8 +236,10 @@ priors <- prior(normal(0, 2),
 
 ```
 
-Now we do a so-called prior predictive check, in other words we want to know what the posterior distribution looks like before having seen the data, based on the priors only. This is a useful exercise to make sure that the priors results in reasonable quantitative assumptions.
-We usually do it for all parameters, but here we will focus only on the critical parameter `contextinformal`, i.e. the difference between formal and informal contexts. Let us also have a look at the predictions for the prior-only model.
+Now we do a so-called prior predictive check, in other words we want to know what the posterior distribution looks like before having seen the data, based on the priors only.
+This is a useful exercise to make sure that the priors results in reasonable quantitative assumptions.
+We usually do it for all parameters, but here we will focus only on the critical parameter `contextinformal`, i.e. the difference between formal and informal contexts.
+Let us also have a look at the predictions for the prior-only model.
 
 ```{r priors-model}
 #| warning: FALSE
@@ -296,7 +290,11 @@ ggplot(prior_samples,
 
 ```
 
-Looking at the distribution, the priors for the effect of context on pitch seems sensible. The most plausible value is zero. Values that are smaller or larger than zero become less plausible the further they are away from zero and values being smaller or larger than zero are equally likely. Good. Before we have seen the data, our model is somewhat pessimistic about the effect of context on on pitch.
+Looking at the distribution, the priors for the effect of context on pitch seems sensible.
+The most plausible value is zero.
+Values that are smaller or larger than zero become less plausible the further they are away from zero and values being smaller or larger than zero are equally likely.
+Good.
+Before we have seen the data, our model is somewhat pessimistic about the effect of context on on pitch.
 Now we can run the full model that integrates the likelihood (our data) with the priors and visualize the posteriors for the critical parameter.
 
 ```{r model-1}
@@ -356,10 +354,12 @@ posterior_plot
 
 The posterior samples suggests that the majority of plausible values after seeing the data are positive, or in other words, informal contexts elicit larger pitch values.
 Negative values are not very plausible values, but also not completely implausible.
-We can visually access the amount of of posteriors that fall on the left side of zero by relating the dark blue part of the density curve to the yellow part.
 Compared to our prior probability (green distribution) for which roughly 50% of posteriors were negative, this decrease in plausibility of negative values is quite noteworthy already.
 
-What we have done here should be quite familiar. We compare our model predictions to a reference point. It is a single point value: zero.But do we really care that much for such point hypotheses? Is zero really that special?
+What we have done here should be quite familiar.
+We compare our model predictions to a reference point.
+It is a single point value: zero.But do we really care that much for such point hypotheses?
+Is zero really that special?
 We might think so because years of using null hypothesis significance testing has conditioned us to think that way.
 But this tutorial would like to break this cycle and move forward.
 Bear with us and let's approach hypothesis testing a bit differently today.
@@ -377,13 +377,14 @@ Speech is, in spoken languages at least, THE vehicle to transmit linguistic info
 Speech is also very complex and very noisy: Not everything that can be measured in the acoustic signal matters for the listener.
 For example, if something cannot be perceived reliably, it is at least conceivable that it might play little to no role in communication.
 While speech sciences has a rich research tradition to estimate what can and what cannot be reliably heard, exact estimates depends on a lot of moving parts.
-But there is evidence that pitch in static conditions with resynthesised speech might be around 5% (Isačenko and Schädlich 1970).
+But there is evidence that pitch in static conditions with resynthesised speech might be around 5% [@isacenko-schadlich_Model_book_1970].
 That means, pitch changes below 0.05 semitones can not be used to discriminate two sounds reliably.
 Such thresholds are referred to as Just Noticeable Differences (JNDs) and can be used to define what constitutes meaningful differences when we look at speech data.
 So we could interpret the original hypothesis the following way: If a pitch difference is below the JND, it is not meaningful.
 So instead of testing against a point-zero hypothesis, we can test against a range of parameter values that are equivalent to the null value for practical purposes.
 In our case, let us be extra conservative and double the reported JND to 0.1, so values between `-0.1` and `0.1` are simply meaningless.
-Such ranges are called regions of practical equivalence (ROPEs, Kruschke, 2010, 2018).
+Such ranges are sometimes called regions of practical equivalence (ROPEs).
+Alternative terms that have been used are range of equivalence, equivalence margin, smallest effect size of interest, and good-enough belt [see @kruschke_Rejecting_journalarticle_2018].
 
 ```{r rope}
 
@@ -400,9 +401,9 @@ With a ROPE being defined, we can now test our hypothesis "whether pitch is **me
 Bayes Factors (henceforth: BFs) allow us to quantify relative evidence of one model compared to another.
 <!-- @Michael swoops in and dazzles the crowd with a crispy introduction without getting too nerdy -->
 
-## Approximating BF with Savage Dickey
+## Approximating Bayes Factor with Savage Dickey
 
-## BF for a specified Region of Practical Equivalence (ROPE)
+## Calculating Bayes Factor for a specified Region of Practical Equivalence (ROPE)
 
 Instead of doing it by hand, we can calculate the Savage Dickey ratio with the `bayesfactor_parameters()` function from the `bayesfactorR` package.
 What happens behind the scenes is that the function will sample posteriors from your specified model based on priors only (so before seeing any data) and calculates the posterior probability of the specified `null` hypothesis (here the range specified by our ROPE).
@@ -417,7 +418,7 @@ BF_1 <- bayesfactor_parameters(posterior = fit,
 
 ```
 
-Before interpreting the number we get, let us visually explore what our BF corresponds to. 
+Before interpreting the number we get, let us visually explore what our BF corresponds to.
 
 ```{r plot-ropes}
 #| warning: FALSE
@@ -431,7 +432,8 @@ posterior_plot +
 
 ```
 
-What the BF does is relating two numbers: (a) The prior probability of parameter values outside the rope, i.e. the proportion of the green distribution that falls outside the dashed lines, and (b) the posterior probability of parameter values outside the rope, i.e. the proportion of the red distribution that falls outside the dashed lines. Eye-balling the plot, we can maybe already see that more of the red distribution is outside the ROPE than of the green distribution.
+What the BF does is relating two numbers: (a) The prior probability of parameter values outside the rope, i.e. the proportion of the green distribution that falls outside the dashed lines, and (b) the posterior probability of parameter values outside the rope, i.e. the proportion of the red distribution that falls outside the dashed lines.
+Eye-balling the plot, we can maybe already see that more of the red distribution is outside the ROPE than of the green distribution.
 
 ```{r BF_rope_print}
 
@@ -442,14 +444,20 @@ BF_1
 To be exact, 5.6 times for of the red distribution is outside the ROPE than of the green distribution.
 
 That means the model that has seen the data provide 5.6 times more evidence for pitch being outside of the ROPE, or in other words, it is 5.6 times more likely (after having seen the data), that context affects pitch meaningfully.
-According to Jeffrey's (1961) criteria for interpreting BFs, this value corresponds to moderate evidence for the alternative hypothesis.
+According to @lee-wagenmakers_Bayesian_book_2014 criteria for interpreting BFs, this value corresponds to moderate evidence for the alternative hypothesis.
+
+## Sensitivity analysis for different priors and ROPEs
 
 Now as you probably have guessed already, all these probabilities are very much dependent on the priors of the model, so it is important to evaluate the robustness of our BF-based interpretation across a range of sensible priors.
-And as long as we are not a 100% sure about our ROPEs, we might as well explore the robustness of the BF across different ROPEs. We won't bore you with the code for that process, but you can follow it along in our scripts. Let us assume the following five ROPE intervals centered on zero: 0.05, 0.1, 0.5, 1, 2.
-We assume the following five prior values for the width of the standard deviation of the critical parameter (centered on zero): 1 1.5, 2, 2.5, 3. These are all sensible prior widths assuming that medium to strong effects in either direction are plausible.
+And as long as we are not a 100% sure about our ROPEs, we might as well explore the robustness of the BF across different ROPEs.
+We won't bore you with the code for that process, but you can follow it along in our scripts.
+Let us assume the following five ROPE intervals centered on zero: 0.05, 0.1, 0.5, 1, 2.
+We assume the following five prior values for the width of the standard deviation of the critical parameter (centered on zero): 1 1.5, 2, 2.5, 3.
+These are all sensible prior widths assuming that medium to strong effects in either direction are plausible.
 
 ```{r loop-priors-for-full-models}
 #| echo: FALSE
+#| message: FALSE
 
 # define 5 different priors widths that make sense
 # priors_1.0 <- prior(normal(0, 1), class = b, coef = "contextinformal")
@@ -492,6 +500,7 @@ We assume the following five prior values for the width of the standard deviatio
 
 ```{r store-results}
 #| echo: FALSE
+#| message: FALSE
 
 #saveRDS(model_list, "models/model_loop.RDS")
 model_list_all <- readRDS("../models/model_loop.RDS")
@@ -500,6 +509,7 @@ model_list_all <- readRDS("../models/model_loop.RDS")
 
 ```{r loop-through-ropes}
 #| echo: FALSE
+#| message: FALSE
 
 # specify different rope intervals
 
@@ -539,7 +549,7 @@ model_list_all <- readRDS("../models/model_loop.RDS")
 #    select(prior_sd, BF, interval_range)
 
 #write_csv(results, "../models/loop_results.csv")
-#results <- read_csv("../models/loop_results.csv")
+results <- read_csv("../models/loop_results.csv")
 
 ```
 
@@ -566,8 +576,8 @@ ggplot(results,
                        breaks = c(0.00000,0.03,0.1,0.33,1,3,10),
                        labels = c("0",
                                   "0.03 > very strong for H0","0.1 > strong for H0",
-                                  "0.33 > substantial for H0","1 = inconclusive",
-                                  "3 < substantial for H1","10 < very strong for H1"),
+                                  "0.33 > moderate for H0","1 = inconclusive",
+                                  "3 < moderate for H1","10 < strong for H1"),
                        oob = scales::squish
                        ) +
   scale_y_discrete(breaks = c("[-0.05, 0.05]",
@@ -589,23 +599,52 @@ ggplot(results,
 
 ```
 
-The matrix of BFs is visualized in Figure X. Orange cells indicate evidence for the alternative. Green cells indicate evidence for the null. Given that you can see that the conclusions we can draw from our data are rather dependent on the choices we made along the way. 
+The matrix of BFs is visualized in Figure X. Orange cells indicate evidence for the alternative.
+Green cells indicate evidence for the null.
+Given that you can see that the conclusions we can draw from our data are rather dependent on the choices we made along the way.
 
-By comparing the BF values along the y-axis, we can see that the calculated BFs are heavily dependent on the chosen ROPE. We here chose (theoretically speaking) a quite large range of ROPEs. The smallest ROPE we tested (-0.05 to 0.05) corresponds to evidence that listeners can hear pitch differences of 5% (REFERENCE). But even the largest ROPE we tested (-2 to 2) is theoretically not unthinkable. t'Hart (1981) reports on experimental evidence suggesting that listeners cannot reliably hear pitch changes below 1.5-2 semitones. 
-In light of this range of possible definitions what constitutes meaningful differences, our data seem not very robust, as illustrated by the shift from orange to green. 
+By comparing the BF values along the y-axis, we can see that the calculated BFs are heavily dependent on the chosen ROPE.
+We here chose (theoretically speaking) a quite large range of ROPEs.
+The smallest ROPE we tested (-0.05 to 0.05) corresponds to evidence that listeners can hear pitch differences of 5% [@isacenko-schadlich_Model_book_1970].
+But even the largest ROPE we tested (-2 to 2) is theoretically not unthinkable.
+@thart_Differential_journalarticle_1981 reports on experimental evidence suggesting that listeners cannot reliably hear pitch changes below 1.5-2 semitones.
+In light of this range of possible definitions what constitutes meaningful differences, our data seem not very robust, as illustrated by the shift from orange to green.
 
-Additionally, when comparing the BF values along the x-axis, we can see that the calculated BFs are comparatively robust for different standard deviations of the critical prior. However, we can also see that the BF values decrease with the width of the priors (from left to right).
-This is not surprising and a known phenomenon, often discussed under the Jeffreys-Lindley paradox (Lindley 1957): The more diffuse the priors are (i.e. wider priors), the larger is the probability that a specific parameter values is not compatible with the data.
+Additionally, when comparing the BF values along the x-axis, we can see that the calculated BFs are comparatively robust for different standard deviations of the critical prior.
+However, we can also see that the BF values decrease with the width of the priors (from left to right).
+This is not surprising and a known phenomenon, often discussed under the Jeffreys-Lindley paradox [@lindley_Statistical_journalarticle_1957]: The more diffuse the priors are (i.e. wider priors), the larger is the probability that a specific parameter values is not compatible with the data.
 
-Combined, we can see that the larger the ROPE and the wider the priors, the weaker the evidence for the alternative / stronger the evidence for the null hypothesis. In an ideal world, the evidence provided by the data should be robust across these subjective choices. But BF calculations like these allow us to assess the boundaries of our conclusions. 
+Combined, we can see that the larger the ROPE and the wider the priors, the weaker the evidence for the alternative / stronger the evidence for the null hypothesis.
+In an ideal world, the evidence provided by the data should be robust across these subjective choices.
+But BF calculations like these allow us to assess the boundaries of our conclusions.
 
 ## BF for point hypothesis
 
 don't lol
 
-## Write up
+# How to write things up
 
 Do’s Do think think about sensible priors think about sensible ropes think about the smallest effect sizes of interest instead of testing point-0
 
 Don’ts Don’t fall into the trap of discrete thresholds.
 Don’t hack ropes
+
+# Other Resources
+
+### References
+
+```{r sessionInfo}
+#| echo: FALSE
+
+sessionInfo()
+
+c("brms", "bayestestR", "tidybayes", "tidyverse", "ggdist") %>%
+  map(citation) %>%
+  print(style = "text")
+
+```
+
+<!-- References will auto-populate in the refs div below -->
+
+::: {#refs}
+:::

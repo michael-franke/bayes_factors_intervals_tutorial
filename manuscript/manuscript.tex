@@ -139,6 +139,39 @@
 \makeatother
 
 
+% definitions for citeproc citations
+\NewDocumentCommand\citeproctext{}{}
+\NewDocumentCommand\citeproc{mm}{%
+  \begingroup\def\citeproctext{#2}\cite{#1}\endgroup}
+\makeatletter
+ % allow citations to break across lines
+ \let\@cite@ofmt\@firstofone
+ % avoid brackets around text for \cite:
+ \def\@biblabel#1{}
+ \def\@cite#1#2{{#1\if@tempswa , #2\fi}}
+\makeatother
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newenvironment{CSLReferences}[2] % #1 hanging-indent, #2 entry-spacing
+ {\begin{list}{}{%
+  \setlength{\itemindent}{0pt}
+  \setlength{\leftmargin}{0pt}
+  \setlength{\parsep}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+   \setlength{\leftmargin}{\cslhangindent}
+   \setlength{\itemindent}{-1\cslhangindent}
+  \fi
+  % set entry spacing
+  \setlength{\itemsep}{#2\baselineskip}}}
+ {\end{list}}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{\hfill\break\parbox[t]{\linewidth}{\strut\ignorespaces#1\strut}}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 
 
 
@@ -153,7 +186,7 @@
 
 
 
-\title{How to test hypothesis using Bayes Factor in behavioral sciences}
+\title{Hypothesis Testing Using Bayes Factor in Behavioral Sciences}
 
 
 \shorttitle{Test Bayes Factor}
@@ -333,33 +366,21 @@ different from the traditional null hypothesis significance testing in
 that it requires more thinking about the quantitative nature of your
 data. This is not a bug but, at least for us, a feature that will allow
 you to understand both your data and what you can learn from them
-better. This work stands on the shoulders of giants with many fantastic
-resources out there. Importantly this tutorial and the accompanying
-scripts will make use of a few wonderful R package:
-
-\begin{itemize}
-\item
-  The extraordinary \texttt{brms} package to run our Bayesian models,
-  written by Paul Buerkner (2016).
-\item
-  The \texttt{bayestestR} package to calculate the Bayes Factors,
-  written by Makowski et al.~(2019)
-\item
-  \ldots{}
-\end{itemize}
+better.
 
 If you don't have any experience with regression modeling, you will
 probably still be able to follow, but you might also want to consider
 doing a crash course. To bring you up to speed, we recommend the
-excellent tutorial by Bodo Winter (2013) on mixed eﬀects regression in a
-non-Bayesian ---a.k.a. frequentist---paradigm. To then make the
-transition to Bayesian versions of these regression models, we
+excellent tutorial by Bodo Winter
+(\citeproc{ref-winter_Linear_preprint_2013}{2013}) on mixed eﬀects
+regression in a non-Bayesian ---a.k.a. frequentist---paradigm. To then
+make the transition to Bayesian versions of these regression models, we
 shamelessly suggest our own tutorial on ``Bayesian Regression for
 Factorial Designs'' as a natural follow-up using the same data and
-Winter (Franke \& Roettger 2019). In a sense, the present tutorial on
-hypothesis testing could be considered the long-awaited sequel of the
-series started by Winter. For continuity, we will continue to use the
-original data set.
+Winter (\citeproc{ref-franke-roettger_Bayesian_preprint_2019}{Franke \&
+Roettger, 2019}). In a sense, the present tutorial on hypothesis testing
+could be considered the long-awaited sequel of the series started by
+Winter. For continuity, we will continue to use the original data set.
 
 To actively follow this tutorial, you should have R installed on your
 computer (https://www.r-project.org). Unless you already have a favorite
@@ -381,7 +402,6 @@ can import with the following code:
 
 \CommentTok{\# package for BF calculation and plotting}
 \FunctionTok{library}\NormalTok{(bayestestR)}
-\FunctionTok{library}\NormalTok{(see)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -394,7 +414,8 @@ language in which the social distance between speakers plays a central
 role. The way Korean speakers speak depends for example on whether they
 are in a formal context (e.g.~during a consultation with a professor) or
 an informal context (e.g.~chatting with a friend about the holidays)
-(e.g.~Winter et al.~2012)
+(\citeproc{ref-winter-grawunder_Phonetic_journalarticle_2012}{Winter \&
+Grawunder, 2012}).
 
 To load the data into your R environment, run the following code
 
@@ -442,8 +463,10 @@ resembles the way people perceive pitch (\texttt{pitch\_ST})
 For most analyses of behavioral experiments, researchers are interested
 in whether an outcome variable is meaningfully affected by at least one
 manipulated variable and if so how the outcome variable is affected by
-it. In this case, Winter et al.~(2012) wanted to test whether pitch is
-meaningfully affected by the social context of the utterance.
+it. In this case, Winter and Grawunder
+(\citeproc{ref-winter-grawunder_Phonetic_journalarticle_2012}{2012})
+wanted to test whether pitch is meaningfully affected by the social
+context of the utterance.
 
 As a first step, we can explore this question visually:
 
@@ -489,10 +512,11 @@ The default priors that brms picks for the Intercept and the variance
 parameters are mostly reasonable as they are derived from the data,
 weakly informative and symmetrical. However the prior for our critical
 parameter \texttt{contextinformal} should also be weakly informative
-(REFERENCE), i.e.~the prior assumption about the difference between
-informal and formal contexts should be that we don't know, but our best
-guess is that it is close to zero and equally likely to be more or less
-than zero. So we specify a normal distribution centered on zero for this
+(\citeproc{ref-gelman-etal_Prior_journalarticle_2017}{Gelman et al.,
+2017}), i.e.~the prior assumption about the difference between informal
+and formal contexts should be that we don't know, but our best guess is
+that it is close to zero and equally likely to be more or less than
+zero. So we specify a normal distribution centered on zero for this
 parameter.
 
 Note: Only for demonstration purposes, we will use default priors for
@@ -645,12 +669,10 @@ i.e.~after seeing the data}
 The posterior samples suggests that the majority of plausible values
 after seeing the data are positive, or in other words, informal contexts
 elicit larger pitch values. Negative values are not very plausible
-values, but also not completely implausible. We can visually access the
-amount of of posteriors that fall on the left side of zero by relating
-the dark blue part of the density curve to the yellow part. Compared to
-our prior probability (green distribution) for which roughly 50\% of
-posteriors were negative, this decrease in plausibility of negative
-values is quite noteworthy already.
+values, but also not completely implausible. Compared to our prior
+probability (green distribution) for which roughly 50\% of posteriors
+were negative, this decrease in plausibility of negative values is quite
+noteworthy already.
 
 What we have done here should be quite familiar. We compare our model
 predictions to a reference point. It is a single point value: zero.But
@@ -679,19 +701,23 @@ it might play little to no role in communication. While speech sciences
 has a rich research tradition to estimate what can and what cannot be
 reliably heard, exact estimates depends on a lot of moving parts. But
 there is evidence that pitch in static conditions with resynthesised
-speech might be around 5\% (Isačenko and Schädlich 1970). That means,
-pitch changes below 0.05 semitones can not be used to discriminate two
-sounds reliably. Such thresholds are referred to as Just Noticeable
-Differences (JNDs) and can be used to define what constitutes meaningful
-differences when we look at speech data. So we could interpret the
-original hypothesis the following way: If a pitch difference is below
-the JND, it is not meaningful. So instead of testing against a
-point-zero hypothesis, we can test against a range of parameter values
-that are equivalent to the null value for practical purposes. In our
-case, let us be extra conservative and double the reported JND to 0.1,
-so values between \texttt{-0.1} and \texttt{0.1} are simply meaningless.
-Such ranges are called regions of practical equivalence (ROPEs,
-Kruschke, 2010, 2018).
+speech might be around 5\%
+(\citeproc{ref-isacenko-schadlich_Model_book_1970}{Isačenko \&
+Schädlich, 1970}). That means, pitch changes below 0.05 semitones can
+not be used to discriminate two sounds reliably. Such thresholds are
+referred to as Just Noticeable Differences (JNDs) and can be used to
+define what constitutes meaningful differences when we look at speech
+data. So we could interpret the original hypothesis the following way:
+If a pitch difference is below the JND, it is not meaningful. So instead
+of testing against a point-zero hypothesis, we can test against a range
+of parameter values that are equivalent to the null value for practical
+purposes. In our case, let us be extra conservative and double the
+reported JND to 0.1, so values between \texttt{-0.1} and \texttt{0.1}
+are simply meaningless. Such ranges are sometimes called regions of
+practical equivalence (ROPEs). Alternative terms that have been used are
+range of equivalence, equivalence margin, smallest effect size of
+interest, and good-enough belt (see
+\citeproc{ref-kruschke_Rejecting_journalarticle_2018}{Kruschke, 2018}).
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -711,11 +737,12 @@ Factor}\label{testing-hypothesis-using-bayes-factor}
 Bayes Factors (henceforth: BFs) allow us to quantify relative evidence
 of one model compared to another.
 
-\subsection{Approximating BF with Savage
-Dickey}\label{approximating-bf-with-savage-dickey}
+\subsection{Approximating Bayes Factor with Savage
+Dickey}\label{approximating-bayes-factor-with-savage-dickey}
 
-\subsection{BF for a specified Region of Practical Equivalence
-(ROPE)}\label{bf-for-a-specified-region-of-practical-equivalence-rope}
+\subsection{Calculating Bayes Factor for a specified Region of Practical
+Equivalence
+(ROPE)}\label{calculating-bayes-factor-for-a-specified-region-of-practical-equivalence-rope}
 
 Instead of doing it by hand, we can calculate the Savage Dickey ratio
 with the \texttt{bayesfactor\_parameters()} function from the
@@ -735,10 +762,6 @@ specified by our ROPE).
                                \AttributeTok{parameter =} \StringTok{"b\_contextinformal"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
-
-\begin{verbatim}
-Sampling priors, please wait...
-\end{verbatim}
 
 Before interpreting the number we get, let us visually explore what our
 BF corresponds to.
@@ -781,7 +804,7 @@ Bayes Factor (Null-Interval)
 
 Parameter       |   BF
 ----------------------
-contextinformal | 5.63
+contextinformal | 5.76
 
 * Evidence Against The Null: [-0.100, 0.100]
 \end{verbatim}
@@ -792,9 +815,13 @@ than of the green distribution.
 That means the model that has seen the data provide 5.6 times more
 evidence for pitch being outside of the ROPE, or in other words, it is
 5.6 times more likely (after having seen the data), that context affects
-pitch meaningfully. According to Jeffrey's (1961) criteria for
+pitch meaningfully. According to Lee and Wagenmakers
+(\citeproc{ref-lee-wagenmakers_Bayesian_book_2014}{2014}) criteria for
 interpreting BFs, this value corresponds to moderate evidence for the
 alternative hypothesis.
+
+\subsection{Sensitivity analysis for different priors and
+ROPEs}\label{sensitivity-analysis-for-different-priors-and-ropes}
 
 Now as you probably have guessed already, all these probabilities are
 very much dependent on the priors of the model, so it is important to
@@ -809,17 +836,6 @@ the critical parameter (centered on zero): 1 1.5, 2, 2.5, 3. These are
 all sensible prior widths assuming that medium to strong effects in
 either direction are plausible.
 
-\begin{verbatim}
-Rows: 200 Columns: 3
--- Column specification --------------------------------------------------------
-Delimiter: ","
-chr (1): interval_range
-dbl (2): prior_sd, BF
-
-i Use `spec()` to retrieve the full column specification for this data.
-i Specify the column types or set `show_col_types = FALSE` to quiet this message.
-\end{verbatim}
-
 \begin{figure}[H]
 
 \caption{Bayes Factors for a range of priors and a range of ROPEs}
@@ -830,33 +846,207 @@ i Specify the column types or set `show_col_types = FALSE` to quiet this message
 
 \end{figure}%
 
-The matrix of BFs is visualized in Figure X. By comparing the BF values
-along the y-axis, we can see that the calculated BFs are heavily
-dependent on the chosen ROPE. We here chose theoretically quite
-different ROPEs. For ROPEs above one semitone, BF values become less
-stable and range from anecdotal evidence for the alternative to strong
-evidence for the null hypothesis, dependent on the prior.
+The matrix of BFs is visualized in Figure X. Orange cells indicate
+evidence for the alternative. Green cells indicate evidence for the
+null. Given that you can see that the conclusions we can draw from our
+data are rather dependent on the choices we made along the way.
 
-By comparing the BF values along the x-axis, we can see that the
-calculated BFs are relatively robust for different standard deviations
-of the critical prior. However, we can also see that the BF values
-decrease with the width of the priors. This is not surprising and a
-known phenomenon, often discussed under the Jeffreys-Lindley paradox
-(Lindley 1957). The more diffuse the priors are (i.e.~wider priors), the
-larger is the probability that a specific parameter values is not
-compatible with the data.
+By comparing the BF values along the y-axis, we can see that the
+calculated BFs are heavily dependent on the chosen ROPE. We here chose
+(theoretically speaking) a quite large range of ROPEs. The smallest ROPE
+we tested (-0.05 to 0.05) corresponds to evidence that listeners can
+hear pitch differences of 5\%
+(\citeproc{ref-isacenko-schadlich_Model_book_1970}{Isačenko \&
+Schädlich, 1970}). But even the largest ROPE we tested (-2 to 2) is
+theoretically not unthinkable. 't Hart
+(\citeproc{ref-thart_Differential_journalarticle_1981}{1981}) reports on
+experimental evidence suggesting that listeners cannot reliably hear
+pitch changes below 1.5-2 semitones. In light of this range of possible
+definitions what constitutes meaningful differences, our data seem not
+very robust, as illustrated by the shift from orange to green.
+
+Additionally, when comparing the BF values along the x-axis, we can see
+that the calculated BFs are comparatively robust for different standard
+deviations of the critical prior. However, we can also see that the BF
+values decrease with the width of the priors (from left to right). This
+is not surprising and a known phenomenon, often discussed under the
+Jeffreys-Lindley paradox
+(\citeproc{ref-lindley_Statistical_journalarticle_1957}{Lindley, 1957}):
+The more diffuse the priors are (i.e.~wider priors), the larger is the
+probability that a specific parameter values is not compatible with the
+data.
+
+Combined, we can see that the larger the ROPE and the wider the priors,
+the weaker the evidence for the alternative / stronger the evidence for
+the null hypothesis. In an ideal world, the evidence provided by the
+data should be robust across these subjective choices. But BF
+calculations like these allow us to assess the boundaries of our
+conclusions.
 
 \subsection{BF for point hypothesis}\label{bf-for-point-hypothesis}
 
 don't lol
 
-\subsection{Write up}\label{write-up}
+\section{How to write things up}\label{how-to-write-things-up}
 
 Do's Do think think about sensible priors think about sensible ropes
 think about the smallest effect sizes of interest instead of testing
 point-0
 
 Don'ts Don't fall into the trap of discrete thresholds. Don't hack ropes
+
+\section{Other Resources}\label{other-resources}
+
+\subsubsection{References}\label{references}
+
+\begin{verbatim}
+R version 4.4.3 (2025-02-28)
+Platform: x86_64-apple-darwin20
+Running under: macOS Sequoia 15.5
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: Europe/Oslo
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] ggdist_3.3.2        rstan_2.32.6        StanHeaders_2.32.10
+ [4] see_0.11.0          bayestestR_0.16.1.2 tidybayes_3.0.6    
+ [7] brms_2.22.0         Rcpp_1.1.0          ggridges_0.5.6     
+[10] lubridate_1.9.4     forcats_1.0.0       stringr_1.5.1      
+[13] dplyr_1.1.4         purrr_1.1.0         readr_2.1.5        
+[16] tidyr_1.3.1         tibble_3.3.0        ggplot2_3.5.1      
+[19] tidyverse_2.0.0    
+
+loaded via a namespace (and not attached):
+ [1] svUnit_1.0.6         tidyselect_1.2.1     farver_2.1.2        
+ [4] loo_2.8.0            fastmap_1.2.0        tensorA_0.36.2.1    
+ [7] digest_0.6.36        timechange_0.3.0     lifecycle_1.0.4     
+[10] processx_3.8.4       magrittr_2.0.3       posterior_1.6.0     
+[13] compiler_4.4.3       rlang_1.1.6          tools_4.4.3         
+[16] utf8_1.2.6           yaml_2.3.10          data.table_1.17.8   
+[19] knitr_1.48           labeling_0.4.3       bridgesampling_1.1-2
+[22] bit_4.6.0            pkgbuild_1.4.4       cmdstanr_0.8.1      
+[25] abind_1.4-5          withr_3.0.2          datawizard_1.2.0    
+[28] grid_4.4.3           stats4_4.4.3         colorspace_2.1-1    
+[31] inline_0.3.19        scales_1.3.0         insight_1.3.1.14    
+[34] cli_3.6.5            mvtnorm_1.3-1        rmarkdown_2.27      
+[37] crayon_1.5.3         generics_0.1.4       RcppParallel_5.1.8  
+[40] rstudioapi_0.16.0    tzdb_0.5.0           bayesplot_1.11.1    
+[43] parallel_4.4.3       matrixStats_1.3.0    vctrs_0.6.5         
+[46] Matrix_1.7-2         jsonlite_2.0.0       hms_1.1.3           
+[49] arrayhelpers_1.1-0   bit64_4.6.0-1        logspline_2.1.22    
+[52] glue_1.8.0           codetools_0.2-20     ps_1.7.7            
+[55] distributional_0.4.0 stringi_1.8.7        gtable_0.3.6        
+[58] QuickJSR_1.3.0       munsell_0.5.1        pillar_1.11.0       
+[61] htmltools_0.5.8.1    Brobdingnag_1.2-9    R6_2.6.1            
+[64] vroom_1.6.5          evaluate_0.24.0      lattice_0.22-6      
+[67] backports_1.5.0      rstantools_2.4.0     coda_0.19-4.1       
+[70] gridExtra_2.3        nlme_3.1-167         checkmate_2.3.1     
+[73] xfun_0.45            pkgconfig_2.0.3     
+\end{verbatim}
+
+\begin{verbatim}
+[[1]]
+Bürkner P (2017). "brms: An R Package for Bayesian Multilevel Models
+Using Stan." _Journal of Statistical Software_, *80*(1), 1-28.
+doi:10.18637/jss.v080.i01 <https://doi.org/10.18637/jss.v080.i01>.
+
+Bürkner P (2018). "Advanced Bayesian Multilevel Modeling with the R
+Package brms." _The R Journal_, *10*(1), 395-411.
+doi:10.32614/RJ-2018-017 <https://doi.org/10.32614/RJ-2018-017>.
+
+Bürkner P (2021). "Bayesian Item Response Modeling in R with brms and
+Stan." _Journal of Statistical Software_, *100*(5), 1-54.
+doi:10.18637/jss.v100.i05 <https://doi.org/10.18637/jss.v100.i05>.
+
+[[2]]
+Makowski D, Ben-Shachar M, Lüdecke D (2019). "bayestestR: Describing
+Effects and their Uncertainty, Existence and Significance within the
+Bayesian Framework." _Journal of Open Source Software_, *4*(40), 1541.
+doi:10.21105/joss.01541 <https://doi.org/10.21105/joss.01541>,
+<https://joss.theoj.org/papers/10.21105/joss.01541>.
+
+[[3]]
+Kay M (2023). _tidybayes: Tidy Data and Geoms for Bayesian Models_.
+doi:10.5281/zenodo.1308151 <https://doi.org/10.5281/zenodo.1308151>, R
+package version 3.0.6, <http://mjskay.github.io/tidybayes/>.
+
+[[4]]
+Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R,
+Grolemund G, Hayes A, Henry L, Hester J, Kuhn M, Pedersen TL, Miller E,
+Bache SM, Müller K, Ooms J, Robinson D, Seidel DP, Spinu V, Takahashi
+K, Vaughan D, Wilke C, Woo K, Yutani H (2019). "Welcome to the
+tidyverse." _Journal of Open Source Software_, *4*(43), 1686.
+doi:10.21105/joss.01686 <https://doi.org/10.21105/joss.01686>.
+
+[[5]]
+Kay M (2024). "ggdist: Visualizations of Distributions and Uncertainty
+in the Grammar of Graphics." _IEEE Transactions on Visualization and
+Computer Graphics_, *30*(1), 414-424. doi:10.1109/TVCG.2023.3327195
+<https://doi.org/10.1109/TVCG.2023.3327195>.
+
+Kay M (2024). _ggdist: Visualizations of Distributions and
+Uncertainty_. doi:10.5281/zenodo.3879620
+<https://doi.org/10.5281/zenodo.3879620>, R package version 3.3.2,
+<https://mjskay.github.io/ggdist/>.
+\end{verbatim}
+
+\phantomsection\label{refs}
+\begin{CSLReferences}{1}{0}
+\bibitem[\citeproctext]{ref-franke-roettger_Bayesian_preprint_2019}
+Franke, M., \& Roettger, T. (2019). \emph{Bayesian regression modeling
+(for factorial designs): {A} tutorial}. OSF.
+\url{https://doi.org/10.31234/osf.io/cdxv3}
+
+\bibitem[\citeproctext]{ref-gelman-etal_Prior_journalarticle_2017}
+Gelman, A., Simpson, D., \& Betancourt, M. (2017). The {Prior Can Often
+Only Be Understood} in the {Context} of the {Likelihood}.
+\emph{Entropy}, \emph{19}(10), 555.
+\url{https://doi.org/10.3390/e19100555}
+
+\bibitem[\citeproctext]{ref-isacenko-schadlich_Model_book_1970}
+Isačenko, A., \& Schädlich, H.-J. (1970). \emph{A model of standard
+{German} intonation}. Walter de Gruyter GmbH \& Co KG.
+
+\bibitem[\citeproctext]{ref-kruschke_Rejecting_journalarticle_2018}
+Kruschke, J. K. (2018). Rejecting or {Accepting Parameter Values} in
+{Bayesian Estimation}. \emph{Advances in Methods and Practices in
+Psychological Science}, \emph{1}(2), 270--280.
+\url{https://doi.org/10.1177/2515245918771304}
+
+\bibitem[\citeproctext]{ref-lee-wagenmakers_Bayesian_book_2014}
+Lee, M. D., \& Wagenmakers, E.-J. (2014). \emph{Bayesian {Cognitive
+Modeling}: {A Practical Course}}. Cambridge University Press.
+
+\bibitem[\citeproctext]{ref-lindley_Statistical_journalarticle_1957}
+Lindley, D. V. (1957). A {Statistical Paradox}. \emph{Biometrika},
+\emph{44}(1/2), 187--192. \url{https://doi.org/10.2307/2333251}
+
+\bibitem[\citeproctext]{ref-thart_Differential_journalarticle_1981}
+'t Hart, J. (1981). Differential sensitivity to pitch distance,
+particularly in speech. \emph{The Journal of the Acoustical Society of
+America}, \emph{69}(3), 811--821. \url{https://doi.org/10.1121/1.385592}
+
+\bibitem[\citeproctext]{ref-winter_Linear_preprint_2013}
+Winter, B. (2013). \emph{Linear models and linear mixed effects models
+in {R} with linguistic applications} (arXiv:1308.5499). arXiv.
+\url{https://doi.org/10.48550/arXiv.1308.5499}
+
+\bibitem[\citeproctext]{ref-winter-grawunder_Phonetic_journalarticle_2012}
+Winter, B., \& Grawunder, S. (2012). The phonetic profile of {Korean}
+formal and informal speech registers. \emph{Journal of Phonetics},
+\emph{40}(6), 808--815. \url{https://doi.org/10.1016/j.wocn.2012.08.006}
+
+\end{CSLReferences}
 
 
 
