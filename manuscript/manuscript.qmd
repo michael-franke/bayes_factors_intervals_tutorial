@@ -577,7 +577,7 @@ ggplot(results_wrangled,
                        ) +
   labs(title = "(A) Bayes factor in favour of alternative", 
        subtitle = "from moderate evidence against the null\nto very strong evidence for the null",
-       fill = "Bayes Factor",
+       fill = "Bayes Factor\n",
        y = "ROPE in Hz centered on 0 by 2 Hz steps\n",
        x = "\nprior standard deviation in Hz") +
   theme_minimal()
