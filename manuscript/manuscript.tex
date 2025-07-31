@@ -426,27 +426,27 @@ To load the data into your R environment, run the following code
 \NormalTok{polite }\OtherTok{=} \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"../data/polite.csv"}\NormalTok{) }\SpecialCharTok{|\textgreater{}} 
   \CommentTok{\# remove men}
   \FunctionTok{filter}\NormalTok{(gender }\SpecialCharTok{==} \StringTok{"F"}\NormalTok{) }\SpecialCharTok{|\textgreater{}} 
-  \CommentTok{\# calculate semitones (reference 50 Hz)}
-  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pitch\_ST =} \DecValTok{12} \SpecialCharTok{*} \FunctionTok{log2}\NormalTok{(pitch }\SpecialCharTok{/} \DecValTok{50}\NormalTok{))}
+  \CommentTok{\# transform context to factor}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{context =} \FunctionTok{as.factor}\NormalTok{(context))}
 
 \NormalTok{polite}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-# A tibble: 126 x 5
-   subject gender context  pitch pitch_ST
-   <chr>   <chr>  <chr>    <dbl>    <dbl>
- 1 F1      F      formal    215.     25.2
- 2 F1      F      informal  211.     24.9
- 3 F1      F      formal    285.     30.1
- 4 F1      F      informal  266.     28.9
- 5 F1      F      formal    211.     24.9
- 6 F1      F      informal  286.     30.2
- 7 F1      F      formal    252.     28.0
- 8 F1      F      informal  282.     29.9
- 9 F1      F      formal    230.     26.4
-10 F1      F      informal  250.     27.9
+# A tibble: 126 x 4
+   subject gender context  pitch
+   <chr>   <chr>  <fct>    <dbl>
+ 1 F1      F      formal    215.
+ 2 F1      F      informal  211.
+ 3 F1      F      formal    285.
+ 4 F1      F      informal  266.
+ 5 F1      F      formal    211.
+ 6 F1      F      informal  286.
+ 7 F1      F      formal    252.
+ 8 F1      F      informal  282.
+ 9 F1      F      formal    230.
+10 F1      F      informal  250.
 # i 116 more rows
 \end{verbatim}
 
@@ -456,9 +456,7 @@ be looking at female speakers btw. Subjects produced diﬀerent sentences,
 and the experiment manipulated whether the sentences were produced in a
 \texttt{formal} or an \texttt{informal} social context, indicated by the
 variable \texttt{context.} Crucially, each row contains a measurement of
-pitch in Hz stored in the variable \texttt{pitch}. Here we have
-calculated a derived scale (semitones) of pitch which more closely
-resembles the way people perceive pitch (\texttt{pitch\_ST})
+pitch in Hz stored in the variable \texttt{pitch}.
 
 For most analyses of behavioral experiments, researchers are interested
 in whether an outcome variable is meaningfully affected by at least one
@@ -498,10 +496,14 @@ priors need to be specified:
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# contrast code predictor}
+
+\FunctionTok{contrasts}\NormalTok{(polite}\SpecialCharTok{$}\NormalTok{context) }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.5}\NormalTok{,}\FloatTok{0.5}\NormalTok{)}
+
 \CommentTok{\# define linear model formula}
 \CommentTok{\# predict pitch by context and allow for that relationship }
 \CommentTok{\# to vary between subjects}
-\NormalTok{formula }\OtherTok{\textless{}{-}} \FunctionTok{bf}\NormalTok{(pitch\_ST }\SpecialCharTok{\textasciitilde{}}\NormalTok{ context }\SpecialCharTok{+}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{+}\NormalTok{ context }\SpecialCharTok{|}\NormalTok{ subject))}
+\NormalTok{formula }\OtherTok{\textless{}{-}} \FunctionTok{bf}\NormalTok{(pitch }\SpecialCharTok{\textasciitilde{}}\NormalTok{ context }\SpecialCharTok{+}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{+}\NormalTok{ context }\SpecialCharTok{|}\NormalTok{ subject))}
 
 \CommentTok{\# get priors for this model}
 \FunctionTok{get\_prior}\NormalTok{(formula, polite)}
@@ -511,7 +513,7 @@ priors need to be specified:
 The default priors that brms picks for the Intercept and the variance
 parameters are mostly reasonable as they are derived from the data,
 weakly informative and symmetrical. However the prior for our critical
-parameter \texttt{contextinformal} should also be weakly informative
+parameter \texttt{context1} should also be weakly informative
 (\citeproc{ref-gelman-etal_Prior_journalarticle_2017}{Gelman et al.,
 2017}), i.e.~the prior assumption about the difference between informal
 and formal contexts should be that we don't know, but our best guess is
@@ -520,17 +522,15 @@ zero. So we specify a normal distribution centered on zero for this
 parameter.
 
 Note: Only for demonstration purposes, we will use default priors for
-the other parameters. You always should critically reflect on all of
+the other parameters, but you always should critically reflect on all of
 your priors.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# }\AlertTok{NOTE}\CommentTok{: TO MAKE IT EASIER TO FOLLOW WE COULD CONTRAST CODE THE PREDICTOR}
-
 \CommentTok{\# pick a weakly informative prior for the critical parameter}
-\NormalTok{priors }\OtherTok{\textless{}{-}} \FunctionTok{prior}\NormalTok{(}\FunctionTok{normal}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{2}\NormalTok{), }
+\NormalTok{priors }\OtherTok{\textless{}{-}} \FunctionTok{prior}\NormalTok{(}\FunctionTok{normal}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{20}\NormalTok{), }
                 \AttributeTok{class =}\NormalTok{ b, }
-                \AttributeTok{coef =} \StringTok{"contextinformal"}\NormalTok{)}
+                \AttributeTok{coef =} \StringTok{"context1"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -539,9 +539,9 @@ know what the posterior distribution looks like before having seen the
 data, based on the priors only. This is a useful exercise to make sure
 that the priors results in reasonable quantitative assumptions. We
 usually do it for all parameters, but here we will focus only on the
-critical parameter \texttt{contextinformal}, i.e.~the difference between
-formal and informal contexts. Let us also have a look at the predictions
-for the prior-only model.
+critical parameter \texttt{context1}, i.e.~the difference between formal
+and informal contexts. Let us also have a look at the predictions for
+the prior-only model.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -554,8 +554,9 @@ for the prior-only model.
            \AttributeTok{family =} \FunctionTok{gaussian}\NormalTok{(),}
            \CommentTok{\# sample prior only}
            \AttributeTok{sample\_prior =} \StringTok{"only"}\NormalTok{,}
-           \CommentTok{\# common sampling specifications}
+           \CommentTok{\# store / load model output}
            \AttributeTok{file  =} \StringTok{"../models/fit\_prior"}\NormalTok{,}
+           \CommentTok{\# common sampling specifications}
            \AttributeTok{seed =} \DecValTok{1234}\NormalTok{,}
            \AttributeTok{iter =} \DecValTok{8000}\NormalTok{,}
            \AttributeTok{chains =} \DecValTok{4}\NormalTok{,}
@@ -570,20 +571,21 @@ for the prior-only model.
 \CommentTok{\# extract prior samples}
 \NormalTok{prior\_samples }\OtherTok{\textless{}{-}} 
 \NormalTok{  fit\_prior }\SpecialCharTok{|\textgreater{}} 
-  \FunctionTok{spread\_draws}\NormalTok{(b\_contextinformal)}
+  \FunctionTok{spread\_draws}\NormalTok{(b\_context1)}
   
 \CommentTok{\# plot  }
 \FunctionTok{ggplot}\NormalTok{(prior\_samples,}
-       \FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ b\_contextinformal)) }\SpecialCharTok{+} 
+       \FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ b\_context1)) }\SpecialCharTok{+} 
   \FunctionTok{stat\_histinterval}\NormalTok{(}\AttributeTok{slab\_color =}\NormalTok{ project\_colors[}\DecValTok{11}\NormalTok{],}
                     \AttributeTok{slab\_fill =} \FunctionTok{alpha}\NormalTok{(project\_colors[}\DecValTok{11}\NormalTok{], }\FloatTok{0.5}\NormalTok{),}
                     \AttributeTok{fill =} \ConstantTok{NA}\NormalTok{,}
                     \AttributeTok{color =} \ConstantTok{NA}\NormalTok{,}
                     \AttributeTok{outline\_bars =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{ pitch difference in semitones"}\NormalTok{,}
-       \AttributeTok{y =} \StringTok{"density }\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{limits =}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{4}\NormalTok{,}\DecValTok{4}\NormalTok{)) }\SpecialCharTok{+}
-  \FunctionTok{theme\_minimal}\NormalTok{() }
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{ prior pitch difference between formal and informal contexts"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{""}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{limits =}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{70}\NormalTok{,}\DecValTok{70}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{axis.text.y =} \FunctionTok{element\_blank}\NormalTok{())}
 \end{Highlighting}
 \end{Shaded}
 
@@ -613,10 +615,11 @@ visualize the posteriors for the critical parameter.
 \NormalTok{fit }\OtherTok{\textless{}{-}} \FunctionTok{brm}\NormalTok{(formula,}
            \AttributeTok{prior =}\NormalTok{ priors,}
            \AttributeTok{family =} \FunctionTok{gaussian}\NormalTok{(),}
-           \CommentTok{\# common sampling specifications}
+           \CommentTok{\# store / load model output}
            \AttributeTok{file  =} \StringTok{"../models/fit"}\NormalTok{,}
+           \CommentTok{\# common sampling specifications}
            \AttributeTok{seed =} \DecValTok{1234}\NormalTok{,}
-           \AttributeTok{iter =} \DecValTok{4000}\NormalTok{,}
+           \AttributeTok{iter =} \DecValTok{8000}\NormalTok{,}
            \AttributeTok{chains =} \DecValTok{4}\NormalTok{,}
            \AttributeTok{cores =} \DecValTok{4}\NormalTok{,}
            \AttributeTok{backend =} \StringTok{"cmdstanr"}\NormalTok{,}
@@ -626,10 +629,9 @@ visualize the posteriors for the critical parameter.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{posterior\_plot }\OtherTok{\textless{}{-}} 
-\NormalTok{  fit }\SpecialCharTok{|\textgreater{}} 
-  \FunctionTok{spread\_draws}\NormalTok{(b\_contextinformal) }\SpecialCharTok{|\textgreater{}} 
-  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ b\_contextinformal)) }\SpecialCharTok{+} 
+\NormalTok{posterior\_plot }\OtherTok{\textless{}{-}}\NormalTok{ fit }\SpecialCharTok{|\textgreater{}} 
+  \FunctionTok{spread\_draws}\NormalTok{(b\_context1) }\SpecialCharTok{|\textgreater{}} 
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ b\_context1)) }\SpecialCharTok{+} 
     \FunctionTok{stat\_histinterval}\NormalTok{(}\AttributeTok{data =}\NormalTok{ prior\_samples,}
                      \AttributeTok{slab\_color =}\NormalTok{ project\_colors[}\DecValTok{11}\NormalTok{],}
                      \AttributeTok{slab\_fill =} \FunctionTok{alpha}\NormalTok{(project\_colors[}\DecValTok{11}\NormalTok{], }\FloatTok{0.5}\NormalTok{),}
@@ -640,16 +642,12 @@ visualize the posteriors for the critical parameter.
                       \AttributeTok{slab\_fill =} \FunctionTok{alpha}\NormalTok{(project\_colors[}\DecValTok{14}\NormalTok{], }\FloatTok{0.5}\NormalTok{),}
                       \AttributeTok{color =} \ConstantTok{NA}\NormalTok{,}
                       \AttributeTok{outline\_bars =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{+}
-  \CommentTok{\# stat\_slab(data = prior\_samples,}
-  \CommentTok{\#           lwd = 1,}
-  \CommentTok{\#           colour = project\_colors[11],}
-  \CommentTok{\#           fill = NA) +}
   \FunctionTok{scale\_thickness\_shared}\NormalTok{() }\SpecialCharTok{+}
-  \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{limits =}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{4}\NormalTok{,}\DecValTok{4}\NormalTok{)) }\SpecialCharTok{+}
-  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{ pitch difference in semitones"}\NormalTok{,}
-       \AttributeTok{y =} \StringTok{"density }\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{ pitch difference between formal and informal contexts"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{""}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{limits =}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{70}\NormalTok{,}\DecValTok{70}\NormalTok{)) }\SpecialCharTok{+}
   \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+}
-  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \StringTok{"top"}\NormalTok{)}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{axis.text.y =} \FunctionTok{element\_blank}\NormalTok{())}
 
 \NormalTok{posterior\_plot}
 \end{Highlighting}
@@ -666,13 +664,13 @@ i.e.~after seeing the data}
 
 \end{figure}%
 
-The posterior samples suggests that the majority of plausible values
-after seeing the data are positive, or in other words, informal contexts
-elicit larger pitch values. Negative values are not very plausible
-values, but also not completely implausible. Compared to our prior
-probability (green distribution) for which roughly 50\% of posteriors
-were negative, this decrease in plausibility of negative values is quite
-noteworthy already.
+The posterior samples (red distribution) suggests that the majority of
+plausible values after seeing the data are positive, or in other words,
+informal contexts elicit larger pitch values. Negative values are not
+very plausible posterior values, but also not completely implausible.
+Compared to our prior probability (green distribution) for which roughly
+50\% of posteriors are negative, this decrease in plausibility of
+negative values is quite noteworthy already.
 
 What we have done here should be quite familiar. We compare our model
 predictions to a reference point. It is a single point value: zero.But
@@ -684,8 +682,6 @@ and let's approach hypothesis testing a bit differently today.
 
 \subsection{Grounding hypotheses in regions of practical
 equivalences}\label{grounding-hypotheses-in-regions-of-practical-equivalences}
-
-NOTE NEED TO FIND A BETTER JND SOURCE
 
 Above we claimed that we wanted to test ``whether pitch is
 \textbf{meaningfully affected} by the social context of the utterance''.
@@ -699,29 +695,35 @@ in the acoustic signal matters for the listener. For example, if
 something cannot be perceived reliably, it is at least conceivable that
 it might play little to no role in communication. While speech sciences
 has a rich research tradition to estimate what can and what cannot be
-reliably heard, exact estimates depends on a lot of moving parts. But
-there is evidence that pitch in static conditions with resynthesised
-speech might be around 5\%
-(\citeproc{ref-isacenko-schadlich_Model_book_1970}{Isačenko \&
-Schädlich, 1970}). That means, pitch changes below 0.05 semitones can
-not be used to discriminate two sounds reliably. Such thresholds are
-referred to as Just Noticeable Differences (JNDs) and can be used to
-define what constitutes meaningful differences when we look at speech
-data. So we could interpret the original hypothesis the following way:
-If a pitch difference is below the JND, it is not meaningful. So instead
-of testing against a point-zero hypothesis, we can test against a range
-of parameter values that are equivalent to the null value for practical
-purposes. In our case, let us be extra conservative and double the
-reported JND to 0.1, so values between \texttt{-0.1} and \texttt{0.1}
-are simply meaningless. Such ranges are sometimes called regions of
-practical equivalence (ROPEs). Alternative terms that have been used are
+reliably heard, exact estimates depends on a lot of moving parts.Such
+thresholds are referred to as Just Noticeable Differences (JNDs) and can
+be used to define what constitutes meaningful differences when we look
+at speech data.
+
+For example, Liu (\citeproc{ref-liu2013just}{2013}) report on JNDs
+ranging from 3 to 14 Hz. Jongman et al.
+(\citeproc{ref-jongman2017just}{2017}) report on JNDs between 6 and 9
+Hz. Turner et al. (\citeproc{ref-turner2019perception}{2019}) reported
+on JNDs between 17 and 25 Hz for non-speech stimuli and between 35 and
+40 Hz for speech stimuli. While these studies are hard to compare, they
+give us at least a the range of JND values to work with.
+
+So we could interpret the original hypothesis the following way: If a
+pitch difference is below the JND, it is not meaningful. So instead of
+testing against a point-zero hypothesis, we can test against a range of
+parameter values that are equivalent to the null value for practical
+purposes. In our case, let us begin with the lowest reported JND of the
+above studies on pitch perception in speech (3 Hz), but be extra
+conservative and double the reported JND to 6 Hz. We then assume that
+pitch values between \texttt{-6} and \texttt{6} are meaningless. Such
+ranges are sometimes called regions of practical equivalence (ROPEs),
 range of equivalence, equivalence margin, smallest effect size of
-interest, and good-enough belt (see
+interest, or good-enough belt (see
 \citeproc{ref-kruschke_Rejecting_journalarticle_2018}{Kruschke, 2018}).
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{rope }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.1}\NormalTok{,}\FloatTok{0.1}\NormalTok{)}
+\NormalTok{rope }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{6}\NormalTok{,}\DecValTok{6}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -759,7 +761,7 @@ specified by our ROPE).
 
 \NormalTok{BF\_1 }\OtherTok{\textless{}{-}} \FunctionTok{bayesfactor\_parameters}\NormalTok{(}\AttributeTok{posterior =}\NormalTok{ fit, }
                                \AttributeTok{null =}\NormalTok{ rope, }
-                               \AttributeTok{parameter =} \StringTok{"b\_contextinformal"}\NormalTok{)}
+                               \AttributeTok{parameter =} \StringTok{"b\_context1"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -809,32 +811,33 @@ contextinformal | 5.76
 * Evidence Against The Null: [-0.100, 0.100]
 \end{verbatim}
 
-To be exact, 5.6 times for of the red distribution is outside the ROPE
-than of the green distribution.
+To be exact, 2.7 times for of the red distribution is outside of the
+ROPE than of the green distribution.
 
-That means the model that has seen the data provide 5.6 times more
+That means the model that has seen the data provide 2.7 times more
 evidence for pitch being outside of the ROPE, or in other words, it is
-5.6 times more likely (after having seen the data), that context affects
+2.7 times more likely (after having seen the data), that context affects
 pitch meaningfully. According to Lee and Wagenmakers
 (\citeproc{ref-lee-wagenmakers_Bayesian_book_2014}{2014}) criteria for
-interpreting BFs, this value corresponds to moderate evidence for the
-alternative hypothesis.
+interpreting BFs, this value corresponds to only anecdotal evidence for
+the alternative hypothesis.
 
 \subsection{Sensitivity analysis for different priors and
 ROPEs}\label{sensitivity-analysis-for-different-priors-and-ropes}
 
 Now as you probably have guessed already, all these probabilities are
 very much dependent on the priors of the model, so it is important to
-evaluate the robustness of our BF-based interpretation across a range of
-sensible priors. And as long as we are not a 100\% sure about our ROPEs,
-we might as well explore the robustness of the BF across different
-ROPEs. We won't bore you with the code for that process, but you can
-follow it along in our scripts. Let us assume the following five ROPE
-intervals centered on zero: 0.05, 0.1, 0.5, 1, 2. We assume the
-following five prior values for the width of the standard deviation of
-the critical parameter (centered on zero): 1 1.5, 2, 2.5, 3. These are
-all sensible prior widths assuming that medium to strong effects in
-either direction are plausible.
+evaluate the robustness of our Bayes Factor-based interpretation across
+a range of sensible priors. And as long as we are not a 100\% sure about
+what a meaningful difference is, we might as well explore the robustness
+of the Bayes Factor across different ROPEs. We won't bore you with the
+code for that process, but you can follow it along in our scripts. Let
+us explore the following ROPE intervals as informed by the three studies
+cited above on pitch perception: we test a range of ROPE intervals from
+6 Hz to 40 Hz. We also assume the following five prior values for the
+width of the standard deviation of the critical parameter (centered on
+zero): 10, 15, 20, 25, 30. These are all sensible prior widths assuming
+that medium to strong effects in either direction are plausible.
 
 \begin{figure}[H]
 
@@ -846,42 +849,50 @@ either direction are plausible.
 
 \end{figure}%
 
-The matrix of BFs is visualized in Figure X. Orange cells indicate
-evidence for the alternative. Green cells indicate evidence for the
-null. Given that you can see that the conclusions we can draw from our
+The combination of Bayes Factors is visualized in Figure X. Orange cells
+indicate evidence for the alternative. Green cells indicate evidence for
+the null. It becomes clear that the conclusions we can draw from our
 data are rather dependent on the choices we made along the way.
 
-By comparing the BF values along the y-axis, we can see that the
-calculated BFs are heavily dependent on the chosen ROPE. We here chose
-(theoretically speaking) a quite large range of ROPEs. The smallest ROPE
-we tested (-0.05 to 0.05) corresponds to evidence that listeners can
-hear pitch differences of 5\%
-(\citeproc{ref-isacenko-schadlich_Model_book_1970}{Isačenko \&
-Schädlich, 1970}). But even the largest ROPE we tested (-2 to 2) is
-theoretically not unthinkable. 't Hart
-(\citeproc{ref-thart_Differential_journalarticle_1981}{1981}) reports on
-experimental evidence suggesting that listeners cannot reliably hear
-pitch changes below 1.5-2 semitones. In light of this range of possible
-definitions what constitutes meaningful differences, our data seem not
-very robust, as illustrated by the shift from orange to green.
+By comparing the Bayes Factors along the y-axis, we can see that they
+are heavily dependent on the chosen ROPE. We here chose (theoretically
+speaking) a quite large range of ROPEs, all of which are informed by
+psychoacoustic studies of what pitch differences can be reliably heard
+and thus likely are meaningful for communication. In light of this range
+of possible definitions what constitutes meaningful differences, our
+data seem not very robust, as illustrated by the shift from orange to
+green. Even the smallest ROPE intervals provide only anecdotal to
+moderate evidence for the alternative. And the most conservative ROPEs,
+following Turner et al. (\citeproc{ref-turner2019perception}{2019}),
+leads to moderate to very strong evidence against the alternative
+hypothesis.
 
-Additionally, when comparing the BF values along the x-axis, we can see
-that the calculated BFs are comparatively robust for different standard
-deviations of the critical prior. However, we can also see that the BF
-values decrease with the width of the priors (from left to right). This
-is not surprising and a known phenomenon, often discussed under the
-Jeffreys-Lindley paradox
+Additionally, when comparing the Bayes Factors along the x-axis, we can
+see that they are comparatively consistent for different standard
+deviations of the critical prior. However, we can also see that the
+Bayes Factors decrease with the width of the priors (from left to
+right). This is not surprising and a known phenomenon, often discussed
+under the Jeffreys-Lindley paradox
 (\citeproc{ref-lindley_Statistical_journalarticle_1957}{Lindley, 1957}):
 The more diffuse the priors are (i.e.~wider priors), the larger is the
 probability that a specific parameter values is not compatible with the
 data.
 
 Combined, we can see that the larger the ROPE and the wider the priors,
-the weaker the evidence for the alternative / stronger the evidence for
-the null hypothesis. In an ideal world, the evidence provided by the
-data should be robust across these subjective choices. But BF
-calculations like these allow us to assess the boundaries of our
-conclusions.
+the more likely becomes the null hypothesis. In an ideal world, the
+evidence provided by the data should be robust across these choices.
+However, this exploration of our inference is a fantastic opportunity to
+assess the boundaries of our conclusions. In this case, the original
+conclusions by Winter and Grawunder
+(\citeproc{ref-winter-grawunder_Phonetic_journalarticle_2012}{2012}) was
+based on the null hypothesis significance testing and traditionally
+tested the compatibility of the data with a point-null hypothesis. They
+concluded ``that in formal speech, Korean {[}\ldots{]} female speakers
+lowered their average fundamental frequency {[}\ldots{]}.'' This
+statement is still true according to their inferential criteria, but
+thinking more deeply about the theoretical consequences of differences
+in pitch, it might be less clear that these differenecs are truly
+meaninful.
 
 \subsection{BF for point hypothesis}\label{bf-for-point-hypothesis}
 
@@ -889,15 +900,31 @@ don't lol
 
 \section{How to write things up}\label{how-to-write-things-up}
 
-Do's Do think think about sensible priors think about sensible ropes
-think about the smallest effect sizes of interest instead of testing
-point-0
+\section{Some words of encouragement}\label{some-words-of-encouragement}
 
-Don'ts Don't fall into the trap of discrete thresholds. Don't hack ropes
+Bayesian inference in general and this form of hypothesis testing in
+particular require much more thinking than we might be used to. We think
+this is a good thing. Many voices have criticized the lack of engagement
+that we behavioral scientists invest into thinking how our theoretical
+ideas connect to concrete predictions in the quantitative systems under
+investigation (\citeproc{ref-coretta2023multidimensional}{Coretta et
+al., 2023}; e.g. \citeproc{ref-scheel2022most}{Scheel, 2022};
+\citeproc{ref-woensdregt2024lessons}{Woensdregt et al., 2024}). The
+presented form of hypothesis testing is easy to understand, but does
+require to think deeply about prior quantitative assumptions as well as
+what it means for observations to be meaningfully different. That is
+neither trivial nor easy. But we would like to encourage you to engage
+in exactly this thinking to better understand our data and how they
+might link with our understanding of cognition and behavior.
 
 \section{Other Resources}\label{other-resources}
 
-\subsubsection{References}\label{references}
+There are many fantastic resources out there to help you learn about the
+wonderful world of statistics. Here are a few recommendations. - A very
+accessible introduction to linear models in R is Winter
+(\citeproc{ref-winter2019statistics}{2019}). - \ldots{}
+
+\section{References}\label{references}
 
 \begin{verbatim}
 R version 4.4.3 (2025-02-28)
@@ -1002,6 +1029,14 @@ Uncertainty_. doi:10.5281/zenodo.3879620
 
 \phantomsection\label{refs}
 \begin{CSLReferences}{1}{0}
+\bibitem[\citeproctext]{ref-coretta2023multidimensional}
+Coretta, S., Casillas, J. V., Roessig, S., Franke, M., Ahn, B.,
+Al-Hoorie, A. H., Al-Tamimi, J., Alotaibi, N. E., AlShakhori, M. K.,
+Altmiller, R. M., et al. (2023). Multidimensional signals and analytic
+flexibility: Estimating degrees of freedom in human-speech analyses.
+\emph{Advances in Methods and Practices in Psychological Science},
+\emph{6}(3), 25152459231162567.
+
 \bibitem[\citeproctext]{ref-franke-roettger_Bayesian_preprint_2019}
 Franke, M., \& Roettger, T. (2019). \emph{Bayesian regression modeling
 (for factorial designs): {A} tutorial}. OSF.
@@ -1013,9 +1048,11 @@ Only Be Understood} in the {Context} of the {Likelihood}.
 \emph{Entropy}, \emph{19}(10), 555.
 \url{https://doi.org/10.3390/e19100555}
 
-\bibitem[\citeproctext]{ref-isacenko-schadlich_Model_book_1970}
-Isačenko, A., \& Schädlich, H.-J. (1970). \emph{A model of standard
-{German} intonation}. Walter de Gruyter GmbH \& Co KG.
+\bibitem[\citeproctext]{ref-jongman2017just}
+Jongman, A., Qin, Z., Zhang, J., \& Sereno, J. A. (2017). Just
+noticeable differences for pitch direction, height, and slope for
+mandarin and english listeners. \emph{The Journal of the Acoustical
+Society of America}, \emph{142}(2), EL163--EL169.
 
 \bibitem[\citeproctext]{ref-kruschke_Rejecting_journalarticle_2018}
 Kruschke, J. K. (2018). Rejecting or {Accepting Parameter Values} in
@@ -1031,20 +1068,38 @@ Modeling}: {A Practical Course}}. Cambridge University Press.
 Lindley, D. V. (1957). A {Statistical Paradox}. \emph{Biometrika},
 \emph{44}(1/2), 187--192. \url{https://doi.org/10.2307/2333251}
 
-\bibitem[\citeproctext]{ref-thart_Differential_journalarticle_1981}
-'t Hart, J. (1981). Differential sensitivity to pitch distance,
-particularly in speech. \emph{The Journal of the Acoustical Society of
-America}, \emph{69}(3), 811--821. \url{https://doi.org/10.1121/1.385592}
+\bibitem[\citeproctext]{ref-liu2013just}
+Liu, C. (2013). Just noticeable difference of tone pitch contour change
+for english-and chinese-native listeners. \emph{The Journal of the
+Acoustical Society of America}, \emph{134}(4), 3011--3020.
+
+\bibitem[\citeproctext]{ref-scheel2022most}
+Scheel, A. M. (2022). Why most psychological research findings are not
+even wrong. \emph{Infant and Child Development}, \emph{31}(1), e2295.
+
+\bibitem[\citeproctext]{ref-turner2019perception}
+Turner, D. R., Bradlow, A. R., \& Cole, J. S. (2019). Perception of
+pitch contours in speech and nonspeech. \emph{INTERSPEECH}, 2275--2279.
 
 \bibitem[\citeproctext]{ref-winter_Linear_preprint_2013}
 Winter, B. (2013). \emph{Linear models and linear mixed effects models
 in {R} with linguistic applications} (arXiv:1308.5499). arXiv.
 \url{https://doi.org/10.48550/arXiv.1308.5499}
 
+\bibitem[\citeproctext]{ref-winter2019statistics}
+Winter, B. (2019). \emph{Statistics for linguists: An introduction using
+r}. Routledge.
+
 \bibitem[\citeproctext]{ref-winter-grawunder_Phonetic_journalarticle_2012}
 Winter, B., \& Grawunder, S. (2012). The phonetic profile of {Korean}
 formal and informal speech registers. \emph{Journal of Phonetics},
 \emph{40}(6), 808--815. \url{https://doi.org/10.1016/j.wocn.2012.08.006}
+
+\bibitem[\citeproctext]{ref-woensdregt2024lessons}
+Woensdregt, M., Fusaroli, R., Rich, P., Modrák, M., Kolokolova, A.,
+Wright, C., \& Warlaumont, A. S. (2024). Lessons for theory from
+scientific domains where evidence is sparse or indirect.
+\emph{Computational Brain \& Behavior}, \emph{7}(4), 588--607.
 
 \end{CSLReferences}
 
