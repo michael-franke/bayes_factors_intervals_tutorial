@@ -92,10 +92,10 @@ In sum, this tutorial provides an accessible, non-technical introduction to Baye
 
 # Motivation and intended audience
 
-This tutorial provides a very basic introduction to the topic using R (R Core Team, 2025).
+This tutorial provides a very basic introduction to hypothesis testing with Bayes factors using R (R Core Team, 2025).
 We wrote this tutorial with a particular reader in mind.
 If you have used R before and if you have a basic understanding of linear regression, and Bayesian inference, this tutorial is for you.
-We will remain mostly conceptual to provide you with a conceptual tool to approach hypothesis testing within Bayesian inference.
+We will remain mostly conceptual to provide you with an accessible tool to approach hypothesis testing within Bayesian inference.
 The form of hypothesis testing that we would like to introduce to you is, however, different from the traditional null hypothesis significance testing in that it requires more thinking about the quantitative nature of your data.
 This is not a bug but, at least for us, a feature that will allow you to understand both your data and what you can learn from them better.
 
@@ -149,11 +149,14 @@ options(mc.cores = parallel::detectCores())
 
 # Data, research questions & hypotheses
 
+In this section, we introduce the data set that we will use throughout this tutorial, the research question that we want to address, and how to formulate hypotheses in a way that allows us to test them with Bayes factors using ROPEs.
+
+## The data set: voice pitch in Korean across social contexts
+
 This tutorial looks at a data set relevant for investigating whether voice pitch diﬀers across social contexts in Korean.
 Korean is a language in which the social distance between speakers plays a central role.
-The way Korean speakers speak depends for example on whether they are in a formal context (e.g. during a consultation with a professor) or an informal context (e.g. chatting with a friend about the holidays) [@winter-grawunder_Phonetic_journalarticle_2012].
-
-To load the data into your R environment, run the following code
+The way Korean speakers speak depends for example on whether they are in a formal context (e.g. during a job interview) or an informal context (e.g. chatting with a friend about the holidays) [@winter-grawunder_Phonetic_journalarticle_2012].
+To load and inspect the data into your R environment, run the following code:
 
 ```{r load-data}
 #| message: FALSE
@@ -235,13 +238,13 @@ polite |>
 
 ```
 
-
+## A Bayesian regression model to address our research question
 
 Let us build a Bayesian linear model to approach an answer to this question.
 Using the package `brms` [@Burkner2018-Advanced-Bayesi], our first step is to specify the model formula and check which priors need to be specified:
 
 ```{r model_prep}
-#| output: false
+#| output: true
 
 # contrast code predictor
 
@@ -253,14 +256,16 @@ contrasts(polite$context) <- c(-0.5,0.5)
 formula <- bf(pitch ~ context + (1 + context | subject))
 
 # get priors for this model
-get_prior(formula, polite)
+get_prior(formula, polite)[c(2,5,10,8,9,4),1:4]
+
+# NOTE: make the above prettier? (how to suppress the `source` column?)
 
 ```
 
 The default priors that `brms` picks for the Intercept and the variance parameters are mostly reasonable as they are derived from the data, weakly informative and symmetrical.
 However the prior for our critical parameter `context1` should also be weakly informative [@gelman-etal_Prior_journalarticle_2017], i.e. the prior assumption about the difference between informal and formal contexts should be that we don't know, but our best guess is that it is close to zero and equally likely to be more or less than zero.
 So we specify a normal distribution centered on zero for this parameter.
-(NB: We use default priors for the other parameters for convenience here, but you always should critically reflect on all of your priors.)
+(NB: We use default priors for the other parameters for convenience here, but you should always critically reflect on all of your priors.)
 
 ```{r priors-2}
 
@@ -280,35 +285,27 @@ Let us also have a look at the predictions for the prior-only model.
 #| warning: FALSE
 #| message: FALSE
 
-# NOTE: CAN WE STORE THE SAMPLING PARAMETERS 
-#       (seed, iter, chains, cores, backend, data)? 
-#       TO MAKE THE CODE CHUNKS SMALLER?
-# only for 'cores' and 'backend', but not for seed, iter, chains.
-# the the latter, we could define a custom brms-function that bakes these
-# defaults in
-
+# NOTE: CAN WE STORE THE SAMPLING PARAMETERS (seed, iter, chains, cores, backend, data) 
+# NOTE: Done for 'cores' and 'backend', but for the rest we'd have to define a custom 
+#       brms-function but that's likely less reader friendly.
 
 # run the model
-fit_prior <- brm(formula,
-           prior = priors,
-           family = gaussian(),
+fit_prior <- brm(formula, prior = priors, data = polite,
            # sample prior only
            sample_prior = "only",
            # store / load model output
            file  = "../models/fit_prior",
            # common sampling specifications
-           seed = 1234,
-           iter = 8000,
-           chains = 4,
-           data = polite)
+           seed = 1234, iter = 8000
+           )
            
 ```
 
 ```{r plot-priors}
+#| echo: FALSE
 #| fig-height: 4
 #| fig-cap: "Prior probability of the effect of context on pitch, i.e. before seeing the data"
 #| label: fig-plot-priors
-
 
 # extract prior samples
 prior_samples <- 
@@ -344,22 +341,19 @@ Now we can run the full model that integrates the likelihood (our data) with the
 #| output: FALSE
 
 # run the model
-fit <- brm(formula,
-           prior = priors,
-           family = gaussian(),
+fit <- brm(formula, prior = priors, data = polite,
            # store / load model output
            file  = "../models/fit",
            # common sampling specifications
-           seed = 1234,
-           iter = 8000,
-           chains = 4,
-           data = polite)
+           seed = 1234, iter = 8000
+           )
            
 ```
 
 ```{r plot-posterior}
 #| warning: FALSE
 #| message: FALSE
+#| echo: FALSE
 #| fig-height: 4
 #| fig-cap: "Posterior probability of the effect of context on pitch, i.e. after seeing the data"
 #| label: fig-plot-posterior
@@ -408,19 +402,26 @@ Bear with us and let's approach hypothesis testing a bit differently today.
 Above we claimed that we wanted to test "whether pitch is **meaningfully affected** by the social context of the utterance".
 We snuck the word meaningfully in there for a reason.
 But what does "meaningful" mean?
-This is really a good questions and (un)fortunately requires quite a bit of thinking.
+This is an interesting yet deep questions and (un)fortunately requires quite a bit of thinking.
+As we argue here, what a meaningful difference is, depends on the context of the data. 
+So let's have a closer look at our data.
+
 This tutorial deals with speech data.
-Speech is, in spoken languages at least, THE vehicle to transmit linguistic information in order to communicate with each other.
+Speech is, in spoken languages at least, *the* vehicle to transmit linguistic information in order to communicate with each other.
 Speech is also very complex and very noisy: Not everything that can be measured in the acoustic signal matters for the listener.
 For example, if something cannot be perceived reliably, it is at least conceivable that it might play little to no role in communication.
-While speech sciences has a rich research tradition to estimate what can and what cannot be reliably heard, exact estimates depends on a lot of moving parts.Such thresholds are referred to as Just Noticeable Differences (JNDs) and can be used to define what constitutes meaningful differences when we look at speech data.
+While the speech sciences have a rich research tradition to estimate what can and what cannot be reliably heard, exact estimation depends on a lot of moving parts.
+Such thresholds are referred to as *Just Noticeable Differences* (JNDs) and can be used to define what constitutes meaningful differences when we look at speech data.
 
-For example, @liu2013just report on JNDs ranging from 3 to 14 Hz. @jongman2017just report on JNDs between 6 and 9 Hz. @turner2019perception reported on JNDs between 17 and 25 Hz for non-speech stimuli and between 35 and 40 Hz for speech stimuli. While these studies are hard to compare, they give us at least a the range of JND values to work with. 
+For example, @liu2013just report on JNDs ranging from 3 to 14 Hz. 
+@jongman2017just report on JNDs between 6 and 9 Hz. 
+@turner2019perception reported on JNDs between 17 and 25 Hz for non-speech stimuli and between 35 and 40 Hz for speech stimuli. 
+While these studies are hard to compare, they give us at least an idea about the rough order of magnitude for JND values to work with when it comes to speech data like the data set at hand. 
 
-So we could interpret the original hypothesis the following way: If a pitch difference is below the JND, it is not meaningful.
-So instead of testing against a point-zero hypothesis, we can test against a range of parameter values that are equivalent to the null value for practical purposes.
+Based on these considerations, we could interpret the original hypothesis the following way: If a pitch difference is below the JND, it is not meaningful.
+So, instead of testing against a point-valued hypothesis, we can test against a range of parameter values that are equivalent to the null value for practical purposes.
 In our case, let us begin with the lowest reported JND of the above studies on pitch perception in speech (3 Hz), but be extra conservative and double the reported JND to 6 Hz. We then assume that pitch values between `-6` and `6` are meaningless.
-Such ranges are sometimes called regions of practical equivalence (ROPEs), range of equivalence, equivalence margin, smallest effect size of interest, or good-enough belt [see @kruschke_Rejecting_journalarticle_2018].
+Such ranges are sometimes called *regions of practical equivalence* (ROPEs), range of equivalence, equivalence margin, smallest effect size of interest, or good-enough belt [see @kruschke_Rejecting_journalarticle_2018].
 
 ```{r rope}
 
@@ -428,18 +429,150 @@ rope <- c(-6,6)
   
 ```
 
-With a ROPE being defined, we can now test our hypothesis "whether pitch is **meaningfully affected** by the social context of the utterance" using Bayes Factor:
+With a ROPE being defined, we can now test our hypothesis "whether pitch is **meaningfully affected** by the social context of the utterance" using Bayes Factors.
 
 # Testing hypothesis using Bayes Factor
 
-## What is Bayes Factor
+## What is Bayes Factor?
 
-Bayes Factors (henceforth: BFs) allow us to quantify relative evidence of one model compared to another.
-<!-- @Michael swoops in and dazzles the crowd with a crispy introduction without getting too nerdy -->
+Suppose we have two hypotheses $H_0$ and $H_1$ and want to know which of these is correct.
+We do so by looking at some observed data $D$.
+As Bayesians, the first most obvious thing to look at is how likely each hypothesis is after seeing the data, i.e., something like $P(H_0 \mid D)$ and $P(H_1 \mid D)$.
+Now, it turns out that these *posterior probabilities of hypotheses* are problematic, because they depend on the prior probabilities of the hypotheses $P(H_0)$ and $P(H_1)$, which are often hard to justify.
+To see this, imagine that the hypotheses on the table are deep issues like a contrast between Darwinian evolutionary theory and intelligent design.
+Proponents of either view would have a hard time agreeing on priors for these hypotheses, but may find it much easier to agree on which observations are made more or less likely by either hypothesis.
+Therefore, the preferred Bayesian measure is the Bayes factor, which is defined as the likelihood ratio of the data given each hypothesis:
 
-## Approximating Bayes Factor with Savage Dickey
+$$
+\text{Bayes factor in favor of hypothesis 1 over hypothesis 2} \ \  \colon\!= \ \ \frac{P(D \mid H_1)}{P(D \mid H_0)}
+$$
+
+To see how this is an objective and actually quite intuitive measure of observational evidence in scientific reasoning, consider the case of Darwinian evolution ($H_1$) versus intelligent design $H_0$ again.
+Let's take the historical case of observing how the beak sizes of finches on the Galápagos islands changed over time as a functional adaptation to environmental changes.
+What is a better explanation of that observation?
+To begin with, let's notice that this observation is *not* ruled out by either hypothesis.
+But the probability of observing $D$ (adaptively changing beak sizes) is much higher under Darwinian evolution than under intelligent design.
+This is because the latter is compatible with many more counterfactual observations, such as beak sizes staying the same over time, or even beak sizes changing in a way that is not adaptive.
+So, the probability of the observed data is much higher under Darwinian evolution than under intelligent design, so that $P(D \mid H_1) > P(D \mid H_0)$, irrespective of what we initiallly believed is the correct hypothesis.
+This is what corroborates the intuition that the observation $D$ is an argument in favor of $H_1$ and not $H_0$, and this is exactly what the Bayes factor quantifies.
+
+Concretely, a Bayes factor of 1 corresponds to the case of $P(D \mid H_1) = P(D \mid H_0)$, i.e., the data is equally likely under both hypotheses, so the data does not provide any evidence for or against either hypothesis.
+Any Bayes factor larger than 1 indicates that the data is more likely under $H_1$ than under $H_0$, and the larger the Bayes factor, the stronger the evidence in favor of $H_1$.
+Conversely, any Bayes factor smaller than 1 indicates that the data is more likely under $H_0$ than under $H_1$.
+Notice that the Bayes factor is symmetric in the sense that a Bayes factor of 3 in favor of $H_1$ over $H_0$ corresponds to a Bayes factor of 1/3 in favor of $H_0$ over $H_1$.
+There are various conventions for interpreting the strength of evidence of Bayes factors, such as to consider as "*mild evidence*" Bayes factors bigger than 3, "*strong evidence*" Bayes factors bigger than 10, and "*decisive evidence*" Bayes factors bigger than 30.
+
+One way to interpret Bayes factors in absolute terms is this.
+A Bayes factor of $n$ in favor of $H_1$ over $H_0$ means that after seeing the data, a rational researcher who thought both hypotheses were equally likely would consider $H_1$ to be $n$ times more likely than $H_0$ after observing $D$.
+In other words, if you are maximally uncertain before, then observe $D$ and that makes you weight $H_1$ $n$ times more than $H_0$, then the Bayes factor is $n$.
+
+## Bayes factors for statistical models
+
+After motivating Bayes factors in general, let's have a look at the definition of Bayes factors in the context of statistical models. This small section is a bit more technical, but it can be skipped without too much loss. 
+
+In the context of statistical models, we can use Bayes factors to compare two statistical models $M_0$ and $M_1$ that instantiate two competing hypotheses (or assumptions) $H_0$ and $H_1$.
+A Bayesian statistical model $M$ consists of:
+
+1. a *likelihood function* $P(D \mid \theta, M)$ that specifies how likely the observed data $D$ is given the model $M$ and the model's parameters $\theta$, and 
+2. a *prior distribution* $P(\theta \mid M)$ that specifies how likely different parameter values are before seeing the data.
+
+The probability of some observed data $P(D \mid M)$ under a model $M$ is then obtained by integrating over all possible parameter values $\theta$:
+
+$$
+P(D \mid M) = \int P(D \mid \theta, M) \ \  P(\theta \mid M) d\theta
+$$
+
+This is called the *marginal likelihood* of the data under the model $M$.
+We can think of this quantity as obtained from sampling repeatedly parameter values from the prior and then sampling, for of these, a potential data observation.
+(Notice that this is the *prior predictive data distribution* of the model.)
+
+Putting things together, the resulting definition for Bayes factors in statistical models is:
+
+$$
+\text{Bayes factor in favor of model 1 over model 2} \ \  \colon\!= \ \ \frac{P(D \mid M_1)}{P(D \mid M_0)} = \frac{\int P(D \mid \theta, M_1) \ \  P(\theta \mid M_1) d\theta}{\int P(D \mid \theta, M_0) \ \  P(\theta \mid M_0) d\theta}
+$$
+
+## Approximating Bayes Factor with the Savage-Dickey method (for point-valued hypotheses)
+
+While Bayes factors are a very intuitive and useful measure of evidence, they are often hard to compute.
+There are various approximation methods, such as bridge sampling [@GronauSarafoglou2017-A-tutorial-on-b], which can be used for any arbitrary pair of models, but these can still be computationally costly and sometimes hard to implement.
+However, for the special case of *nested models*, there is a simple and computationally cheap approximation method called the *Savage-Dickey density ratio* [@DickeyLientz1970-The-Weighted-Li;@WagenmakersLodewyckx2010-Bayesian-hypoth].
+
+Intuitively speaking, model $M_0$ is nested in model $M_1$ if $M_0$ can be obtained from $M_1$ by fixing one or more parameters to a specific value.
+For example, we may consider a model $M_1$ that has a normal distribution on the `context` coefficient as a prior, and a nested model $M_0$ that has a degenerate prior on the `context` coefficient that puts all its mass on zero.
+That model $M_0$ would then correspond to the (standard, point-valued) null hypothesis that there is no effect of `context` on `pitch`.
+
+So, suppose that $M_0$ is nested in $M_1$ by fixing a critical parameter $\theta^*$ to a specific value $x$.
+Then, the Savage-Dickey density ratio states that the Bayes factor in favor of $M_1$ over $M_0$ can be computed as the ratio of the prior and posterior density of the critical parameter at the point value that defines the null hypothesis:
+
+$$
+\text{Bayes factor in favor of model 1 over model 2} \ \  = \ \  \frac{P(\theta^*=x \mid D, M_1)}{P(\theta^*=x \mid M_1)}
+$$
+Let's unpack this.
+First of all, this seemingly magical result is actually not that magical, but follows directly from the definition of Bayes factors and Bayes' theorem, but we skip the derivation here.
+What this means is that in practice we do not have to calculate or approximate any integrals at all, but we can simply look at one model and run posterior inference, like we routinly do with `brms`, for example.
+Look at the formula above: we would only need to run one model, $M_1$, and then look at the prior and posterior density of the critical parameter $\theta^*$ at the point value $x$.
+The prior, we should usually be able to get easily because it is in our hands to specify it.
+The posterior probably, we could get by estimating it from the samples that are returned by software like `brms` ...
+
+... well, at least in principle. 
+One problem here is that estimating $P(\theta^*=x \mid D, M_1)$ from posterior samples is fickle.
+We can do it with some mathematical methods, but we may need a lot of samples and do some post-processing (e.g., using splines). 
+The main point is that posterior samples are not reliable for estimating densities at specific points, but they are reliable for estimating probabilities over ranges of values.
+Ah, if only there was a generalization of the Savage-Dickey density ratio that works for ranges of values!
+
+Wait: there is!
 
 ## Calculating Bayes Factor for a specified Region of Practical Equivalence (ROPE)
+
+
+The Bayes Factor in favor of model $M_{0}$ over alternative model $M_{1}$ is:
+$$
+BF_{01} = \frac{P(\theta \in I_{0} \mid D, M_{e})}{P(\theta \in I_{1} \mid D, M_{e})} \ \frac{P(\theta \in I_{1} \mid  M_{e})}{P(\theta \in I_{0} \mid M_{e})}
+$$
+
+
+@fig-savage-dickey shows ...
+
+```{r Savage-Dickey-visualization}
+#| echo: FALSE
+#| label: fig-savage-dickey
+
+# NOTE: make me pretty, please!
+
+tibble(
+  delta = seq(-3,3,length.out = 1000),
+  encompassing = dnorm(delta)
+) %>%
+  mutate(
+    null = ifelse(-0.1 <= delta & delta <= 0.1,
+                  encompassing, 0),
+    alt  = ifelse(-0.1 >= delta | delta >= 0.1,
+                  encompassing, 0)
+  ) %>%
+  mutate(
+    encompassing = encompassing / sum(encompassing),
+    null = null / sum(null),
+    alt = alt / sum(alt)
+  ) %>%
+  pivot_longer(cols = -delta, names_to = "model", values_to = "density") %>%
+  mutate(model = factor(model, ordered = T, levels = c("encompassing", "null", "alt"))) %>%
+  ggplot(aes(x = delta, y = density)) +
+  geom_line() +
+  geom_area(fill = "lightgray", alpha = 0.6) +
+  facet_wrap(. ~ model, nrow = 3, scales = "free") +
+  labs(
+    x = "", y = ""
+  ) +
+  guides(fill = F) +
+  theme(
+    axis.text.y  = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+
+```
+
+
 
 Instead of doing it by hand, we can calculate the Savage Dickey ratio with the `bayesfactor_parameters()` function from the `bayesfactorR` package.
 What happens behind the scenes is that the function will sample posteriors from your specified model based on priors only (so before seeing any data) and calculates the posterior probability of the specified `null` hypothesis (here the range specified by our ROPE).

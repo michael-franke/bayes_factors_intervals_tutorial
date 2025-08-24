@@ -416,18 +416,18 @@ widely applicable (though not universally).
 \section{Motivation and intended
 audience}\label{motivation-and-intended-audience}
 
-This tutorial provides a very basic introduction to the topic using R (R
-Core Team, 2025). We wrote this tutorial with a particular reader in
-mind. If you have used R before and if you have a basic understanding of
-linear regression, and Bayesian inference, this tutorial is for you. We
-will remain mostly conceptual to provide you with a conceptual tool to
-approach hypothesis testing within Bayesian inference. The form of
-hypothesis testing that we would like to introduce to you is, however,
-different from the traditional null hypothesis significance testing in
-that it requires more thinking about the quantitative nature of your
-data. This is not a bug but, at least for us, a feature that will allow
-you to understand both your data and what you can learn from them
-better.
+This tutorial provides a very basic introduction to hypothesis testing
+with Bayes factors using R (R Core Team, 2025). We wrote this tutorial
+with a particular reader in mind. If you have used R before and if you
+have a basic understanding of linear regression, and Bayesian inference,
+this tutorial is for you. We will remain mostly conceptual to provide
+you with an accessible tool to approach hypothesis testing within
+Bayesian inference. The form of hypothesis testing that we would like to
+introduce to you is, however, different from the traditional null
+hypothesis significance testing in that it requires more thinking about
+the quantitative nature of your data. This is not a bug but, at least
+for us, a feature that will allow you to understand both your data and
+what you can learn from them better.
 
 If you don't have any experience with regression modeling, you will
 probably still be able to follow, but you might also want to consider
@@ -473,16 +473,23 @@ can import with the following code:
 \section{Data, research questions \&
 hypotheses}\label{data-research-questions-hypotheses}
 
+In this section, we introduce the data set that we will use throughout
+this tutorial, the research question that we want to address, and how to
+formulate hypotheses in a way that allows us to test them with Bayes
+factors using ROPEs.
+
+\subsection{The data set: voice pitch in Korean across social
+contexts}\label{the-data-set-voice-pitch-in-korean-across-social-contexts}
+
 This tutorial looks at a data set relevant for investigating whether
 voice pitch diﬀers across social contexts in Korean. Korean is a
 language in which the social distance between speakers plays a central
 role. The way Korean speakers speak depends for example on whether they
-are in a formal context (e.g.~during a consultation with a professor) or
-an informal context (e.g.~chatting with a friend about the holidays)
+are in a formal context (e.g.~during a job interview) or an informal
+context (e.g.~chatting with a friend about the holidays)
 (\citeproc{ref-winter-grawunder_Phonetic_journalarticle_2012}{Winter \&
-Grawunder, 2012}).
-
-To load the data into your R environment, run the following code
+Grawunder, 2012}). To load and inspect the data into your R environment,
+run the following code:
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -558,6 +565,9 @@ speakers' pitch values across contexts}
 
 \end{figure}%
 
+\subsection{A Bayesian regression model to address our research
+question}\label{a-bayesian-regression-model-to-address-our-research-question}
+
 Let us build a Bayesian linear model to approach an answer to this
 question. Using the package \texttt{brms}
 (\citeproc{ref-Burkner2018-Advanced-Bayesi}{Bürkner, 2018}), our first
@@ -576,7 +586,23 @@ specified:
 \NormalTok{formula }\OtherTok{\textless{}{-}} \FunctionTok{bf}\NormalTok{(pitch }\SpecialCharTok{\textasciitilde{}}\NormalTok{ context }\SpecialCharTok{+}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{+}\NormalTok{ context }\SpecialCharTok{|}\NormalTok{ subject))}
 
 \CommentTok{\# get priors for this model}
-\FunctionTok{get\_prior}\NormalTok{(formula, polite)}
+\FunctionTok{get\_prior}\NormalTok{(formula, polite)[}\FunctionTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{,}\DecValTok{5}\NormalTok{,}\DecValTok{10}\NormalTok{,}\DecValTok{8}\NormalTok{,}\DecValTok{9}\NormalTok{,}\DecValTok{4}\NormalTok{),}\DecValTok{1}\SpecialCharTok{:}\DecValTok{4}\NormalTok{]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+                     prior     class      coef   group    source
+                    (flat)         b  context1         (unknown)
+ student_t(3, 241.5, 35.6) Intercept                   (unknown)
+     student_t(3, 0, 35.6)     sigma                   (unknown)
+                    (flat)        sd  context1 subject (unknown)
+                    (flat)        sd Intercept subject (unknown)
+                    (flat)       cor           subject (unknown)
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# }\AlertTok{NOTE}\CommentTok{: make the above prettier? (how to suppress the \textasciigrave{}source\textasciigrave{} column?)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -590,7 +616,7 @@ and formal contexts should be that we don't know, but our best guess is
 that it is close to zero and equally likely to be more or less than
 zero. So we specify a normal distribution centered on zero for this
 parameter. (NB: We use default priors for the other parameters for
-convenience here, but you always should critically reflect on all of
+convenience here, but you should always critically reflect on all of
 your priors.)
 
 \begin{Shaded}
@@ -613,50 +639,19 @@ the prior-only model.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# }\AlertTok{NOTE}\CommentTok{: CAN WE STORE THE SAMPLING PARAMETERS }
-\CommentTok{\#       (seed, iter, chains, cores, backend, data)? }
-\CommentTok{\#       TO MAKE THE CODE CHUNKS SMALLER?}
-\CommentTok{\# only for \textquotesingle{}cores\textquotesingle{} and \textquotesingle{}backend\textquotesingle{}, but not for seed, iter, chains.}
-\CommentTok{\# the the latter, we could define a custom brms{-}function that bakes these}
-\CommentTok{\# defaults in}
-
+\CommentTok{\# }\AlertTok{NOTE}\CommentTok{: CAN WE STORE THE SAMPLING PARAMETERS (seed, iter, chains, cores, backend, data) }
+\CommentTok{\# }\AlertTok{NOTE}\CommentTok{: Done for \textquotesingle{}cores\textquotesingle{} and \textquotesingle{}backend\textquotesingle{}, but for the rest we\textquotesingle{}d have to define a custom }
+\CommentTok{\#       brms{-}function but that\textquotesingle{}s likely less reader friendly.}
 
 \CommentTok{\# run the model}
-\NormalTok{fit\_prior }\OtherTok{\textless{}{-}} \FunctionTok{brm}\NormalTok{(formula,}
-           \AttributeTok{prior =}\NormalTok{ priors,}
-           \AttributeTok{family =} \FunctionTok{gaussian}\NormalTok{(),}
+\NormalTok{fit\_prior }\OtherTok{\textless{}{-}} \FunctionTok{brm}\NormalTok{(formula, }\AttributeTok{prior =}\NormalTok{ priors, }\AttributeTok{data =}\NormalTok{ polite,}
            \CommentTok{\# sample prior only}
            \AttributeTok{sample\_prior =} \StringTok{"only"}\NormalTok{,}
            \CommentTok{\# store / load model output}
            \AttributeTok{file  =} \StringTok{"../models/fit\_prior"}\NormalTok{,}
            \CommentTok{\# common sampling specifications}
-           \AttributeTok{seed =} \DecValTok{1234}\NormalTok{,}
-           \AttributeTok{iter =} \DecValTok{8000}\NormalTok{,}
-           \AttributeTok{chains =} \DecValTok{4}\NormalTok{,}
-           \AttributeTok{data =}\NormalTok{ polite)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# extract prior samples}
-\NormalTok{prior\_samples }\OtherTok{\textless{}{-}} 
-\NormalTok{  fit\_prior }\SpecialCharTok{|\textgreater{}} 
-  \FunctionTok{spread\_draws}\NormalTok{(b\_context1)}
-  
-\CommentTok{\# plot  }
-\FunctionTok{ggplot}\NormalTok{(prior\_samples,}
-       \FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ b\_context1)) }\SpecialCharTok{+} 
-  \FunctionTok{stat\_histinterval}\NormalTok{(}\AttributeTok{slab\_color =}\NormalTok{ project\_colors[}\DecValTok{11}\NormalTok{],}
-                    \AttributeTok{slab\_fill =} \FunctionTok{alpha}\NormalTok{(project\_colors[}\DecValTok{11}\NormalTok{], }\FloatTok{0.5}\NormalTok{),}
-                    \AttributeTok{fill =} \ConstantTok{NA}\NormalTok{,}
-                    \AttributeTok{color =} \ConstantTok{NA}\NormalTok{,}
-                    \AttributeTok{outline\_bars =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{ prior pitch difference between formal and informal contexts"}\NormalTok{,}
-       \AttributeTok{y =} \StringTok{""}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{limits =}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{70}\NormalTok{,}\DecValTok{70}\NormalTok{)) }\SpecialCharTok{+}
-  \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+}
-  \FunctionTok{theme}\NormalTok{(}\AttributeTok{axis.text.y =} \FunctionTok{element\_blank}\NormalTok{())}
+           \AttributeTok{seed =} \DecValTok{1234}\NormalTok{, }\AttributeTok{iter =} \DecValTok{8000}
+\NormalTok{           )}
 \end{Highlighting}
 \end{Shaded}
 
@@ -686,43 +681,12 @@ parameter.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# run the model}
-\NormalTok{fit }\OtherTok{\textless{}{-}} \FunctionTok{brm}\NormalTok{(formula,}
-           \AttributeTok{prior =}\NormalTok{ priors,}
-           \AttributeTok{family =} \FunctionTok{gaussian}\NormalTok{(),}
+\NormalTok{fit }\OtherTok{\textless{}{-}} \FunctionTok{brm}\NormalTok{(formula, }\AttributeTok{prior =}\NormalTok{ priors, }\AttributeTok{data =}\NormalTok{ polite,}
            \CommentTok{\# store / load model output}
            \AttributeTok{file  =} \StringTok{"../models/fit"}\NormalTok{,}
            \CommentTok{\# common sampling specifications}
-           \AttributeTok{seed =} \DecValTok{1234}\NormalTok{,}
-           \AttributeTok{iter =} \DecValTok{8000}\NormalTok{,}
-           \AttributeTok{chains =} \DecValTok{4}\NormalTok{,}
-           \AttributeTok{data =}\NormalTok{ polite)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# plot prior and posterior}
-\NormalTok{posterior\_plot }\OtherTok{\textless{}{-}}\NormalTok{ fit }\SpecialCharTok{|\textgreater{}} 
-  \FunctionTok{spread\_draws}\NormalTok{(b\_context1) }\SpecialCharTok{|\textgreater{}} 
-  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ b\_context1)) }\SpecialCharTok{+} 
-    \FunctionTok{stat\_histinterval}\NormalTok{(}\AttributeTok{data =}\NormalTok{ prior\_samples,}
-                     \AttributeTok{slab\_color =}\NormalTok{ project\_colors[}\DecValTok{11}\NormalTok{],}
-                     \AttributeTok{slab\_fill =} \FunctionTok{alpha}\NormalTok{(project\_colors[}\DecValTok{11}\NormalTok{], }\FloatTok{0.5}\NormalTok{),}
-                     \AttributeTok{fill =} \ConstantTok{NA}\NormalTok{,}
-                     \AttributeTok{color =} \ConstantTok{NA}\NormalTok{,}
-                     \AttributeTok{outline\_bars =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{+}
-    \FunctionTok{stat\_histinterval}\NormalTok{(}\AttributeTok{slab\_color =}\NormalTok{ project\_colors[}\DecValTok{14}\NormalTok{],}
-                      \AttributeTok{slab\_fill =} \FunctionTok{alpha}\NormalTok{(project\_colors[}\DecValTok{14}\NormalTok{], }\FloatTok{0.5}\NormalTok{),}
-                      \AttributeTok{color =} \ConstantTok{NA}\NormalTok{,}
-                      \AttributeTok{outline\_bars =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{scale\_thickness\_shared}\NormalTok{() }\SpecialCharTok{+}
-  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{ pitch difference between formal and informal contexts"}\NormalTok{,}
-       \AttributeTok{y =} \StringTok{""}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{limits =}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{70}\NormalTok{,}\DecValTok{70}\NormalTok{)) }\SpecialCharTok{+}
-  \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+}
-  \FunctionTok{theme}\NormalTok{(}\AttributeTok{axis.text.y =} \FunctionTok{element\_blank}\NormalTok{())}
-
-\NormalTok{posterior\_plot}
+           \AttributeTok{seed =} \DecValTok{1234}\NormalTok{, }\AttributeTok{iter =} \DecValTok{8000}
+\NormalTok{           )}
 \end{Highlighting}
 \end{Shaded}
 
@@ -763,19 +727,22 @@ equivalences}\label{grounding-hypotheses-in-regions-of-practical-equivalences}
 Above we claimed that we wanted to test ``whether pitch is
 \textbf{meaningfully affected} by the social context of the utterance''.
 We snuck the word meaningfully in there for a reason. But what does
-``meaningful'' mean? This is really a good questions and (un)fortunately
-requires quite a bit of thinking. This tutorial deals with speech data.
-Speech is, in spoken languages at least, THE vehicle to transmit
-linguistic information in order to communicate with each other. Speech
-is also very complex and very noisy: Not everything that can be measured
-in the acoustic signal matters for the listener. For example, if
-something cannot be perceived reliably, it is at least conceivable that
-it might play little to no role in communication. While speech sciences
-has a rich research tradition to estimate what can and what cannot be
-reliably heard, exact estimates depends on a lot of moving parts.Such
-thresholds are referred to as Just Noticeable Differences (JNDs) and can
-be used to define what constitutes meaningful differences when we look
-at speech data.
+``meaningful'' mean? This is an interesting yet deep questions and
+(un)fortunately requires quite a bit of thinking. As we argue here, what
+a meaningful difference is, depends on the context of the data. So let's
+have a closer look at our data.
+
+This tutorial deals with speech data. Speech is, in spoken languages at
+least, \emph{the} vehicle to transmit linguistic information in order to
+communicate with each other. Speech is also very complex and very noisy:
+Not everything that can be measured in the acoustic signal matters for
+the listener. For example, if something cannot be perceived reliably, it
+is at least conceivable that it might play little to no role in
+communication. While the speech sciences have a rich research tradition
+to estimate what can and what cannot be reliably heard, exact estimation
+depends on a lot of moving parts. Such thresholds are referred to as
+\emph{Just Noticeable Differences} (JNDs) and can be used to define what
+constitutes meaningful differences when we look at speech data.
 
 For example, Liu (\citeproc{ref-liu2013just}{2013}) report on JNDs
 ranging from 3 to 14 Hz. Jongman et al.
@@ -783,19 +750,22 @@ ranging from 3 to 14 Hz. Jongman et al.
 Hz. Turner et al. (\citeproc{ref-turner2019perception}{2019}) reported
 on JNDs between 17 and 25 Hz for non-speech stimuli and between 35 and
 40 Hz for speech stimuli. While these studies are hard to compare, they
-give us at least a the range of JND values to work with.
+give us at least an idea about the rough order of magnitude for JND
+values to work with when it comes to speech data like the data set at
+hand.
 
-So we could interpret the original hypothesis the following way: If a
-pitch difference is below the JND, it is not meaningful. So instead of
-testing against a point-zero hypothesis, we can test against a range of
-parameter values that are equivalent to the null value for practical
-purposes. In our case, let us begin with the lowest reported JND of the
-above studies on pitch perception in speech (3 Hz), but be extra
-conservative and double the reported JND to 6 Hz. We then assume that
-pitch values between \texttt{-6} and \texttt{6} are meaningless. Such
-ranges are sometimes called regions of practical equivalence (ROPEs),
-range of equivalence, equivalence margin, smallest effect size of
-interest, or good-enough belt (see
+Based on these considerations, we could interpret the original
+hypothesis the following way: If a pitch difference is below the JND, it
+is not meaningful. So, instead of testing against a point-valued
+hypothesis, we can test against a range of parameter values that are
+equivalent to the null value for practical purposes. In our case, let us
+begin with the lowest reported JND of the above studies on pitch
+perception in speech (3 Hz), but be extra conservative and double the
+reported JND to 6 Hz. We then assume that pitch values between
+\texttt{-6} and \texttt{6} are meaningless. Such ranges are sometimes
+called \emph{regions of practical equivalence} (ROPEs), range of
+equivalence, equivalence margin, smallest effect size of interest, or
+good-enough belt (see
 \citeproc{ref-kruschke_Rejecting_journalarticle_2018}{Kruschke, 2018}).
 
 \begin{Shaded}
@@ -806,22 +776,207 @@ interest, or good-enough belt (see
 
 With a ROPE being defined, we can now test our hypothesis ``whether
 pitch is \textbf{meaningfully affected} by the social context of the
-utterance'' using Bayes Factor:
+utterance'' using Bayes Factors.
 
 \section{Testing hypothesis using Bayes
 Factor}\label{testing-hypothesis-using-bayes-factor}
 
-\subsection{What is Bayes Factor}\label{what-is-bayes-factor}
+\subsection{What is Bayes Factor?}\label{what-is-bayes-factor}
 
-Bayes Factors (henceforth: BFs) allow us to quantify relative evidence
-of one model compared to another.
+Suppose we have two hypotheses \(H_0\) and \(H_1\) and want to know
+which of these is correct. We do so by looking at some observed data
+\(D\). As Bayesians, the first most obvious thing to look at is how
+likely each hypothesis is after seeing the data, i.e., something like
+\(P(H_0 \mid D)\) and \(P(H_1 \mid D)\). Now, it turns out that these
+\emph{posterior probabilities of hypotheses} are problematic, because
+they depend on the prior probabilities of the hypotheses \(P(H_0)\) and
+\(P(H_1)\), which are often hard to justify. To see this, imagine that
+the hypotheses on the table are deep issues like a contrast between
+Darwinian evolutionary theory and intelligent design. Proponents of
+either view would have a hard time agreeing on priors for these
+hypotheses, but may find it much easier to agree on which observations
+are made more or less likely by either hypothesis. Therefore, the
+preferred Bayesian measure is the Bayes factor, which is defined as the
+likelihood ratio of the data given each hypothesis:
 
-\subsection{Approximating Bayes Factor with Savage
-Dickey}\label{approximating-bayes-factor-with-savage-dickey}
+\[
+\text{Bayes factor in favor of hypothesis 1 over hypothesis 2} \ \  \colon\!= \ \ \frac{P(D \mid H_1)}{P(D \mid H_0)}
+\]
+
+To see how this is an objective and actually quite intuitive measure of
+observational evidence in scientific reasoning, consider the case of
+Darwinian evolution (\(H_1\)) versus intelligent design \(H_0\) again.
+Let's take the historical case of observing how the beak sizes of
+finches on the Galápagos islands changed over time as a functional
+adaptation to environmental changes. What is a better explanation of
+that observation? To begin with, let's notice that this observation is
+\emph{not} ruled out by either hypothesis. But the probability of
+observing \(D\) (adaptively changing beak sizes) is much higher under
+Darwinian evolution than under intelligent design. This is because the
+latter is compatible with many more counterfactual observations, such as
+beak sizes staying the same over time, or even beak sizes changing in a
+way that is not adaptive. So, the probability of the observed data is
+much higher under Darwinian evolution than under intelligent design, so
+that \(P(D \mid H_1) > P(D \mid H_0)\), irrespective of what we
+initiallly believed is the correct hypothesis. This is what corroborates
+the intuition that the observation \(D\) is an argument in favor of
+\(H_1\) and not \(H_0\), and this is exactly what the Bayes factor
+quantifies.
+
+Concretely, a Bayes factor of 1 corresponds to the case of
+\(P(D \mid H_1) = P(D \mid H_0)\), i.e., the data is equally likely
+under both hypotheses, so the data does not provide any evidence for or
+against either hypothesis. Any Bayes factor larger than 1 indicates that
+the data is more likely under \(H_1\) than under \(H_0\), and the larger
+the Bayes factor, the stronger the evidence in favor of \(H_1\).
+Conversely, any Bayes factor smaller than 1 indicates that the data is
+more likely under \(H_0\) than under \(H_1\). Notice that the Bayes
+factor is symmetric in the sense that a Bayes factor of 3 in favor of
+\(H_1\) over \(H_0\) corresponds to a Bayes factor of 1/3 in favor of
+\(H_0\) over \(H_1\). There are various conventions for interpreting the
+strength of evidence of Bayes factors, such as to consider as
+``\emph{mild evidence}'' Bayes factors bigger than 3, ``\emph{strong
+evidence}'' Bayes factors bigger than 10, and ``\emph{decisive
+evidence}'' Bayes factors bigger than 30.
+
+One way to interpret Bayes factors in absolute terms is this. A Bayes
+factor of \(n\) in favor of \(H_1\) over \(H_0\) means that after seeing
+the data, a rational researcher who thought both hypotheses were equally
+likely would consider \(H_1\) to be \(n\) times more likely than \(H_0\)
+after observing \(D\). In other words, if you are maximally uncertain
+before, then observe \(D\) and that makes you weight \(H_1\) \(n\) times
+more than \(H_0\), then the Bayes factor is \(n\).
+
+\subsection{Bayes factors for statistical
+models}\label{bayes-factors-for-statistical-models}
+
+After motivating Bayes factors in general, let's have a look at the
+definition of Bayes factors in the context of statistical models. This
+small section is a bit more technical, but it can be skipped without too
+much loss.
+
+In the context of statistical models, we can use Bayes factors to
+compare two statistical models \(M_0\) and \(M_1\) that instantiate two
+competing hypotheses (or assumptions) \(H_0\) and \(H_1\). A Bayesian
+statistical model \(M\) consists of:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  a \emph{likelihood function} \(P(D \mid \theta, M)\) that specifies
+  how likely the observed data \(D\) is given the model \(M\) and the
+  model's parameters \(\theta\), and
+\item
+  a \emph{prior distribution} \(P(\theta \mid M)\) that specifies how
+  likely different parameter values are before seeing the data.
+\end{enumerate}
+
+The probability of some observed data \(P(D \mid M)\) under a model
+\(M\) is then obtained by integrating over all possible parameter values
+\(\theta\):
+
+\[
+P(D \mid M) = \int P(D \mid \theta, M) \ \  P(\theta \mid M) d\theta
+\]
+
+This is called the \emph{marginal likelihood} of the data under the
+model \(M\). We can think of this quantity as obtained from sampling
+repeatedly parameter values from the prior and then sampling, for of
+these, a potential data observation. (Notice that this is the
+\emph{prior predictive data distribution} of the model.)
+
+Putting things together, the resulting definition for Bayes factors in
+statistical models is:
+
+\[
+\text{Bayes factor in favor of model 1 over model 2} \ \  \colon\!= \ \ \frac{P(D \mid M_1)}{P(D \mid M_0)} = \frac{\int P(D \mid \theta, M_1) \ \  P(\theta \mid M_1) d\theta}{\int P(D \mid \theta, M_0) \ \  P(\theta \mid M_0) d\theta}
+\]
+
+\subsection{Approximating Bayes Factor with the Savage-Dickey method
+(for point-valued
+hypotheses)}\label{approximating-bayes-factor-with-the-savage-dickey-method-for-point-valued-hypotheses}
+
+While Bayes factors are a very intuitive and useful measure of evidence,
+they are often hard to compute. There are various approximation methods,
+such as bridge sampling
+(\citeproc{ref-GronauSarafoglou2017-A-tutorial-on-b}{Gronau et al.,
+2017}), which can be used for any arbitrary pair of models, but these
+can still be computationally costly and sometimes hard to implement.
+However, for the special case of \emph{nested models}, there is a simple
+and computationally cheap approximation method called the
+\emph{Savage-Dickey density ratio}
+(\citeproc{ref-DickeyLientz1970-The-Weighted-Li}{Dickey \& Lientz,
+1970};
+\citeproc{ref-WagenmakersLodewyckx2010-Bayesian-hypoth}{Wagenmakers et
+al., 2010}).
+
+Intuitively speaking, model \(M_0\) is nested in model \(M_1\) if
+\(M_0\) can be obtained from \(M_1\) by fixing one or more parameters to
+a specific value. For example, we may consider a model \(M_1\) that has
+a normal distribution on the \texttt{context} coefficient as a prior,
+and a nested model \(M_0\) that has a degenerate prior on the
+\texttt{context} coefficient that puts all its mass on zero. That model
+\(M_0\) would then correspond to the (standard, point-valued) null
+hypothesis that there is no effect of \texttt{context} on
+\texttt{pitch}.
+
+So, suppose that \(M_0\) is nested in \(M_1\) by fixing a critical
+parameter \(\theta^*\) to a specific value \(x\). Then, the
+Savage-Dickey density ratio states that the Bayes factor in favor of
+\(M_1\) over \(M_0\) can be computed as the ratio of the prior and
+posterior density of the critical parameter at the point value that
+defines the null hypothesis:
+
+\[
+\text{Bayes factor in favor of model 1 over model 2} \ \  = \ \  \frac{P(\theta^*=x \mid D, M_1)}{P(\theta^*=x \mid M_1)}
+\] Let's unpack this. First of all, this seemingly magical result is
+actually not that magical, but follows directly from the definition of
+Bayes factors and Bayes' theorem, but we skip the derivation here. What
+this means is that in practice we do not have to calculate or
+approximate any integrals at all, but we can simply look at one model
+and run posterior inference, like we routinly do with \texttt{brms}, for
+example. Look at the formula above: we would only need to run one model,
+\(M_1\), and then look at the prior and posterior density of the
+critical parameter \(\theta^*\) at the point value \(x\). The prior, we
+should usually be able to get easily because it is in our hands to
+specify it. The posterior probably, we could get by estimating it from
+the samples that are returned by software like \texttt{brms} \ldots{}
+
+\ldots{} well, at least in principle. One problem here is that
+estimating \(P(\theta^*=x \mid D, M_1)\) from posterior samples is
+fickle. We can do it with some mathematical methods, but we may need a
+lot of samples and do some post-processing (e.g., using splines). The
+main point is that posterior samples are not reliable for estimating
+densities at specific points, but they are reliable for estimating
+probabilities over ranges of values. Ah, if only there was a
+generalization of the Savage-Dickey density ratio that works for ranges
+of values!
+
+Wait: there is!
 
 \subsection{Calculating Bayes Factor for a specified Region of Practical
 Equivalence
 (ROPE)}\label{calculating-bayes-factor-for-a-specified-region-of-practical-equivalence-rope}
+
+The Bayes Factor in favor of model \(M_{0}\) over alternative model
+\(M_{1}\) is: \[
+BF_{01} = \frac{P(\theta \in I_{0} \mid D, M_{e})}{P(\theta \in I_{1} \mid D, M_{e})} \ \frac{P(\theta \in I_{1} \mid  M_{e})}{P(\theta \in I_{0} \mid M_{e})}
+\]
+
+Figure~\ref{fig-savage-dickey} shows \ldots{}
+
+\begin{figure}[!tbp]
+
+\caption{\label{fig-savage-dickey}}
+
+\centering{
+
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-savage-dickey-1.pdf}}
+
+}
+
+\end{figure}%
 
 Instead of doing it by hand, we can calculate the Savage Dickey ratio
 with the \texttt{bayesfactor\_parameters()} function from the
@@ -1128,6 +1283,13 @@ Gelman, A., Simpson, D., \& Betancourt, M. (2017). The {Prior Can Often
 Only Be Understood} in the {Context} of the {Likelihood}.
 \emph{Entropy}, \emph{19}(10), 555.
 \url{https://doi.org/10.3390/e19100555}
+
+\bibitem[\citeproctext]{ref-GronauSarafoglou2017-A-tutorial-on-b}
+Gronau, Q. F., Sarafoglou, A., Matzke, D., Ly, A., Boehm, U., Marsman,
+M., Leslie, D. S., Forster, J. J., Wagenmakers, E.-J., \& Steingroever,
+H. (2017). A tutorial on bridge sampling. \emph{Journal of Mathematical
+Psychology}, \emph{81}, 80--97.
+\url{https://doi.org/doi.org/10.1016/j.jmp.2017.09.005}
 
 \bibitem[\citeproctext]{ref-jongman2017just}
 Jongman, A., Qin, Z., Zhang, J., \& Sereno, J. A. (2017). Just
