@@ -1,5 +1,6 @@
 \documentclass[
   doc,
+  floatsintext,
   longtable,
   nolmodern,
   notxfonts,
@@ -126,15 +127,17 @@
 
 \usepackage{graphicx}
 \makeatletter
-\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
-\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
-\makeatother
-% Scale images if necessary, so that they will not overflow the page
-% margins by default, and it is still possible to overwrite the defaults
-% using explicit options in \includegraphics[width, height, ...]{}
-\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
 % Set default figure placement to htbp
-\makeatletter
 \def\fps@figure{htbp}
 \makeatother
 
@@ -222,7 +225,7 @@ Oslo},{Department of Linguistics, University of Tübingen}}
 
 
 \abstract{Recent times have seen a surge of Bayesian inference across
-the behavioral sciences. However, the process of testing hypothesis is
+the behavioral sciences. However, the process of testing hypotheses is
 often conceptually challenging or computationally costly. This tutorial
 provides an accessible, non-technical introduction that covers the most
 common scenarios in experimental sciences: Testing the evidence for an
@@ -253,6 +256,16 @@ Roettger, Email: \href{mailto:timo.roettger@iln.uio.no}{timo.roettger@iln.uio.no
 
 
 
+\AtBeginDocument{%
+  \setcounter{topnumber}{4}
+  \setcounter{bottomnumber}{2}
+  \setcounter{totalnumber}{6}
+  \renewcommand{\topfraction}{0.95}
+  \renewcommand{\bottomfraction}{0.80}
+  \renewcommand{\textfraction}{0.07}
+  \renewcommand{\floatpagefraction}{0.6}
+  \floatplacement{figure}{!tbp}% optional global nudge
+}
 \makeatletter
 \@ifpackageloaded{caption}{}{\usepackage{caption}}
 \AtBeginDocument{%
@@ -347,7 +360,7 @@ Traditionally, these statistical tests have been done within the null
 hypothesis significance testing framework. Over the last decade or so,
 however, we have seen more and more statistical approaches within an
 alternative inferential framework: Bayesian inference. Testing
-hypothesis within the Bayesian framework is often considered either
+hypotheses within the Bayesian framework is often considered either
 conceptually challenging, computationally too costly, or both. This
 tutorial provides an accessible, non-technical introduction to Bayesian
 hypothesis testing that is easy to understand and computationally cheap.
@@ -376,8 +389,9 @@ excellent tutorial by Bodo Winter
 regression in a non-Bayesian ---a.k.a. frequentist---paradigm. To then
 make the transition to Bayesian versions of these regression models, we
 shamelessly suggest our own tutorial on ``Bayesian Regression for
-Factorial Designs'' as a natural follow-up using the same data and
-Winter (\citeproc{ref-franke-roettger_Bayesian_preprint_2019}{Franke \&
+Factorial Designs'' as a natural follow-up using the same data that
+Winter used
+(\citeproc{ref-franke-roettger_Bayesian_preprint_2019}{Franke \&
 Roettger, 2019}). In a sense, the present tutorial on hypothesis testing
 could be considered the long-awaited sequel of the series started by
 Winter. For continuity, we will continue to use the original data set.
@@ -402,6 +416,9 @@ can import with the following code:
 
 \CommentTok{\# package for BF calculation and plotting}
 \FunctionTok{library}\NormalTok{(bayestestR)}
+
+\FunctionTok{options}\NormalTok{(}\AttributeTok{brms.backend =} \StringTok{"cmdstanr"}\NormalTok{)}
+\FunctionTok{options}\NormalTok{(}\AttributeTok{mc.cores =}\NormalTok{ parallel}\SpecialCharTok{::}\FunctionTok{detectCores}\NormalTok{())}
 \end{Highlighting}
 \end{Shaded}
 
@@ -452,11 +469,11 @@ To load the data into your R environment, run the following code
 
 This data set contains anonymous identifiers for individual speakers
 stored in the variable \texttt{subject.} In this tutorial we will only
-be looking at female speakers btw. Subjects produced diﬀerent sentences,
-and the experiment manipulated whether the sentences were produced in a
-\texttt{formal} or an \texttt{informal} social context, indicated by the
-variable \texttt{context.} Crucially, each row contains a measurement of
-pitch in Hz stored in the variable \texttt{pitch}.
+be looking at the data from female speakers. Subjects produced diﬀerent
+sentences, and the experiment manipulated whether the sentences were
+produced in a \texttt{formal} or an \texttt{informal} social context,
+indicated by the variable \texttt{context.} Crucially, each row contains
+a measurement of pitch in Hz stored in the variable \texttt{pitch}.
 
 For most analyses of behavioral experiments, researchers are interested
 in whether an outcome variable is meaningfully affected by at least one
@@ -466,33 +483,38 @@ it. In this case, Winter and Grawunder
 wanted to test whether pitch is meaningfully affected by the social
 context of the utterance.
 
-As a first step, we can explore this question visually:
+As a first step, we can explore this question visually.
+Figure~\ref{fig-descriptive-dataviz} displays the pitch values for all
+utterances in the dataset across contexts (semi-transparent points). The
+solid points indicate the average pitch values across all sentences and
+speakers. Looking at the plot, we can see that voice pitch from
+utterances in formal contexts are on average slightly lower than those
+in informal contexts. The red distribution is slightly shifted to the
+left of the blue distribution by around 1.3 semitones. In other words,
+speakers tend to slightly lower their voice pitch when speaking in a
+formal context. But there is also a lot of overlap between the two
+contexts. Now as Bayesians, we would like to translate the data into an
+expression of evidence: does the data provide evidence for our research
+hypotheses?
 
-\begin{figure}[H]
+\begin{figure}[!tbph]
 
-\caption{Empirical distribution of pitch values across contexts}
+\caption{\label{fig-descriptive-dataviz}Empirical distribution of female
+speakers' pitch values across contexts}
 
-{\centering \includegraphics{manuscript_files/figure-pdf/descriptive-dataviz-1.pdf}
+\centering{
+
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-descriptive-dataviz-1.pdf}}
 
 }
 
 \end{figure}%
 
-Figure 1 displays the pitch values for all utterances in the dataset
-across contexts (semi-transparent points). The solid points indicate the
-average pitch values across all sentences and speakers. Looking at the
-plot, we can see that voice pitch from utterances in formal contexts are
-on average slightly lower than those in informal contexts. The red
-distribution is slightly shifted to the left of the blue distribution by
-around 1.3 semitones. In other words, speakers tend to slightly lower
-their voice pitch when speaking in a formal context. But there is also a
-lot of overlap between the two contexts. Now as Bayesians, we would like
-to translate the data into an expression of evidence: does the data
-provide evidence for our research hypotheses?
-
 Let us build a Bayesian linear model to approach an answer to this
-question. Our first step is to specify the model formula and check which
-priors need to be specified:
+question. Using the package \texttt{brms}
+(\citeproc{ref-Burkner2018-Advanced-Bayesi}{Bürkner, 2018}), our first
+step is to specify the model formula and check which priors need to be
+specified:
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -510,20 +532,18 @@ priors need to be specified:
 \end{Highlighting}
 \end{Shaded}
 
-The default priors that brms picks for the Intercept and the variance
-parameters are mostly reasonable as they are derived from the data,
-weakly informative and symmetrical. However the prior for our critical
-parameter \texttt{context1} should also be weakly informative
+The default priors that \texttt{brms} picks for the Intercept and the
+variance parameters are mostly reasonable as they are derived from the
+data, weakly informative and symmetrical. However the prior for our
+critical parameter \texttt{context1} should also be weakly informative
 (\citeproc{ref-gelman-etal_Prior_journalarticle_2017}{Gelman et al.,
 2017}), i.e.~the prior assumption about the difference between informal
 and formal contexts should be that we don't know, but our best guess is
 that it is close to zero and equally likely to be more or less than
 zero. So we specify a normal distribution centered on zero for this
-parameter.
-
-Note: Only for demonstration purposes, we will use default priors for
-the other parameters, but you always should critically reflect on all of
-your priors.
+parameter. (NB: We use default priors for the other parameters for
+convenience here, but you always should critically reflect on all of
+your priors.)
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -545,8 +565,13 @@ the prior-only model.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# }\AlertTok{NOTE}\CommentTok{: CAN WE STORE THE SAMPLING PARAMETERS (seed, iter, chains, cores, backend, data)? }
+\CommentTok{\# }\AlertTok{NOTE}\CommentTok{: CAN WE STORE THE SAMPLING PARAMETERS }
+\CommentTok{\#       (seed, iter, chains, cores, backend, data)? }
 \CommentTok{\#       TO MAKE THE CODE CHUNKS SMALLER?}
+\CommentTok{\# only for \textquotesingle{}cores\textquotesingle{} and \textquotesingle{}backend\textquotesingle{}, but not for seed, iter, chains.}
+\CommentTok{\# the the latter, we could define a custom brms{-}function that bakes these}
+\CommentTok{\# defaults in}
+
 
 \CommentTok{\# run the model}
 \NormalTok{fit\_prior }\OtherTok{\textless{}{-}} \FunctionTok{brm}\NormalTok{(formula,}
@@ -560,8 +585,6 @@ the prior-only model.
            \AttributeTok{seed =} \DecValTok{1234}\NormalTok{,}
            \AttributeTok{iter =} \DecValTok{8000}\NormalTok{,}
            \AttributeTok{chains =} \DecValTok{4}\NormalTok{,}
-           \AttributeTok{cores =} \DecValTok{4}\NormalTok{,}
-           \AttributeTok{backend =} \StringTok{"cmdstanr"}\NormalTok{,}
            \AttributeTok{data =}\NormalTok{ polite)}
 \end{Highlighting}
 \end{Shaded}
@@ -589,25 +612,28 @@ the prior-only model.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
+\begin{figure}[!tbp]
 
-\caption{Prior probability of the effect of context on pitch,
-i.e.~before seeing the data}
+\caption{\label{fig-plot-priors}Prior probability of the effect of
+context on pitch, i.e.~before seeing the data}
 
-{\centering \includegraphics{manuscript_files/figure-pdf/plot-priors-1.pdf}
+\centering{
+
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-plot-priors-1.pdf}}
 
 }
 
 \end{figure}%
 
-Looking at the distribution, the priors for the effect of context on
-pitch seems sensible. The most plausible value is zero. Values that are
-smaller or larger than zero become less plausible the further they are
-away from zero and values being smaller or larger than zero are equally
-likely. Good. Before we have seen the data, our model is somewhat
-pessimistic about the effect of context on on pitch. Now we can run the
-full model that integrates the likelihood (our data) with the priors and
-visualize the posteriors for the critical parameter.
+Looking at the distribution in Figure~\ref{fig-plot-priors}, the priors
+for the effect of context on pitch seems sensible. The most plausible
+value is zero. Values that are smaller or larger than zero become less
+plausible the further they are away from zero and values being smaller
+or larger than zero are equally likely. Good. Before we have seen the
+data, our model is somewhat pessimistic about the effect of context on
+on pitch. Now we can run the full model that integrates the likelihood
+(our data) with the priors and visualize the posteriors for the critical
+parameter.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -621,14 +647,13 @@ visualize the posteriors for the critical parameter.
            \AttributeTok{seed =} \DecValTok{1234}\NormalTok{,}
            \AttributeTok{iter =} \DecValTok{8000}\NormalTok{,}
            \AttributeTok{chains =} \DecValTok{4}\NormalTok{,}
-           \AttributeTok{cores =} \DecValTok{4}\NormalTok{,}
-           \AttributeTok{backend =} \StringTok{"cmdstanr"}\NormalTok{,}
            \AttributeTok{data =}\NormalTok{ polite)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# plot prior and posterior}
 \NormalTok{posterior\_plot }\OtherTok{\textless{}{-}}\NormalTok{ fit }\SpecialCharTok{|\textgreater{}} 
   \FunctionTok{spread\_draws}\NormalTok{(b\_context1) }\SpecialCharTok{|\textgreater{}} 
   \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ b\_context1)) }\SpecialCharTok{+} 
@@ -653,24 +678,28 @@ visualize the posteriors for the critical parameter.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
+\begin{figure}[!tbp]
 
-\caption{Posterior probability of the effect of context on pitch,
-i.e.~after seeing the data}
+\caption{\label{fig-plot-posterior}Posterior probability of the effect
+of context on pitch, i.e.~after seeing the data}
 
-{\centering \includegraphics{manuscript_files/figure-pdf/plot-posterior-1.pdf}
+\centering{
+
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-plot-posterior-1.pdf}}
 
 }
 
 \end{figure}%
 
-The posterior samples (red distribution) suggests that the majority of
-plausible values after seeing the data are positive, or in other words,
-informal contexts elicit larger pitch values. Negative values are not
-very plausible posterior values, but also not completely implausible.
-Compared to our prior probability (green distribution) for which roughly
-50\% of posteriors are negative, this decrease in plausibility of
-negative values is quite noteworthy already.
+Figure~\ref{fig-plot-posterior} shows the prior (green distribution) and
+posterior (red distribution) probability of the effect of context on
+pitch. The posterior samples (red distribution) suggests that the
+majority of plausible values after seeing the data are positive, or in
+other words, informal contexts elicit larger pitch values. Negative
+values are not very plausible posterior values, but also not completely
+implausible. Compared to our prior probability (green distribution) for
+which roughly 50\% of posteriors are negative, this decrease in
+plausibility of negative values is quite noteworthy already.
 
 What we have done here should be quite familiar. We compare our model
 predictions to a reference point. It is a single point value: zero.But
@@ -776,12 +805,12 @@ BF corresponds to.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
+\begin{figure}[!tbp]
 
 \caption{Prior and posterior probability of the effect of context on
 pitch relative to the ROPE (-0.1, 0.1)}
 
-{\centering \includegraphics{manuscript_files/figure-pdf/plot-ropes-1.pdf}
+{\centering \pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/plot-ropes-1.pdf}}
 
 }
 
@@ -804,11 +833,11 @@ outside the ROPE than of the green distribution.
 \begin{verbatim}
 Bayes Factor (Null-Interval)
 
-Parameter       |   BF
-----------------------
-contextinformal | 5.76
+Parameter |   BF
+----------------
+context1  | 2.88
 
-* Evidence Against The Null: [-0.100, 0.100]
+* Evidence Against The Null: [-6.000, 6.000]
 \end{verbatim}
 
 To be exact, 2.7 times for of the red distribution is outside of the
@@ -839,11 +868,11 @@ width of the standard deviation of the critical parameter (centered on
 zero): 10, 15, 20, 25, 30. These are all sensible prior widths assuming
 that medium to strong effects in either direction are plausible.
 
-\begin{figure}[H]
+\begin{figure}[!tbp]
 
 \caption{Bayes Factors for a range of priors and a range of ROPEs}
 
-{\centering \includegraphics{manuscript_files/figure-pdf/visualize-raster-1.pdf}
+{\centering \pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/visualize-raster-1.pdf}}
 
 }
 
@@ -927,58 +956,52 @@ accessible introduction to linear models in R is Winter
 \section{References}\label{references}
 
 \begin{verbatim}
-R version 4.4.3 (2025-02-28)
-Platform: x86_64-apple-darwin20
-Running under: macOS Sequoia 15.5
+R version 4.5.1 (2025-06-13)
+Platform: aarch64-apple-darwin20
+Running under: macOS Sequoia 15.6
 
 Matrix products: default
-BLAS:   /Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/lib/libRblas.0.dylib 
-LAPACK: /Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+BLAS:   /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 
-time zone: Europe/Oslo
+time zone: Europe/Amsterdam
 tzcode source: internal
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] ggdist_3.3.2        rstan_2.32.6        StanHeaders_2.32.10
- [4] see_0.11.0          bayestestR_0.16.1.2 tidybayes_3.0.6    
- [7] brms_2.22.0         Rcpp_1.1.0          ggridges_0.5.6     
-[10] lubridate_1.9.4     forcats_1.0.0       stringr_1.5.1      
-[13] dplyr_1.1.4         purrr_1.1.0         readr_2.1.5        
-[16] tidyr_1.3.1         tibble_3.3.0        ggplot2_3.5.1      
-[19] tidyverse_2.0.0    
+ [1] bayestestR_0.16.1 tidybayes_3.0.7   brms_2.22.0       Rcpp_1.1.0       
+ [5] ggdist_3.3.3      lubridate_1.9.4   forcats_1.0.0     stringr_1.5.1    
+ [9] dplyr_1.1.4       purrr_1.1.0       readr_2.1.5       tidyr_1.3.1      
+[13] tibble_3.3.0      ggplot2_3.5.2     tidyverse_2.0.0  
 
 loaded via a namespace (and not attached):
- [1] svUnit_1.0.6         tidyselect_1.2.1     farver_2.1.2        
- [4] loo_2.8.0            fastmap_1.2.0        tensorA_0.36.2.1    
- [7] digest_0.6.36        timechange_0.3.0     lifecycle_1.0.4     
-[10] processx_3.8.4       magrittr_2.0.3       posterior_1.6.0     
-[13] compiler_4.4.3       rlang_1.1.6          tools_4.4.3         
-[16] utf8_1.2.6           yaml_2.3.10          data.table_1.17.8   
-[19] knitr_1.48           labeling_0.4.3       bridgesampling_1.1-2
-[22] bit_4.6.0            pkgbuild_1.4.4       cmdstanr_0.8.1      
-[25] abind_1.4-5          withr_3.0.2          datawizard_1.2.0    
-[28] grid_4.4.3           stats4_4.4.3         colorspace_2.1-1    
-[31] inline_0.3.19        scales_1.3.0         insight_1.3.1.14    
-[34] cli_3.6.5            mvtnorm_1.3-1        rmarkdown_2.27      
-[37] crayon_1.5.3         generics_0.1.4       RcppParallel_5.1.8  
-[40] rstudioapi_0.16.0    tzdb_0.5.0           bayesplot_1.11.1    
-[43] parallel_4.4.3       matrixStats_1.3.0    vctrs_0.6.5         
-[46] Matrix_1.7-2         jsonlite_2.0.0       hms_1.1.3           
-[49] arrayhelpers_1.1-0   bit64_4.6.0-1        logspline_2.1.22    
-[52] glue_1.8.0           codetools_0.2-20     ps_1.7.7            
-[55] distributional_0.4.0 stringi_1.8.7        gtable_0.3.6        
-[58] QuickJSR_1.3.0       munsell_0.5.1        pillar_1.11.0       
-[61] htmltools_0.5.8.1    Brobdingnag_1.2-9    R6_2.6.1            
-[64] vroom_1.6.5          evaluate_0.24.0      lattice_0.22-6      
-[67] backports_1.5.0      rstantools_2.4.0     coda_0.19-4.1       
-[70] gridExtra_2.3        nlme_3.1-167         checkmate_2.3.1     
-[73] xfun_0.45            pkgconfig_2.0.3     
+ [1] gtable_0.3.6         tensorA_0.36.2.1     xfun_0.53           
+ [4] insight_1.4.0        processx_3.8.6       lattice_0.22-7      
+ [7] tzdb_0.5.0           vctrs_0.6.5          tools_4.5.1         
+[10] ps_1.9.1             generics_0.1.4       parallel_4.5.1      
+[13] cmdstanr_0.9.0       pkgconfig_2.0.3      Matrix_1.7-3        
+[16] checkmate_2.3.3      RColorBrewer_1.1-3   distributional_0.5.0
+[19] RcppParallel_5.1.10  lifecycle_1.0.4      compiler_4.5.1      
+[22] farver_2.1.2         Brobdingnag_1.2-9    tinytex_0.57        
+[25] codetools_0.2-20     htmltools_0.5.8.1    bayesplot_1.13.0    
+[28] yaml_2.3.10          crayon_1.5.3         pillar_1.11.0       
+[31] arrayhelpers_1.1-0   bridgesampling_1.1-2 abind_1.4-8         
+[34] nlme_3.1-168         posterior_1.6.1      tidyselect_1.2.1    
+[37] digest_0.6.37        svUnit_1.0.6         mvtnorm_1.3-3       
+[40] stringi_1.8.7        fastmap_1.2.0        grid_4.5.1          
+[43] cli_3.6.5            magrittr_2.0.3       loo_2.8.0           
+[46] withr_3.0.2          scales_1.4.0         backports_1.5.0     
+[49] bit64_4.6.0-1        timechange_0.3.0     rmarkdown_2.29      
+[52] matrixStats_1.5.0    bit_4.6.0            hms_1.1.3           
+[55] coda_0.19-4.1        evaluate_1.0.4       knitr_1.50          
+[58] rstantools_2.4.0     rlang_1.1.6          glue_1.8.0          
+[61] vroom_1.6.5          rstudioapi_0.17.1    jsonlite_2.0.0      
+[64] R6_2.6.1            
 \end{verbatim}
 
 \begin{verbatim}
@@ -1003,9 +1026,9 @@ doi:10.21105/joss.01541 <https://doi.org/10.21105/joss.01541>,
 <https://joss.theoj.org/papers/10.21105/joss.01541>.
 
 [[3]]
-Kay M (2023). _tidybayes: Tidy Data and Geoms for Bayesian Models_.
+Kay M (2024). _tidybayes: Tidy Data and Geoms for Bayesian Models_.
 doi:10.5281/zenodo.1308151 <https://doi.org/10.5281/zenodo.1308151>, R
-package version 3.0.6, <http://mjskay.github.io/tidybayes/>.
+package version 3.0.7, <http://mjskay.github.io/tidybayes/>.
 
 [[4]]
 Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R,
@@ -1021,14 +1044,19 @@ in the Grammar of Graphics." _IEEE Transactions on Visualization and
 Computer Graphics_, *30*(1), 414-424. doi:10.1109/TVCG.2023.3327195
 <https://doi.org/10.1109/TVCG.2023.3327195>.
 
-Kay M (2024). _ggdist: Visualizations of Distributions and
+Kay M (2025). _ggdist: Visualizations of Distributions and
 Uncertainty_. doi:10.5281/zenodo.3879620
-<https://doi.org/10.5281/zenodo.3879620>, R package version 3.3.2,
+<https://doi.org/10.5281/zenodo.3879620>, R package version 3.3.3,
 <https://mjskay.github.io/ggdist/>.
 \end{verbatim}
 
 \phantomsection\label{refs}
 \begin{CSLReferences}{1}{0}
+\bibitem[\citeproctext]{ref-Burkner2018-Advanced-Bayesi}
+Bürkner, P.-C. (2018). {Advanced Bayesian Multilevel Modeling with the R
+Package brms}. \emph{{The R Journal}}, \emph{10}(1), 395--411.
+\url{https://doi.org/10.32614/RJ-2018-017}
+
 \bibitem[\citeproctext]{ref-coretta2023multidimensional}
 Coretta, S., Casillas, J. V., Roessig, S., Franke, M., Ahn, B.,
 Al-Hoorie, A. H., Al-Tamimi, J., Alotaibi, N. E., AlShakhori, M. K.,

@@ -15,7 +15,7 @@ author:
   - name: Michael Franke
     corresponding: false
     #orcid: 0000-0003-1400-2739
-    email: mchfranke@gmail.com
+    email: michael.franke@uni-tuebingen.de
     affiliations:
       - name: University of Tübingen
         department: Department of Linguistics
@@ -33,7 +33,7 @@ author-note:
     financial-support: null
     gratitude: null
     #authorship-agreements: Conceptionalization, Methodology, Validation, Formal Analysis, Review & Editing of Manuscript, Data Curation - TBR. & DLJE; Software, Investigation - DLJE; Writing of Original Draft, Visualization, Supervision - TBR.
-abstract: "Recent times have seen a surge of Bayesian inference across the behavioral sciences. However, the process of testing hypothesis is often conceptually challenging or computationally costly. This tutorial provides an accessible, non-technical introduction that covers the most common scenarios in experimental sciences: Testing the evidence for an alternative hypothesis using Bayes Factor through the Savage Dickey approximation. This method is conceptually easy to understand and computatioanlly cheap."
+abstract: "Recent times have seen a surge of Bayesian inference across the behavioral sciences. However, the process of testing hypotheses is often conceptually challenging or computationally costly. This tutorial provides an accessible, non-technical introduction that covers the most common scenarios in experimental sciences: Testing the evidence for an alternative hypothesis using Bayes Factor through the Savage Dickey approximation. This method is conceptually easy to understand and computatioanlly cheap."
 keywords: [statistics, Bayes, Bayes Factor, Savage Dickey, hypothesis testing, ROPE]
 bibliography: bibliography.bib
 format:
@@ -43,6 +43,20 @@ format:
     # Can be jou (journal), man (manuscript), stu (student), or doc (document)
     documentmode: doc
     keep-tex: true
+    floatsintext: true
+    include-in-header:
+      text: |
+        \AtBeginDocument{%
+          \setcounter{topnumber}{4}
+          \setcounter{bottomnumber}{2}
+          \setcounter{totalnumber}{6}
+          \renewcommand{\topfraction}{0.95}
+          \renewcommand{\bottomfraction}{0.80}
+          \renewcommand{\textfraction}{0.07}
+          \renewcommand{\floatpagefraction}{0.6}
+          \floatplacement{figure}{!tbp}% optional global nudge
+        }
+    fig-pos: "!tbp"
 #header-includes: \usepackage{annotate-equations}
 execute:
   echo: true
@@ -60,7 +74,7 @@ editor:
 To date, the most common quantitative approach across the experimental sciences is to run an experiment with one or more predictors and statistically test whether the predictors affect the measured variables.
 Traditionally, these statistical tests have been done within the null hypothesis significance testing framework.
 Over the last decade or so, however, we have seen more and more statistical approaches within an alternative inferential framework: Bayesian inference.
-Testing hypothesis within the Bayesian framework is often considered either conceptually challenging, computationally too costly, or both.
+Testing hypotheses within the Bayesian framework is often considered either conceptually challenging, computationally too costly, or both.
 This tutorial provides an accessible, non-technical introduction to Bayesian hypothesis testing that is easy to understand and computationally cheap.
 
 # Motivation and intended audience
@@ -75,7 +89,7 @@ This is not a bug but, at least for us, a feature that will allow you to underst
 If you don’t have any experience with regression modeling, you will probably still be able to follow, but you might also want to consider doing a crash course.
 To bring you up to speed, we recommend the excellent tutorial by Bodo @winter_Linear_preprint_2013 on mixed eﬀects regression in a non-Bayesian —a.k.a.
 frequentist—paradigm.
-To then make the transition to Bayesian versions of these regression models, we shamelessly suggest our own tutorial on "Bayesian Regression for Factorial Designs" as a natural follow-up using the same data and Winter [@franke-roettger_Bayesian_preprint_2019].
+To then make the transition to Bayesian versions of these regression models, we shamelessly suggest our own tutorial on "Bayesian Regression for Factorial Designs" as a natural follow-up using the same data that Winter used [@franke-roettger_Bayesian_preprint_2019].
 In a sense, the present tutorial on hypothesis testing could be considered the long-awaited sequel of the series started by Winter.
 For continuity, we will continue to use the original data set.
 
@@ -115,6 +129,9 @@ library(tidybayes)
 # package for BF calculation and plotting
 library(bayestestR)
 
+options(brms.backend = "cmdstanr")
+options(mc.cores = parallel::detectCores())
+
 ```
 
 # Data, research questions & hypotheses
@@ -140,20 +157,31 @@ polite
 
 ```
 
-This data set contains anonymous identifiers for individual speakers stored in the variable `subject.` In this tutorial we will only be looking at female speakers btw.
-Subjects produced diﬀerent sentences, and the experiment manipulated whether the sentences were produced in a `formal` or an `informal` social context, indicated by the variable `context.` Crucially, each row contains a measurement of pitch in Hz stored in the variable `pitch`.
+This data set contains anonymous identifiers for individual speakers stored in the variable `subject.` 
+In this tutorial we will only be looking at the data from female speakers.
+Subjects produced diﬀerent sentences, and the experiment manipulated whether the sentences were produced in a `formal` or an `informal` social context, indicated by the variable `context.` 
+Crucially, each row contains a measurement of pitch in Hz stored in the variable `pitch`.
 
 For most analyses of behavioral experiments, researchers are interested in whether an outcome variable is meaningfully affected by at least one manipulated variable and if so how the outcome variable is affected by it.
 In this case, @winter-grawunder_Phonetic_journalarticle_2012 wanted to test whether pitch is meaningfully affected by the social context of the utterance.
 
-As a first step, we can explore this question visually:
+As a first step, we can explore this question visually.
+@fig-descriptive-dataviz displays the pitch values for all utterances in the dataset across contexts (semi-transparent points).
+The solid points indicate the average pitch values across all sentences and speakers.
+Looking at the plot, we can see that voice pitch from utterances in formal contexts are on average slightly lower than those in informal contexts.
+The red distribution is slightly shifted to the left of the blue distribution by around 1.3 semitones.
+In other words, speakers tend to slightly lower their voice pitch when speaking in a formal context.
+But there is also a lot of overlap between the two contexts.
+Now as Bayesians, we would like to translate the data into an expression of evidence: does the data provide evidence for our research hypotheses?
 
 ```{r descriptive-dataviz}
 #| message: FALSE
 #| warning: FALSE
 #| echo: FALSE
 #| fig-height: 4
-#| fig-cap: "Empirical distribution of pitch values across contexts"
+#| fig-cap: "Empirical distribution of female speakers' pitch values across contexts"
+#| fig-pos: "!tbph"
+#| label: fig-descriptive-dataviz
 
 polite |> 
   # aggregate mean values for context
@@ -194,16 +222,10 @@ polite |>
 
 ```
 
-Figure 1 displays the pitch values for all utterances in the dataset across contexts (semi-transparent points).
-The solid points indicate the average pitch values across all sentences and speakers.
-Looking at the plot, we can see that voice pitch from utterances in formal contexts are on average slightly lower than those in informal contexts.
-The red distribution is slightly shifted to the left of the blue distribution by around 1.3 semitones.
-In other words, speakers tend to slightly lower their voice pitch when speaking in a formal context.
-But there is also a lot of overlap between the two contexts.
-Now as Bayesians, we would like to translate the data into an expression of evidence: does the data provide evidence for our research hypotheses?
+
 
 Let us build a Bayesian linear model to approach an answer to this question.
-Our first step is to specify the model formula and check which priors need to be specified:
+Using the package `brms` [@Burkner2018-Advanced-Bayesi], our first step is to specify the model formula and check which priors need to be specified:
 
 ```{r model_prep}
 #| output: false
@@ -222,12 +244,10 @@ get_prior(formula, polite)
 
 ```
 
-The default priors that brms picks for the Intercept and the variance parameters are mostly reasonable as they are derived from the data, weakly informative and symmetrical.
+The default priors that `brms` picks for the Intercept and the variance parameters are mostly reasonable as they are derived from the data, weakly informative and symmetrical.
 However the prior for our critical parameter `context1` should also be weakly informative [@gelman-etal_Prior_journalarticle_2017], i.e. the prior assumption about the difference between informal and formal contexts should be that we don't know, but our best guess is that it is close to zero and equally likely to be more or less than zero.
 So we specify a normal distribution centered on zero for this parameter.
-
-Note: Only for demonstration purposes, we will use default priors for the other parameters, but
-you always should critically reflect on all of your priors.
+(NB: We use default priors for the other parameters for convenience here, but you always should critically reflect on all of your priors.)
 
 ```{r priors-2}
 
@@ -247,8 +267,13 @@ Let us also have a look at the predictions for the prior-only model.
 #| warning: FALSE
 #| message: FALSE
 
-# NOTE: CAN WE STORE THE SAMPLING PARAMETERS (seed, iter, chains, cores, backend, data)? 
+# NOTE: CAN WE STORE THE SAMPLING PARAMETERS 
+#       (seed, iter, chains, cores, backend, data)? 
 #       TO MAKE THE CODE CHUNKS SMALLER?
+# only for 'cores' and 'backend', but not for seed, iter, chains.
+# the the latter, we could define a custom brms-function that bakes these
+# defaults in
+
 
 # run the model
 fit_prior <- brm(formula,
@@ -262,8 +287,6 @@ fit_prior <- brm(formula,
            seed = 1234,
            iter = 8000,
            chains = 4,
-           cores = 4,
-           backend = "cmdstanr",
            data = polite)
            
 ```
@@ -271,6 +294,8 @@ fit_prior <- brm(formula,
 ```{r plot-priors}
 #| fig-height: 4
 #| fig-cap: "Prior probability of the effect of context on pitch, i.e. before seeing the data"
+#| label: fig-plot-priors
+
 
 # extract prior samples
 prior_samples <- 
@@ -293,7 +318,7 @@ ggplot(prior_samples,
 
 ```
 
-Looking at the distribution, the priors for the effect of context on pitch seems sensible.
+Looking at the distribution in @fig-plot-priors, the priors for the effect of context on pitch seems sensible.
 The most plausible value is zero.
 Values that are smaller or larger than zero become less plausible the further they are away from zero and values being smaller or larger than zero are equally likely.
 Good.
@@ -303,6 +328,7 @@ Now we can run the full model that integrates the likelihood (our data) with the
 ```{r model-1}
 #| warning: FALSE
 #| message: FALSE
+#| output: FALSE
 
 # run the model
 fit <- brm(formula,
@@ -314,8 +340,6 @@ fit <- brm(formula,
            seed = 1234,
            iter = 8000,
            chains = 4,
-           cores = 4,
-           backend = "cmdstanr",
            data = polite)
            
 ```
@@ -325,7 +349,10 @@ fit <- brm(formula,
 #| message: FALSE
 #| fig-height: 4
 #| fig-cap: "Posterior probability of the effect of context on pitch, i.e. after seeing the data"
+#| label: fig-plot-posterior
 
+
+# plot prior and posterior
 posterior_plot <- fit |> 
   spread_draws(b_context1) |> 
   ggplot(aes(x = b_context1)) + 
@@ -349,13 +376,15 @@ posterior_plot <- fit |>
 posterior_plot
 ```
 
-The posterior samples (red distribution) suggests that the majority of plausible values after seeing the data are positive, or in other words, informal contexts elicit larger pitch values.
+@fig-plot-posterior shows the prior (green distribution) and posterior (red distribution) probability of the effect of context on pitch.
+The distribution of posterior samples (red) suggests that the majority of plausible values after seeing the data are positive, or in other words, informal contexts elicit larger pitch values.
 Negative values are not very plausible posterior values, but also not completely implausible.
 Compared to our prior probability (green distribution) for which roughly 50% of posteriors are negative, this decrease in plausibility of negative values is quite noteworthy already.
 
 What we have done here should be quite familiar.
 We compare our model predictions to a reference point.
-It is a single point value: zero.But do we really care that much for such point hypotheses?
+It is a single point value: zero.
+But do we really care that much for such point hypotheses?
 Is zero really that special?
 We might think so because years of using null hypothesis significance testing has conditioned us to think that way.
 But this tutorial would like to break this cycle and move forward.
@@ -453,53 +482,58 @@ These are all sensible prior widths assuming that medium to strong effects in ei
 #| echo: FALSE
 #| message: FALSE
 
-# define 5 different priors widths that make sense
-# priors_10 <- prior(normal(0, 10), class = b, coef = "context1")
-# priors_15 <- prior(normal(0, 15), class = b, coef = "context1")
-# priors_20 <- prior(normal(0, 20), class = b, coef = "context1")
-# priors_25 <- prior(normal(0, 25), class = b, coef = "context1")
-# priors_30 <- prior(normal(0, 30), class = b, coef = "context1")
+# whether to rerun or load stored models
+rerun <- FALSE
 
-# # Define a list of these prior specifications
-# prior_list <- list(priors_10,
-#                    priors_15,
-#                    priors_20,
-#                    priors_25,
-#                    priors_30
-# )
-# 
-# # Initialize a list to store models
-#model_list <- list()
+if (rerun) {
+  
+  # define 5 different priors widths that make sense
+  priors_10 <- prior(normal(0, 10), class = b, coef = "context1")
+  priors_15 <- prior(normal(0, 15), class = b, coef = "context1")
+  priors_20 <- prior(normal(0, 20), class = b, coef = "context1")
+  priors_25 <- prior(normal(0, 25), class = b, coef = "context1")
+  priors_30 <- prior(normal(0, 30), class = b, coef = "context1")
+  
+  # Define a list of these prior specifications
+  prior_list <- list(priors_10,
+                     priors_15,
+                     priors_20,
+                     priors_25,
+                     priors_30
+  )
+  
+  # # Initialize a list to store models
+  model_list <- list()
+  
+  # Loop over the priors
+  for (i in seq_along(prior_list)) {
+      model_list[[i]] <-
+        brm(
+          formula = formula,
+          data = polite,
+          prior = prior_list[[i]],
+          # common sampling specifications
+          seed = 1234,
+          iter = 8000,
+          chains = 4,
+          cores = 4,
+          backend = "cmdstanr"
+    )
+  }
+  
+  # name models
+  names(model_list) <- paste0("xmdl_prior_", c(10,15,20,25,30))
+  
+  # store models
+  saveRDS(model_list, "../models/model_loop.RDS")
+  
+} else {
+  model_list <- readRDS("../models/model_loop.RDS")
+ }
 
-# Loop over the priors
-# for (i in seq_along(prior_list)) {
-#     model_list[[i]] <-
-#       brm(
-#         formula = formula,
-#         data = polite,
-#         prior = prior_list[[i]],
-#         # common sampling specifications
-#         seed = 1234,
-#         iter = 8000,
-#         chains = 4,
-#         cores = 4,
-#         backend = "cmdstanr"
-#   )
-# }
-
-# name models
-#names(model_list) <- paste0("xmdl_prior_", c(10,15,20,25,30))
 
 ```
 
-```{r store-results}
-#| echo: FALSE
-#| message: FALSE
-
-#saveRDS(model_list, "models/model_loop.RDS")
-model_list_all <- readRDS("../models/model_loop.RDS")
-
-```
 
 ```{r loop-through-ropes}
 #| echo: FALSE
