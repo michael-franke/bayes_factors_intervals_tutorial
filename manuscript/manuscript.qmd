@@ -71,11 +71,24 @@ editor:
 
 # Introduction
 
-To date, the most common quantitative approach across the experimental sciences is to run an experiment with one or more predictors and statistically test whether the predictors affect the measured variables.
-Traditionally, these statistical tests have been done within the null hypothesis significance testing framework.
-Over the last decade or so, however, we have seen more and more statistical approaches within an alternative inferential framework: Bayesian inference.
-Testing hypotheses within the Bayesian framework is often considered either conceptually challenging, computationally too costly, or both.
-This tutorial provides an accessible, non-technical introduction to Bayesian hypothesis testing that is easy to understand and computationally cheap.
+One of the most common scenarios in experimental research is to measure one or several (dependent) variable in an experiment which with one or more predictors (independent variables).
+Usually, we then want to test statistically whether the predictors affect the measured dependent variables.
+Traditionally, these statistical tests have been done within the *null hypothesis significance testing* (NHST) framework.
+The logic of NHST is to reason as follows: we assume ---for the sake of argument--- that a null hypothesis is correct, i.e., that there is no effect of the relevant predictors; then we ask our selves how likely different observations would be based on that assumption, and use this so-called *sampling distribution* to quantify how surprising the observed data is under the assumed null hypothesis.
+If this the observed data is very unlikely, i.e., very surprising, we *reject* the null hypothesis and conclude that there is an effect of the predictors on the dependent variable.
+While extensions of the NHST framework exist, in its basic form, NHST only allows to reject the null hypothesis, but not to provide evidence in favor of it.
+
+Over the last decade or so, however, there has been rising interest in statistical approaches within an alternative inferential framework using *Bayesian inference*.
+One of the main reasons for this rising interest is that Bayesian inference allows to quantify evidence against an assumed null hypothesis, but also to yield quantitative evidence in favor the null hypothesis.
+Unfortunately, there are several approaches to hypothesis testing within the Bayesian framework, and many of them are either conceptually challenging, computationally too costly, or both.
+For example, there are good conceptual arguments that support Bayesian hypothesis testing through *model comparison* using Bayes factors [@KassRaftery1995-Bayes-Factors;@VandekerckhoveMatzke2013-Model-Compariso;@MoreyRomeijn2016-philosophyOfBFs], but the computation of Bayes factors can be quite costly, especially for complex models.
+Yet, for some of the most common use cases, there are some simple and computationally cheap approaches to Bayesian hypothesis testing with Bayes factors that are easy to understand and implement.
+One such method is the *Savage-Dickey density ratio* [@DickeyLientz1970-The-Weighted-Li;@WagenmakersLodewyckx2010-Bayesian-hypoth].
+While prior work has prominently documented how to use this method for the case of point-valued null-hypotheses [@WagenmakersLodewyckx2010-Bayesian-hypoth], this method can be hard to estimate reliably with posterior sampling, the most prevalent metod for approximate Bayesian computation at the moment. 
+This tutorial therefore focuses on the use of the Savage-Dickey density ratio for testing hypotheses that are grounded in *regions of practical equivalence* (ROPEs) [@kruschke_Rejecting_journalarticle_2018] using the so-called *encompassing priors* approach [@KlugkistKato2005-Bayesian-model;@KlugkistHoijtink2007-The-Bayes-facto;@Oh2014-Bayesian-compar;@WetzelsGrasman2010-An-encompassing], which is both conceptually more meaningful and computationally more robust than point-valued hypothesis testing.
+In sum, this tutorial provides an accessible, non-technical introduction to Bayesian hypothesis testing that is easy to understand, computationally cheap and widely applicable (though not universally).
+
+
 
 # Motivation and intended audience
 
