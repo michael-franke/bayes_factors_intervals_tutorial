@@ -493,7 +493,7 @@ $$
 \text{Bayes factor in favor of model 1 over model 2} \ \  \colon\!= \ \ \frac{P(D \mid M_1)}{P(D \mid M_0)} = \frac{\int P(D \mid \theta, M_1) \ \  P(\theta \mid M_1) d\theta}{\int P(D \mid \theta, M_0) \ \  P(\theta \mid M_0) d\theta}
 $$
 
-## Approximating Bayes Factor with the Savage-Dickey method (for point-valued hypotheses)
+## Bayes factor for point-valued hypotheses (the Savage-Dickey method)
 
 While Bayes factors are a very intuitive and useful measure of evidence, they are often hard to compute.
 There are various approximation methods, such as bridge sampling [@GronauSarafoglou2017-A-tutorial-on-b], which can be used for any arbitrary pair of models, but these can still be computationally costly and sometimes hard to implement.
@@ -525,16 +525,28 @@ Ah, if only there was a generalization of the Savage-Dickey density ratio that w
 
 Wait: there is!
 
-## Calculating Bayes Factor for a specified Region of Practical Equivalence (ROPE)
+## Bayes factors for interval-based hypotheses (like ROPEs)
 
+The Savage-Dickey density ratio can be generalized to the case where the null hypothesis $H_0$ is not a point-valued hypothesis, but a hypothesis that the critical parameter $\theta^*$ lies in some interval $I_0$, such as our ROPE from above.
+There are several different ways to define the alternative hypothesis $H_1$ in this case, but the most common one is to define it as the complement of $H_0$, i.e., that $\theta^*$ lies in the interval that contains all values that are not in $I_0$, so that:
 
-The Bayes Factor in favor of model $M_{0}$ over alternative model $M_{1}$ is:
+$$
+H_0 = \theta^* \in I_0 \ \ \ \ \ \ \ \  H_1 = \theta^* \not \in I_0
+$$
+
+An efficient way of computing Bayes factors for such a setting is to use the so-called *encompassing priors approach* [@KlugkistKato2005-Bayesian-model;@KlugkistHoijtink2007-The-Bayes-facto;@Oh2014-Bayesian-compar;@WetzelsGrasman2010-An-encompassing].
+According to this approach, we consider an *encompassing model* $M_e$ that contains both the null and the alternative hypothesis as special cases.
+Concretely, the encompassing model $M_e$ could be just a regression model like the model we used above for the Korean speech data, with a prior distribution on the critical parameter $\theta^*$, such as the normal distribution on the slope coefficient for `context`.
+The null model $M_0$ would then be the nested model that is obtained from $M_e$ by conditioning on $\theta^* \in I_0$, and the alternative model $M_1$ would be the nested model that is obtained from $M_e$ by conditioning on $\theta^* \not \in I_0$.
+@fig-savage-dickey shows ...a visualization of this idea.
+
+Based on this setup, the Bayes factor in favor of $M_0$ over $M_1$ can be computed as the ratio of the posterior and prior odds of $\theta^*$ being in $I_0$ versus being in $I_1$, where $I_1$ is the complement of $I_0$:
 $$
 BF_{01} = \frac{P(\theta \in I_{0} \mid D, M_{e})}{P(\theta \in I_{1} \mid D, M_{e})} \ \frac{P(\theta \in I_{1} \mid  M_{e})}{P(\theta \in I_{0} \mid M_{e})}
 $$
 
 
-@fig-savage-dickey shows ...
+
 
 ```{r Savage-Dickey-visualization}
 #| echo: FALSE
@@ -575,27 +587,67 @@ tibble(
 ```
 
 
+## Manually calculating the Bayes factor for our ROPE hypothesis
 
-Instead of doing it by hand, we can calculate the Savage Dickey ratio with the `bayesfactor_parameters()` function from the `bayesfactorR` package.
-What happens behind the scenes is that the function will sample posteriors from your specified model based on priors only (so before seeing any data) and calculates the posterior probability of the specified `null` hypothesis (here the range specified by our ROPE).
+To calculate the Bayes factor for our ROPE hypothesis, we can use the formula above using samples from the prior and the posterior based on our encompassing model.
+For the case of the Korean speech data, we already obtained prior samples above in the `fit_prior` model, and posterior samples in the `fit` model.
+So, we can use these to extract the proportion of samples that fall inside and outside of our ROPE and do the calculations by hand.
+Let's do this first.
 
-```{r BF_rope}
-#|warning: FALSE
-#|message: FALSE
+```{r ROPE-BF-posterior-samples}
 
-BF_1 <- bayesfactor_parameters(posterior = fit, 
-                               null = rope, 
-                               parameter = "b_context1")
+# NOTE: make me shorter and prettier, please!
 
+prior_ROPE <- fit_prior |> 
+  spread_draws(b_context1) |> 
+  summarize(
+    prior_ROPE = mean(b_context1 >= rope[1] & b_context1 <= rope[2])
+  ) |>
+  pull(prior_ROPE)
+
+posterior_ROPE <- fit |> 
+  spread_draws(b_context1) |> 
+  summarize(
+    posterior_ROPE = mean(b_context1 >= rope[1] & b_context1 <= rope[2])
+  ) |> 
+  pull(posterior_ROPE)
 ```
 
-Before interpreting the number we get, let us visually explore what our BF corresponds to.
+Using these numbers, we can now calculate the Bayes factor in favor of the null hypothesis that the effect of `context` on `pitch` is in the ROPE versus the alternative hypothesis that it is outside of the ROPE:
+
+```{r}
+BF_favoring_Null <- (posterior_ROPE / (1 - posterior_ROPE)) /
+                    (prior_ROPE / (1 - prior_ROPE))
+BF_favoring_Null
+```
+
+The Bayes factor in favor of the alternative hypothesis is simply the inverse of this number:
+
+```{r}
+BF_favoring_Alt <- 1 / BF_favoring_Null
+BF_favoring_Alt
+```
+
+With a Bayes factor of around `{r} round(BF_favoring_Alt, 2)`, the data provides only anecdotal evidence in favor of the alternative hypothesis that the effect of `context` on `pitch` is outside of the ROPE.
+
+To better understand this number, let us visually explore what our BF corresponds to.
+@fig-plot-ropes shows again the prior (green) and posterior (red) distributions for the effect of `context` on `pitch`, but now with the ROPE indicated as dashed vertical lines.
+What the BF does is relating two pairs of numbers, one pair for the prior and one for the posterior.
+In each pair, we look at the ratio between the points inside the ROPE and outside of the ROPE.
+So, for the prior probability (green), we consider the ratio of points in inside the ROPE interval to the that outside of it.
+Intuitively, the Bayes factor is the amount that this ratio shifts, when updating the prior with the data to obtain the posterior.
+So, to see evidence in favor of the null hypothesis (the ROPE), we would want to see the ratio of points shift in favor of the points *inside* of the ROPE as we go from prior to posterior. 
+In the plot above, this does not seem to be the case.
+Rather, we see a shift that *more* probability mass is located *outside* the ROPE for the posterior distribution (red) as opposed to inside of it, as compared to the prior.
+This is why, at least in direction, the BF tells us to favor the alternative hypothesis.
+However, the shift is not so very pronounced, so that we would only speak of anecdotal evidence in favor of the alternative hypothesis and not strong or decisive evidence.
 
 ```{r plot-ropes}
 #| warning: FALSE
 #| message: FALSE
 #| fig-height: 4
 #| fig-cap: "Prior and posterior probability of the effect of context on pitch relative to the ROPE (-0.1, 0.1)"
+#| label: fig-plot-ropes
 
 posterior_plot + 
   geom_vline(xintercept = c(rope[1], rope[2]),
@@ -603,19 +655,31 @@ posterior_plot +
 
 ```
 
-What the BF does is relating two numbers: (a) The prior probability of parameter values outside the rope, i.e. the proportion of the green distribution that falls outside the dashed lines, and (b) the posterior probability of parameter values outside the rope, i.e. the proportion of the red distribution that falls outside the dashed lines.
-Eye-balling the plot, we can maybe already see that more of the red distribution is outside the ROPE than of the green distribution.
 
-```{r BF_rope_print}
 
+
+## Calculating ROPE-ed Bayes factor with the `bayesfactorR` package
+
+Instead of doing these calculations by hand, we can more conveniently calculate the Savage Dickey ratio with the `bayesfactor_rope()` function from the `bayestestR` package. (**insert reference for package**)
+The function takes as input the posterior and prior fit objects (you can also only provide the posterior fit, in which case the function will sample from the prior for you).
+The function then computes the ratio for the specified rope for the specified parameter.
+
+```{r BF_rope}
+#|warning: FALSE
+#|message: FALSE
+
+BF_1 <- bayesfactor_rope(posterior = fit, 
+                         prior = fit_prior,
+                         null = rope, 
+                         parameter = "b_context1")
 BF_1
+
 
 ```
 
-To be exact, 2.7 times for of the red distribution is outside of the ROPE than of the green distribution.
+We obtain (almost) the same result in this way: the Bayes factor in favor of the alternative hypothesis for the given ROPE is around `{r} round(exp(BF_1$log_BF), 2)`.
 
-That means the model that has seen the data provide 2.7 times more evidence for pitch being outside of the ROPE, or in other words, it is 2.7 times more likely (after having seen the data), that context affects pitch meaningfully.
-According to @lee-wagenmakers_Bayesian_book_2014 criteria for interpreting BFs, this value corresponds to only anecdotal evidence for the alternative hypothesis.
+**MF doesn't understand why we get numerically different results!?**
 
 ## Sensitivity analysis for different priors and ROPEs
 
@@ -629,6 +693,7 @@ These are all sensible prior widths assuming that medium to strong effects in ei
 ```{r loop-priors-for-full-models}
 #| echo: FALSE
 #| message: FALSE
+#| label: loop-priors-for-full-models
 
 # whether to rerun or load stored models
 rerun <- FALSE
@@ -766,7 +831,7 @@ ggplot(results_wrangled,
 
 ```
 
-The combination of Bayes Factors is visualized in Figure X. Orange cells indicate evidence for the alternative.
+The combination of Bayes Factors is visualized in @loop-priors-for-full-models. Orange cells indicate evidence for the alternative.
 Green cells indicate evidence for the null.
 It becomes clear that the conclusions we can draw from our data are rather dependent on the choices we made along the way.
 

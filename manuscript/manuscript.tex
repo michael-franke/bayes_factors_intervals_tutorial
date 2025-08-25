@@ -883,9 +883,10 @@ P(D \mid M) = \int P(D \mid \theta, M) \ \  P(\theta \mid M) \ \text{d} \theta
 
 This is called the \emph{marginal likelihood} of the data under the
 model \(M\). We can think of this quantity as obtained from sampling
-repeatedly parameter values from the prior and then sampling, for of
-these, a potential data observation. (Notice that this is the
-\emph{prior predictive data distribution} of the model.)
+repeatedly parameter values from the prior and then sampling, for each
+of the sampled parameter values, a potential data observation. (Notice
+that this is the \emph{prior predictive data distribution} of the
+model.)
 
 Putting things together, the resulting definition for Bayes factors in
 statistical models is:
@@ -894,9 +895,8 @@ statistical models is:
 \text{Bayes factor in favor of model 1 over model 2} \ \  \colon\!= \ \ \frac{P(D \mid M_1)}{P(D \mid M_0)} = \frac{\int P(D \mid \theta, M_1) \ \  P(\theta \mid M_1) d\theta}{\int P(D \mid \theta, M_0) \ \  P(\theta \mid M_0) d\theta}
 \]
 
-\subsection{Approximating Bayes Factor with the Savage-Dickey method
-(for point-valued
-hypotheses)}\label{approximating-bayes-factor-with-the-savage-dickey-method-for-point-valued-hypotheses}
+\subsection{Bayes factor for point-valued hypotheses (the Savage-Dickey
+method)}\label{bayes-factor-for-point-valued-hypotheses-the-savage-dickey-method}
 
 While Bayes factors are a very intuitive and useful measure of evidence,
 they are often hard to compute. There are various approximation methods,
@@ -914,11 +914,14 @@ al., 2010}).
 
 Intuitively speaking, model \(M_0\) is nested in model \(M_1\) if
 \(M_0\) can be obtained from \(M_1\) by fixing one or more parameters to
-a specific value. For example, we may consider a model \(M_1\) that has
-a normal distribution on the \texttt{context} coefficient as a prior,
-and a nested model \(M_0\) that has a degenerate prior on the
-\texttt{context} coefficient that puts all its mass on zero. That model
-\(M_0\) would then correspond to the (standard, point-valued) null
+a specific value. (More precisely, by conditioning on a specific value
+of one or more parameters.) For example, take the regression model
+\(M_1\) for the Korean speech data we considered above, which has a
+normal distribution on the \texttt{context} coefficient as a prior. A
+model \(M_0\) nested under it would be one that is exactly like \(M_1\)
+except that \(M_o\)'s prior for the \texttt{context} coefficient allows
+only one value, e.g., that the slope coefficient is equal to zero. That
+model \(M_0\) would then correspond to the (standard, point-valued) null
 hypothesis that there is no effect of \texttt{context} on
 \texttt{pitch}.
 
@@ -926,23 +929,21 @@ So, suppose that \(M_0\) is nested in \(M_1\) by fixing a critical
 parameter \(\theta^*\) to a specific value \(x\). Then, the
 Savage-Dickey density ratio states that the Bayes factor in favor of
 \(M_1\) over \(M_0\) can be computed as the ratio of the prior and
-posterior density of the critical parameter at the point value that
-defines the null hypothesis:
-
-\[
+posterior density of \(\theta^*=x\) from \(M_1\)'s point of view: \[
 \text{Bayes factor in favor of model 1 over model 2} \ \  = \ \  \frac{P(\theta^*=x \mid D, M_1)}{P(\theta^*=x \mid M_1)}
 \] Let's unpack this. First of all, this seemingly magical result is
 actually not that magical, but follows directly from the definition of
 Bayes factors and Bayes' theorem, but we skip the derivation here. What
 this means is that in practice we do not have to calculate or
-approximate any integrals at all, but we can simply look at one model
-and run posterior inference, like we routinly do with \texttt{brms}, for
-example. Look at the formula above: we would only need to run one model,
-\(M_1\), and then look at the prior and posterior density of the
-critical parameter \(\theta^*\) at the point value \(x\). The prior, we
-should usually be able to get easily because it is in our hands to
-specify it. The posterior probably, we could get by estimating it from
-the samples that are returned by software like \texttt{brms} \ldots{}
+approximate any integrals at all, but we can simply look at the more
+complex model \(M_1\) and its prior and posterior parameter
+distributions, like we routinly do with \texttt{brms}, for example. Look
+at the formula above: we would only need to run one model, \(M_1\), and
+then look at the prior and posterior density of the critical parameter
+\(\theta^*\) at the point value \(x\). The prior we should usually be
+able to get easily because it is in our hands to specify it. The
+posterior we could get by estimating it from the samples that are
+returned by software like \texttt{brms} \ldots{}
 
 \ldots{} well, at least in principle. One problem here is that
 estimating \(P(\theta^*=x \mid D, M_1)\) from posterior samples is
@@ -956,16 +957,47 @@ of values!
 
 Wait: there is!
 
-\subsection{Calculating Bayes Factor for a specified Region of Practical
-Equivalence
-(ROPE)}\label{calculating-bayes-factor-for-a-specified-region-of-practical-equivalence-rope}
+\subsection{Bayes factors for interval-based hypotheses (like
+ROPEs)}\label{bayes-factors-for-interval-based-hypotheses-like-ropes}
 
-The Bayes Factor in favor of model \(M_{0}\) over alternative model
-\(M_{1}\) is: \[
-BF_{01} = \frac{P(\theta \in I_{0} \mid D, M_{e})}{P(\theta \in I_{1} \mid D, M_{e})} \ \frac{P(\theta \in I_{1} \mid  M_{e})}{P(\theta \in I_{0} \mid M_{e})}
+The Savage-Dickey density ratio can be generalized to the case where the
+null hypothesis \(H_0\) is not a point-valued hypothesis, but a
+hypothesis that the critical parameter \(\theta^*\) lies in some
+interval \(I_0\), such as our ROPE from above. There are several
+different ways to define the alternative hypothesis \(H_1\) in this
+case, but the most common one is to define it as the complement of
+\(H_0\), i.e., that \(\theta^*\) lies in the interval that contains all
+values that are not in \(I_0\), so that:
+
+\[
+H_0 = \theta^* \in I_0 \ \ \ \ \ \ \ \  H_1 = \theta^* \not \in I_0
 \]
 
-Figure~\ref{fig-savage-dickey} shows \ldots{}
+An efficient way of computing Bayes factors for such a setting is to use
+the so-called \emph{encompassing priors approach}
+(\citeproc{ref-KlugkistKato2005-Bayesian-model}{Klugkist et al., 2005};
+\citeproc{ref-KlugkistHoijtink2007-The-Bayes-facto}{Klugkist \&
+Hoijtink, 2007}; \citeproc{ref-Oh2014-Bayesian-compar}{Oh, 2014};
+\citeproc{ref-WetzelsGrasman2010-An-encompassing}{Wetzels et al.,
+2010}). According to this approach, we consider an \emph{encompassing
+model} \(M_e\) that contains both the null and the alternative
+hypothesis as special cases. Concretely, the encompassing model \(M_e\)
+could be just a regression model like the model we used above for the
+Korean speech data, with a prior distribution on the critical parameter
+\(\theta^*\), such as the normal distribution on the slope coefficient
+for \texttt{context}. The null model \(M_0\) would then be the nested
+model that is obtained from \(M_e\) by conditioning on
+\(\theta^* \in I_0\), and the alternative model \(M_1\) would be the
+nested model that is obtained from \(M_e\) by conditioning on
+\(\theta^* \not \in I_0\). Figure~\ref{fig-savage-dickey} shows \ldots a
+visualization of this idea.
+
+Based on this setup, the Bayes factor in favor of \(M_0\) over \(M_1\)
+can be computed as the ratio of the posterior and prior odds of
+\(\theta^*\) being in \(I_0\) versus being in \(I_1\), where \(I_1\) is
+the complement of \(I_0\): \[
+BF_{01} = \frac{P(\theta \in I_{0} \mid D, M_{e})}{P(\theta \in I_{1} \mid D, M_{e})} \ \frac{P(\theta \in I_{1} \mid  M_{e})}{P(\theta \in I_{0} \mid M_{e})}
+\]
 
 \begin{figure}[!tbp]
 
@@ -979,27 +1011,93 @@ Figure~\ref{fig-savage-dickey} shows \ldots{}
 
 \end{figure}%
 
-Instead of doing it by hand, we can calculate the Savage Dickey ratio
-with the \texttt{bayesfactor\_parameters()} function from the
-\texttt{bayesfactorR} package. What happens behind the scenes is that
-the function will sample posteriors from your specified model based on
-priors only (so before seeing any data) and calculates the posterior
-probability of the specified \texttt{null} hypothesis (here the range
-specified by our ROPE).
+\subsection{Manually calculating the Bayes factor for our ROPE
+hypothesis}\label{manually-calculating-the-bayes-factor-for-our-rope-hypothesis}
+
+To calculate the Bayes factor for our ROPE hypothesis, we can use the
+formula above using samples from the prior and the posterior based on
+our encompassing model. For the case of the Korean speech data, we
+already obtained prior samples above in the \texttt{fit\_prior} model,
+and posterior samples in the \texttt{fit} model. So, we can use these to
+extract the proportion of samples that fall inside and outside of our
+ROPE and do the calculations by hand. Let's do this first.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\#|warning: FALSE}
-\CommentTok{\#|message: FALSE}
+\CommentTok{\# }\AlertTok{NOTE}\CommentTok{: make me shorter and prettier, please!}
 
-\NormalTok{BF\_1 }\OtherTok{\textless{}{-}} \FunctionTok{bayesfactor\_parameters}\NormalTok{(}\AttributeTok{posterior =}\NormalTok{ fit, }
-                               \AttributeTok{null =}\NormalTok{ rope, }
-                               \AttributeTok{parameter =} \StringTok{"b\_context1"}\NormalTok{)}
+\NormalTok{prior\_ROPE }\OtherTok{\textless{}{-}}\NormalTok{ fit\_prior }\SpecialCharTok{|\textgreater{}} 
+  \FunctionTok{spread\_draws}\NormalTok{(b\_context1) }\SpecialCharTok{|\textgreater{}} 
+  \FunctionTok{summarize}\NormalTok{(}
+    \AttributeTok{prior\_ROPE =} \FunctionTok{mean}\NormalTok{(b\_context1 }\SpecialCharTok{\textgreater{}=}\NormalTok{ rope[}\DecValTok{1}\NormalTok{] }\SpecialCharTok{\&}\NormalTok{ b\_context1 }\SpecialCharTok{\textless{}=}\NormalTok{ rope[}\DecValTok{2}\NormalTok{])}
+\NormalTok{  ) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{pull}\NormalTok{(prior\_ROPE)}
+
+\NormalTok{posterior\_ROPE }\OtherTok{\textless{}{-}}\NormalTok{ fit }\SpecialCharTok{|\textgreater{}} 
+  \FunctionTok{spread\_draws}\NormalTok{(b\_context1) }\SpecialCharTok{|\textgreater{}} 
+  \FunctionTok{summarize}\NormalTok{(}
+    \AttributeTok{posterior\_ROPE =} \FunctionTok{mean}\NormalTok{(b\_context1 }\SpecialCharTok{\textgreater{}=}\NormalTok{ rope[}\DecValTok{1}\NormalTok{] }\SpecialCharTok{\&}\NormalTok{ b\_context1 }\SpecialCharTok{\textless{}=}\NormalTok{ rope[}\DecValTok{2}\NormalTok{])}
+\NormalTok{  ) }\SpecialCharTok{|\textgreater{}} 
+  \FunctionTok{pull}\NormalTok{(posterior\_ROPE)}
 \end{Highlighting}
 \end{Shaded}
 
-Before interpreting the number we get, let us visually explore what our
-BF corresponds to.
+Using these numbers, we can now calculate the Bayes factor in favor of
+the null hypothesis that the effect of \texttt{context} on
+\texttt{pitch} is in the ROPE versus the alternative hypothesis that it
+is outside of the ROPE:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{BF\_favoring\_Null }\OtherTok{\textless{}{-}}\NormalTok{ (posterior\_ROPE }\SpecialCharTok{/}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ posterior\_ROPE)) }\SpecialCharTok{/}
+\NormalTok{                    (prior\_ROPE }\SpecialCharTok{/}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ prior\_ROPE))}
+\NormalTok{BF\_favoring\_Null}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 0.374063
+\end{verbatim}
+
+The Bayes factor in favor of the alternative hypothesis is simply the
+inverse of this number:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{BF\_favoring\_Alt }\OtherTok{\textless{}{-}} \DecValTok{1} \SpecialCharTok{/}\NormalTok{ BF\_favoring\_Null}
+\NormalTok{BF\_favoring\_Alt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 2.673347
+\end{verbatim}
+
+With a Bayes factor of around 2.67, the data provides only anecdotal
+evidence in favor of the alternative hypothesis that the effect of
+\texttt{context} on \texttt{pitch} is outside of the ROPE.
+
+To better understand this number, let us visually explore what our BF
+corresponds to. Figure~\ref{fig-plot-ropes} shows again the prior
+(green) and posterior (red) distributions for the effect of
+\texttt{context} on \texttt{pitch}, but now with the ROPE indicated as
+dashed vertical lines. What the BF does is relating two pairs of
+numbers, one pair for the prior and one for the posterior. In each pair,
+we look at the ratio between the points inside the ROPE and outside of
+the ROPE. So, for the prior probability (green), we consider the ratio
+of points in inside the ROPE interval to the that outside of it.
+Intuitively, the Bayes factor is the amount that this ratio shifts, when
+updating the prior with the data to obtain the posterior. So, to see
+evidence in favor of the null hypothesis (the ROPE), we would want to
+see the ratio of points shift in favor of the points \emph{inside} of
+the ROPE as we go from prior to posterior. In the plot above, this does
+not seem to be the case. Rather, we see a shift that \emph{more}
+probability mass is located \emph{outside} the ROPE for the posterior
+distribution (red) as opposed to inside of it, as compared to the prior.
+This is why, at least in direction, the BF tells us to favor the
+alternative hypothesis. However, the shift is not so very pronounced, so
+that we would only speak of anecdotal evidence in favor of the
+alternative hypothesis and not strong or decisive evidence.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1011,25 +1109,38 @@ BF corresponds to.
 
 \begin{figure}[!tbp]
 
-\caption{Prior and posterior probability of the effect of context on
-pitch relative to the ROPE (-0.1, 0.1)}
+\caption{\label{fig-plot-ropes}Prior and posterior probability of the
+effect of context on pitch relative to the ROPE (-0.1, 0.1)}
 
-{\centering \pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/plot-ropes-1.pdf}}
+\centering{
+
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-plot-ropes-1.pdf}}
 
 }
 
 \end{figure}%
 
-What the BF does is relating two numbers: (a) The prior probability of
-parameter values outside the rope, i.e.~the proportion of the green
-distribution that falls outside the dashed lines, and (b) the posterior
-probability of parameter values outside the rope, i.e.~the proportion of
-the red distribution that falls outside the dashed lines. Eye-balling
-the plot, we can maybe already see that more of the red distribution is
-outside the ROPE than of the green distribution.
+\subsection{\texorpdfstring{Calculating ROPE-ed Bayes factor with the
+\texttt{bayesfactorR}
+package}{Calculating ROPE-ed Bayes factor with the bayesfactorR package}}\label{calculating-rope-ed-bayes-factor-with-the-bayesfactorr-package}
+
+Instead of doing these calculations by hand, we can more conveniently
+calculate the Savage Dickey ratio with the \texttt{bayesfactor\_rope()}
+function from the \texttt{bayestestR} package. (\textbf{insert reference
+for package}) The function takes as input the posterior and prior fit
+objects (you can also only provide the posterior fit, in which case the
+function will sample from the prior for you). The function then computes
+the ratio for the specified rope for the specified parameter.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\#|warning: FALSE}
+\CommentTok{\#|message: FALSE}
+
+\NormalTok{BF\_1 }\OtherTok{\textless{}{-}} \FunctionTok{bayesfactor\_rope}\NormalTok{(}\AttributeTok{posterior =}\NormalTok{ fit, }
+                         \AttributeTok{prior =}\NormalTok{ fit\_prior,}
+                         \AttributeTok{null =}\NormalTok{ rope, }
+                         \AttributeTok{parameter =} \StringTok{"b\_context1"}\NormalTok{)}
 \NormalTok{BF\_1}
 \end{Highlighting}
 \end{Shaded}
@@ -1039,21 +1150,16 @@ Bayes Factor (Null-Interval)
 
 Parameter |   BF
 ----------------
-context1  | 2.88
+context1  | 2.79
 
 * Evidence Against The Null: [-6.000, 6.000]
 \end{verbatim}
 
-To be exact, 2.7 times for of the red distribution is outside of the
-ROPE than of the green distribution.
+We obtain (almost) the same result in this way: the Bayes factor in
+favor of the alternative hypothesis for the given ROPE is around 2.79.
 
-That means the model that has seen the data provide 2.7 times more
-evidence for pitch being outside of the ROPE, or in other words, it is
-2.7 times more likely (after having seen the data), that context affects
-pitch meaningfully. According to Lee and Wagenmakers
-(\citeproc{ref-lee-wagenmakers_Bayesian_book_2014}{2014}) criteria for
-interpreting BFs, this value corresponds to only anecdotal evidence for
-the alternative hypothesis.
+\textbf{MF doesn't understand why we get numerically different
+results!?}
 
 \subsection{Sensitivity analysis for different priors and
 ROPEs}\label{sensitivity-analysis-for-different-priors-and-ropes}
@@ -1082,10 +1188,11 @@ that medium to strong effects in either direction are plausible.
 
 \end{figure}%
 
-The combination of Bayes Factors is visualized in Figure X. Orange cells
-indicate evidence for the alternative. Green cells indicate evidence for
-the null. It becomes clear that the conclusions we can draw from our
-data are rather dependent on the choices we made along the way.
+The combination of Bayes Factors is visualized in
+(\citeproc{ref-loop-priors-for-full-models}{\textbf{loop-priors-for-full-models?}}).
+Orange cells indicate evidence for the alternative. Green cells indicate
+evidence for the null. It becomes clear that the conclusions we can draw
+from our data are rather dependent on the choices we made along the way.
 
 By comparing the Bayes Factors along the y-axis, we can see that they
 are heavily dependent on the chosen ROPE. We here chose (theoretically
@@ -1318,10 +1425,6 @@ Kruschke, J. K. (2018). Rejecting or {Accepting Parameter Values} in
 {Bayesian Estimation}. \emph{Advances in Methods and Practices in
 Psychological Science}, \emph{1}(2), 270--280.
 \url{https://doi.org/10.1177/2515245918771304}
-
-\bibitem[\citeproctext]{ref-lee-wagenmakers_Bayesian_book_2014}
-Lee, M. D., \& Wagenmakers, E.-J. (2014). \emph{Bayesian {Cognitive
-Modeling}: {A Practical Course}}. Cambridge University Press.
 
 \bibitem[\citeproctext]{ref-lindley_Statistical_journalarticle_1957}
 Lindley, D. V. (1957). A {Statistical Paradox}. \emph{Biometrika},
