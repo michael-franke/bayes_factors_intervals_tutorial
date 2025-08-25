@@ -778,8 +778,8 @@ With a ROPE being defined, we can now test our hypothesis ``whether
 pitch is \textbf{meaningfully affected} by the social context of the
 utterance'' using Bayes Factors.
 
-\section{Testing hypothesis using Bayes
-Factor}\label{testing-hypothesis-using-bayes-factor}
+\section{Testing hypotheses using Bayes
+Factor}\label{testing-hypotheses-using-bayes-factor}
 
 \subsection{What is Bayes Factor?}\label{what-is-bayes-factor}
 
@@ -794,10 +794,11 @@ they depend on the prior probabilities of the hypotheses \(P(H_0)\) and
 the hypotheses on the table are deep issues like a contrast between
 Darwinian evolutionary theory and intelligent design. Proponents of
 either view would have a hard time agreeing on priors for these
-hypotheses, but may find it much easier to agree on which observations
-are made more or less likely by either hypothesis. Therefore, the
-preferred Bayesian measure is the Bayes factor, which is defined as the
-likelihood ratio of the data given each hypothesis:
+hypotheses, but may find it much easier to agree on whether a given
+observation \(D\) is more likely under the assumption that one of the
+two hypotheses is correct, rather than the other. Therefore, Bayes
+factors are defined as the \emph{likelihood ratio} of the data given
+each hypothesis:
 
 \[
 \text{Bayes factor in favor of hypothesis 1 over hypothesis 2} \ \  \colon\!= \ \ \frac{P(D \mid H_1)}{P(D \mid H_0)}
@@ -806,22 +807,22 @@ likelihood ratio of the data given each hypothesis:
 To see how this is an objective and actually quite intuitive measure of
 observational evidence in scientific reasoning, consider the case of
 Darwinian evolution (\(H_1\)) versus intelligent design \(H_0\) again.
-Let's take the historical case of observing how the beak sizes of
-finches on the Galápagos islands changed over time as a functional
-adaptation to environmental changes. What is a better explanation of
-that observation? To begin with, let's notice that this observation is
-\emph{not} ruled out by either hypothesis. But the probability of
-observing \(D\) (adaptively changing beak sizes) is much higher under
-Darwinian evolution than under intelligent design. This is because the
-latter is compatible with many more counterfactual observations, such as
-beak sizes staying the same over time, or even beak sizes changing in a
-way that is not adaptive. So, the probability of the observed data is
-much higher under Darwinian evolution than under intelligent design, so
-that \(P(D \mid H_1) > P(D \mid H_0)\), irrespective of what we
-initiallly believed is the correct hypothesis. This is what corroborates
-the intuition that the observation \(D\) is an argument in favor of
-\(H_1\) and not \(H_0\), and this is exactly what the Bayes factor
-quantifies.
+Let's take the historical case where the observed data \(D\) is that the
+beak sizes of finches on the Galápagos islands changed over time as a
+functional adaptation to environmental changes. What is a better
+explanation of that observation? To begin with, let's notice that this
+observation is \emph{not} ruled out by either hypothesis. But the
+probability of observing \(D\) (adaptively changing beak sizes) is much
+higher under Darwinian evolution (\(H_1\)) than under intelligent design
+(\(H_0\)). This is because the latter is compatible with many more
+counterfactual observations, such as beak sizes staying the same over
+time, or even beak sizes changing in a way that is not adaptive. So, the
+probability of the observed data is much higher under Darwinian
+evolution than under intelligent design, so that
+\(P(D \mid H_1) > P(D \mid H_0)\), irrespective of what we initiallly
+believed is the correct hypothesis. This is what corroborates the
+intuition that the observation \(D\) is an argument in favor of \(H_1\)
+over \(H_0\), and this is exactly what the Bayes factor quantifies.
 
 Concretely, a Bayes factor of 1 corresponds to the case of
 \(P(D \mid H_1) = P(D \mid H_0)\), i.e., the data is equally likely
@@ -844,16 +845,16 @@ factor of \(n\) in favor of \(H_1\) over \(H_0\) means that after seeing
 the data, a rational researcher who thought both hypotheses were equally
 likely would consider \(H_1\) to be \(n\) times more likely than \(H_0\)
 after observing \(D\). In other words, if you are maximally uncertain
-before, then observe \(D\) and that makes you weight \(H_1\) \(n\) times
-more than \(H_0\), then the Bayes factor is \(n\).
+before, and if you then observe \(D\) and that makes you weight \(H_1\)
+\(n\) times more than \(H_0\), then the Bayes factor is \(n\).
 
 \subsection{Bayes factors for statistical
 models}\label{bayes-factors-for-statistical-models}
 
 After motivating Bayes factors in general, let's have a look at the
-definition of Bayes factors in the context of statistical models. This
-small section is a bit more technical, but it can be skipped without too
-much loss.
+definition of Bayes factors in the context of statistical models in this
+section. What follows in this section is a bit more technical but can be
+skipped without substantial loss.
 
 In the context of statistical models, we can use Bayes factors to
 compare two statistical models \(M_0\) and \(M_1\) that instantiate two
@@ -877,7 +878,7 @@ The probability of some observed data \(P(D \mid M)\) under a model
 \(\theta\):
 
 \[
-P(D \mid M) = \int P(D \mid \theta, M) \ \  P(\theta \mid M) d\theta
+P(D \mid M) = \int P(D \mid \theta, M) \ \  P(\theta \mid M) \ \text{d} \theta
 \]
 
 This is called the \emph{marginal likelihood} of the data under the
