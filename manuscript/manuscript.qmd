@@ -161,8 +161,10 @@ To load and inspect the data into your R environment, run the following code:
 ```{r load-data}
 #| message: FALSE
 
-polite = read_csv("https://raw.githubusercontent.com/michael-franke/bayes_mixed_regression_tutorial/master/code/politeness_data.csv") |> 
-  # transform context to factor
+polite <- 
+  # read_csv("https://raw.githubusercontent.com/michael-franke/bayes_mixed_regression_tutorial/master/code/politeness_data.csv") |> 
+  read_csv("https://shorturl.at/F7pWU") |> 
+  # transform context to factor and rename
   mutate(context = as.factor(context),
          context = recode_factor(context,
                                  "pol" = "formal",
@@ -172,7 +174,9 @@ polite = read_csv("https://raw.githubusercontent.com/michael-franke/bayes_mixed_
                                 "M" = "male",
                                 "F" = "female"))
 
-polite
+head(polite)
+
+# NOTE  if we change the column names in the source we do not have to have the wrangling in here, making the code  chunk slimmer.
 
 ```
 
@@ -196,7 +200,7 @@ Now as Bayesians, we would like to translate the data into an expression of evid
 #| message: FALSE
 #| warning: FALSE
 #| echo: FALSE
-#| fig-height: 4
+#| fig-height: 2
 #| fig-cap: "Empirical distribution of female speakers' pitch values across contexts"
 #| fig-pos: "!tbph"
 #| label: fig-descriptive-dataviz
@@ -209,14 +213,6 @@ polite |>
              x = pitch, 
              fill = context,
              colour = context)) + 
-  stat_histinterval(data = polite,
-                    position = "identity", 
-                    alpha = 0.5,
-                    color = NA,
-                    breaks = seq(floor(min(polite$pitch, na.rm = T)), 
-                                 ceiling(max(polite$pitch, na.rm = T)), 
-                                 by = 15), 
-                    outline_bars = FALSE) +
   # plot all data as semitransparent points
   geom_point(data = polite,
              position = position_dodge(0.5), 
@@ -236,7 +232,8 @@ polite |>
   labs(x = "\npitch in Hz",
        y = "social context\n") +
   theme_minimal() +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+        panel.border = element_rect(color = "lightgrey", fill = NA, size = 1))
 
 ```
 
@@ -249,21 +246,22 @@ Using the package `brms` [@Burkner2018-Advanced-Bayesi], our first step is to sp
 #| output: true
 
 # contrast code predictor
-
 contrasts(polite$context) <- c(-0.5,0.5)
 contrasts(polite$gender) <- c(-0.5,0.5)
 
 # define linear model formula
-# predict pitch by context and gender and allow for the contect relationship 
-# to vary between subjects
-formula <- bf(pitch ~ context + gender +  (1 + context | subject) +
-                                          (1 + context | sentence))
+# predict pitch by context and gender
+# and allow for context to vary between subjects and sentences
+formula <- bf(pitch ~ context + 
+                      gender + 
+                      (1 + context | subject) +
+                      (1 + context | sentence))
 
 # get priors for this model
-get_prior(formula, polite)
+as_tibble(get_prior(formula, polite))[,1:4]
 
 # NOTE MF: make the above prettier? (how to suppress the `source` column?)
-# NOTE TR: calling individual lines is probably confusing to the reader, I suggest we just using the generic command. But yeah the column wrangling is strange. When chosing the first 4 columns it also displays most of them as flat, so something is off there
+# NOTE TR: calling individual lines is probably confusing to the reader, I suggest we just using the generic command. But yeah the column wrangling is strange. When choosing the first 4 columns it also displays most of them as flat, so something is off there. Made an attempt...
 
 ```
 
@@ -276,12 +274,13 @@ So we specify a normal distribution centered on zero for this parameter (and we 
 
 # pick a weakly informative prior for the critical parameter
 priors <- c(prior(normal(0, 20), 
-                class = b, 
-                coef = "context1"),
+                  class = b, 
+                  coef = "context1"),
             # pick a weakly informative prior for the control parameter gender
             prior(normal(0, 50), 
-                class = b, 
-                coef = "gender1"))
+                  class = b, 
+                  coef = "gender1")
+            )
 
 ```
 
@@ -320,8 +319,8 @@ prior_samples <-
 # plot  
 ggplot(prior_samples,
        aes(x = b_context1)) + 
-  stat_histinterval(slab_color = project_colors[11],
-                    slab_fill = alpha(project_colors[11], 0.5),
+  stat_histinterval(slab_color = project_colors[3],
+                    slab_fill = alpha(project_colors[3], 0.5),
                     fill = NA,
                     color = NA,
                     outline_bars = FALSE) +
@@ -371,13 +370,13 @@ posterior_samples <-
 posterior_plot <- posterior_samples |> 
   ggplot(aes(x = b_context1)) + 
     stat_histinterval(data = prior_samples,
-                     slab_color = project_colors[11],
-                     slab_fill = alpha(project_colors[11], 0.5),
+                     slab_color = project_colors[3],
+                     slab_fill = alpha(project_colors[3], 0.5),
                      fill = NA,
                      color = NA,
                      outline_bars = FALSE) +
-    stat_histinterval(slab_color = project_colors[14],
-                      slab_fill = alpha(project_colors[14], 0.5),
+    stat_histinterval(slab_color = project_colors[10],
+                      slab_fill = alpha(project_colors[10], 0.5),
                       color = NA,
                       outline_bars = FALSE) +
   scale_thickness_shared() +
@@ -601,6 +600,7 @@ tibble(
 ```{r Savage-Dickey-visualization_alternative}
 #| echo: FALSE
 #| label: fig-savage-dickey_TR
+#| fig-height: 3
 
 prior_samples <- prior_samples |> mutate(model = "prior")
 posterior_samples <- posterior_samples |> mutate(model = "posterior")
@@ -688,14 +688,14 @@ BF_favoring_Alt
 
 ```
 
-With a Bayes factor of around `{r} round(BF_favoring_Alt, 2)`, the data provides only anecdotal evidence in favor of the alternative hypothesis that the effect of `context` on `pitch` is outside of the ROPE.
+With a Bayes factor of around `{r} round(BF_favoring_Alt, 2)`, the data provides only moderate evidence in favor of the alternative hypothesis that the effect of `context` on `pitch` is outside of the ROPE.
 
 In @fig-savage-dickey_TR, the Bayes factor is the amount that the ratio between samples within the ROPE and outside the ROPE shifts, when updating the prior with the data to obtain the posterior.
 So, to see evidence in favor of the null hypothesis (the ROPE), we would want to see the ratio of points shift in favor of the points *inside* of the ROPE as we go from prior to posterior. 
 In the plot above, this does not seem to be the case.
 Rather, we see a shift that *more* probability mass is located *outside* the ROPE for the posterior distribution as opposed to inside of it, as compared to the prior.
 This is why, at least in direction, the BF tells us to favor the alternative hypothesis.
-However, the shift is not so very pronounced, so that we would only speak of anecdotal evidence in favor of the alternative hypothesis and not strong or decisive evidence.
+However, the shift is not so very pronounced, so that we would only speak of moderate evidence in favor of the alternative hypothesis and not strong or decisive evidence.
 
 ```{r plot-ropes}
 #| warning: FALSE
@@ -894,7 +894,7 @@ It becomes clear that the conclusions we can draw from our data are rather depen
 
 By comparing the Bayes Factors along the y-axis, we can see that they are heavily dependent on the chosen ROPE.
 We here chose (theoretically speaking) a quite large range of ROPEs, all of which are informed by psychoacoustic studies of what pitch differences can be reliably heard and thus likely are meaningful for communication. 
-In light of this range of possible definitions what constitutes meaningful differences, our data do not seem very robust, as illustrated by the shift from orange to green. Even the smallest ROPE intervals provide only anecdotal to moderate evidence for the alternative. And the most conservative ROPEs, following @turner2019perception, leads to moderate to strong evidence against the alternative hypothesis. 
+In light of this range of possible definitions what constitutes meaningful differences, our data do not seem very robust, as illustrated by the shift from orange to green. Even the smallest ROPE intervals provide only anecdotal to moderate evidence for the alternative. And the most conservative ROPEs, following @turner2019perception, leads to moderate to very strong evidence against the alternative hypothesis. 
 
 Additionally, when comparing the Bayes Factors along the x-axis, we can see that they are comparatively consistent for different standard deviations of the critical prior.
 However, we can also see that the Bayes Factors decrease with the width of the priors (from left to right).
@@ -902,7 +902,7 @@ This is not surprising and a known phenomenon, often discussed under the Jeffrey
 
 Combined, we can see that the larger the ROPE and the wider the priors, the more likely becomes the null hypothesis.
 In an ideal world, the evidence provided by the data should be robust across these choices.
-However, this exploration of our inference is a fantastic opportunity to assess the boundaries of our conclusions. In this case, the original conclusions by @winter-grawunder_Phonetic_journalarticle_2012 was based on the null hypothesis significance testing and traditionally tested the compatibility of the data with a point-null hypothesis. They concluded "that in formal speech, Korean [...] female speakers lowered their average fundamental frequency [...]." This statement is still true according to their inferential criteria, but thinking more deeply about the theoretical consequences of differences in pitch, it might be less clear that these differenecs are truly meaninful. 
+However, this exploration of our inference is a fantastic opportunity to assess the boundaries of our conclusions. In this case, the original conclusions by @winter-grawunder_Phonetic_journalarticle_2012 was based on the null hypothesis significance testing and traditionally tested the compatibility of the data with a point-null hypothesis. They concluded "that in formal speech, Korean [...] female speakers lowered their average fundamental frequency [...]." This statement is still true according to their inferential criteria, but thinking more deeply about the theoretical consequences of differences in pitch, it might be less clear that these differences are truly meaningful. 
 
 ## BF for point hypothesis
 
