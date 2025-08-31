@@ -127,15 +127,17 @@
 
 \usepackage{graphicx}
 \makeatletter
-\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
-\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
-\makeatother
-% Scale images if necessary, so that they will not overflow the page
-% margins by default, and it is still possible to overwrite the defaults
-% using explicit options in \includegraphics[width, height, ...]{}
-\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
 % Set default figure placement to htbp
-\makeatletter
 \def\fps@figure{htbp}
 \makeatother
 
@@ -187,7 +189,8 @@
 
 
 
-\title{Hypothesis Testing Using Bayes Factor in Behavioral Sciences}
+\title{Meaningful results for meaningful hypotheses: A tutorial on
+hypothesis testing with Bayes factors using ROPEs}
 
 
 \shorttitle{Test Bayes Factor}
@@ -356,31 +359,33 @@ one or more (dependent) variables in an experiment with one or more
 predictors (independent variables). Usually, we then want to test
 statistically whether the predictors affect the measured dependent
 variables. Traditionally, these statistical tests have been done within
-the \emph{null hypothesis significance testing} (NHST) framework. The
-logic of NHST goes something like this: we assume ---for the sake of
-argument--- that a null hypothesis is correct, i.e., that there is no
-effect of a relevant predictor. We then ask ourselves how likely
-different observations would be based on that assumption, and use this
-so-called \emph{sampling distribution} to quantify how surprising the
-observed data is under the assumed null hypothesis. If the observed data
-are very unlikely, we \emph{reject} the null hypothesis and conclude
-that the predictor affects the dependent variable. While extensions of
-the NHST framework exist, in its basic form, NHST only allows us to
-reject the null hypothesis, but not to provide evidence in favor of it.
+the \emph{null hypothesis significance testing} (NHST)
+framework.\footnote{Not strictly necessary for this tutorial but, in
+  case you need a reminder, the logic of NHST goes something like this:
+  we assume ---for the sake of argument--- that a null hypothesis is
+  correct, i.e., that there is no effect of a relevant predictor. We
+  then ask ourselves how likely different observations would be based on
+  that assumption, and use this so-called \emph{sampling distribution}
+  to quantify how surprising the observed data is under the assumed null
+  hypothesis. If the observed data are very unlikely, we \emph{reject}
+  the null hypothesis and conclude that the predictor affects the
+  dependent variable.} While extensions of the NHST framework exist, in
+its basic form, NHST only allows us to reject the null hypothesis, but
+not to provide evidence in favor of it. Over the last decade or so,
+however, there has been rising interest in statistical approaches within
+an alternative inferential framework using \emph{Bayesian inference}.
+One of the main reasons for this rising interest is that Bayesian
+inference allows to not only quantify evidence \emph{against} an assumed
+null hypothesis, but also to yield quantitative evidence \emph{in favor
+of} the null hypothesis.
 
-Over the last decade or so, however, there has been rising interest in
-statistical approaches within an alternative inferential framework using
-\emph{Bayesian inference}. One of the main reasons for this rising
-interest is that Bayesian inference allows to quantify evidence against
-an assumed null hypothesis, but also to yield quantitative evidence in
-favor of the null hypothesis. Unfortunately, there are several
-approaches to hypothesis testing within the Bayesian framework, and many
-of them are either conceptually challenging, computationally (too)
-costly, or both. For example, there are good conceptual arguments that
-support Bayesian hypothesis testing through \emph{model comparison}
-using Bayes factors (\citeproc{ref-KassRaftery1995-Bayes-Factors}{Kass
-\& Raftery, 1995}; \citeproc{ref-MoreyRomeijn2016-philosophyOfBFs}{Morey
-et al., 2016};
+Unfortunately, there are several approaches to hypothesis testing within
+the Bayesian framework, and many of them are either conceptually
+challenging, computationally (too) costly, or both. For example, there
+are good conceptual arguments that support Bayesian hypothesis testing
+through \emph{model comparison} using Bayes factors
+(\citeproc{ref-KassRaftery1995-Bayes-Factors}{Kass \& Raftery, 1995};
+\citeproc{ref-MoreyRomeijn2016-philosophyOfBFs}{Morey et al., 2016};
 \citeproc{ref-VandekerckhoveMatzke2013-Model-Compariso}{Vandekerckhove
 et al., 2015}), but the computation of Bayes factors can be quite
 costly, especially for complex models. Yet, for some of the most common
@@ -494,7 +499,6 @@ run the following code:
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{polite }\OtherTok{\textless{}{-}} 
-  \CommentTok{\# read\_csv("https://raw.githubusercontent.com/michael{-}franke/bayes\_mixed\_regression\_tutorial/master/code/politeness\_data.csv") |\textgreater{} }
   \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"https://shorturl.at/F7pWU"}\NormalTok{) }\SpecialCharTok{|\textgreater{}} 
   \CommentTok{\# transform context to factor and rename}
   \FunctionTok{mutate}\NormalTok{(}\AttributeTok{context =} \FunctionTok{as.factor}\NormalTok{(context),}
@@ -529,7 +533,7 @@ run the following code:
 \end{Shaded}
 
 This data set contains anonymous identifiers for individual speakers
-stored in the variable \texttt{subject.}. Voice pitch is dependent on
+stored in the variable \texttt{subject}. Voice pitch is dependent on
 speakers' \texttt{gender}, which we need to take into account as well.
 Subjects produced diﬀerent \texttt{sentences}, and the experiment
 manipulated whether the sentences were produced in a \texttt{formal} or
@@ -566,7 +570,7 @@ speakers' pitch values across contexts}
 
 \centering{
 
-\includegraphics{manuscript_files/figure-pdf/fig-descriptive-dataviz-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-descriptive-dataviz-1.pdf}}
 
 }
 
@@ -658,7 +662,7 @@ critically reflect on all of your priors.)
 Now we do a so-called prior predictive check, in other words we want to
 know what the posterior distribution looks like before having seen the
 data, based on the priors only. This is a useful exercise to make sure
-that the priors results in reasonable quantitative assumptions. We
+that the priors result in reasonable quantitative assumptions. We
 usually do it for all parameters, but here we will focus only on the
 critical parameter \texttt{context1}, i.e.~the difference between formal
 and informal contexts. Let us also have a look at the predictions for
@@ -685,7 +689,7 @@ context on pitch, i.e.~before seeing the data}
 
 \centering{
 
-\includegraphics{manuscript_files/figure-pdf/fig-plot-priors-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-plot-priors-1.pdf}}
 
 }
 
@@ -718,7 +722,7 @@ of context on pitch, i.e.~after seeing the data}
 
 \centering{
 
-\includegraphics{manuscript_files/figure-pdf/fig-plot-posterior-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-plot-posterior-1.pdf}}
 
 }
 
@@ -747,7 +751,7 @@ equivalences}\label{grounding-hypotheses-in-regions-of-practical-equivalences}
 
 Above we claimed that we wanted to test ``whether pitch is
 \textbf{meaningfully affected} by the social context of the utterance''.
-We snuck the word meaningfully in there for a reason. But what does
+We snuck the word ``meaningfully'' in there for a reason. But what does
 ``meaningful'' mean? This is an interesting yet deep questions and
 (un)fortunately requires some thinking. What a meaningful difference
 really constitutes depends on the context of the data. So let's have a
@@ -823,7 +827,7 @@ factors are defined as the \emph{likelihood ratio} of the data given
 each hypothesis:
 
 \[
-\text{Bayes factor in favor of hypothesis 0 over hypothesis 1} \ \  \colon\!= \ \ \frac{P(D \mid H_1)}{P(D \mid H_0)}
+\text{Bayes factor in favor of hypothesis 1 over hypothesis 0} \ \  \colon\!= \ \ \frac{P(D \mid H_1)}{P(D \mid H_0)}
 \]
 
 To see how this is an objective and actually quite intuitive measure of
@@ -916,7 +920,7 @@ Putting things together, the resulting definition for Bayes factors in
 statistical models is:
 
 \[
-\text{Bayes factor in favor of model 0 over model 1} \ \  \colon\!= \ \ \frac{P(D \mid M_1)}{P(D \mid M_0)} = \frac{\int P(D \mid \theta, M_1) \ \  P(\theta \mid M_1) d\theta}{\int P(D \mid \theta, M_0) \ \  P(\theta \mid M_0) d\theta}
+\text{Bayes factor in favor of model 1 over model 0} \ \  \colon\!= \ \ \frac{P(D \mid M_1)}{P(D \mid M_0)} = \frac{\int P(D \mid \theta, M_1) \ \  P(\theta \mid M_1) d\theta}{\int P(D \mid \theta, M_0) \ \  P(\theta \mid M_0) d\theta}
 \]
 
 \subsection{Bayes factor for point-valued hypotheses (the Savage-Dickey
@@ -979,14 +983,24 @@ returned by software like \texttt{brms} \ldots{}
 \ldots{} well, at least in principle. One problem here is that
 estimating \(P(\theta^*=x \mid D, M_1)\) from posterior samples is
 fickle. We can do it with some mathematical methods, but we may need a
-lot of samples and do some post-processing (e.g., using splines). The
-main point is that posterior samples are not reliable for estimating
-densities at specific points, but they are reliable for estimating
-probabilities over ranges of values. Ah, if only there was a
+lot of samples and do some post-processing (e.g., using splines). But
+one technical wrinkle is that posterior samples are less reliable for
+estimating densities at specific points, but are usually more reliable
+for estimating probabilities over wide-enough intervals of
+values.\footnote{The problem is one of a class of so-called
+  \textbf{vanishing measures problems}. The probability of a point value
+  is a probability \emph{density}. Markov Chain Monte Carlo (MCMC)
+  methods, which are used by \texttt{brms} and many other Bayesian
+  software packages, generate samples from the posterior distribution.
+  It is extremely unlikely that you will ever get a sample that is
+  exactly equal to the point value \(x\). So you would need to estimate
+  something like the probabilities of a very small interval around
+  \(x\), and put that in relation to similarly small intervals for all
+  other possible values of \(\theta^*\) to get a reliable estimate of
+  the density at \(x\).} Moreover, point-valued hypotheses are often not
+that interesting in practice anyway. Fortunately, there is a
 generalization of the Savage-Dickey density ratio that works for ranges
-of values!
-
-Wait: there is!
+of values, too!
 
 \subsection{Bayes factors for interval-based hypotheses (like
 ROPEs)}\label{bayes-factors-for-interval-based-hypotheses-like-ropes}
@@ -1042,7 +1056,7 @@ BF_{01} = \frac{P(\theta \in I_{0} \mid D, M_{e})}{P(\theta \in I_{1} \mid D, M_
 
 \centering{
 
-\includegraphics{manuscript_files/figure-pdf/fig-savage-dickey_TR-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-savage-dickey_TR-1.pdf}}
 
 }
 
@@ -1061,21 +1075,15 @@ ROPE and do the calculations by hand. Let's do this first.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# }\AlertTok{NOTE}\CommentTok{: make me shorter and prettier, please!}
+\NormalTok{prior\_ROPE }\OtherTok{\textless{}{-}}\NormalTok{ fit\_prior }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{spread\_draws}\NormalTok{(b\_context1) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{summarise}\NormalTok{(}\AttributeTok{prior\_ROPE =} \FunctionTok{mean}\NormalTok{(b\_context1 }\SpecialCharTok{\textgreater{}=}\NormalTok{ rope[}\DecValTok{1}\NormalTok{] }\SpecialCharTok{\&}\NormalTok{ b\_context1 }\SpecialCharTok{\textless{}=}\NormalTok{ rope[}\DecValTok{2}\NormalTok{])) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{pull}\NormalTok{()}
 
-\NormalTok{prior\_ROPE }\OtherTok{\textless{}{-}}\NormalTok{ fit\_prior }\SpecialCharTok{|\textgreater{}} 
-  \FunctionTok{spread\_draws}\NormalTok{(b\_context1) }\SpecialCharTok{|\textgreater{}} 
-  \FunctionTok{summarize}\NormalTok{(}
-    \AttributeTok{prior\_ROPE =} \FunctionTok{mean}\NormalTok{(b\_context1 }\SpecialCharTok{\textgreater{}=}\NormalTok{ rope[}\DecValTok{1}\NormalTok{] }\SpecialCharTok{\&}\NormalTok{ b\_context1 }\SpecialCharTok{\textless{}=}\NormalTok{ rope[}\DecValTok{2}\NormalTok{])}
-\NormalTok{  ) }\SpecialCharTok{|\textgreater{}}
-  \FunctionTok{pull}\NormalTok{(prior\_ROPE)}
-
-\NormalTok{posterior\_ROPE }\OtherTok{\textless{}{-}}\NormalTok{ fit }\SpecialCharTok{|\textgreater{}} 
-  \FunctionTok{spread\_draws}\NormalTok{(b\_context1) }\SpecialCharTok{|\textgreater{}} 
-  \FunctionTok{summarize}\NormalTok{(}
-    \AttributeTok{posterior\_ROPE =} \FunctionTok{mean}\NormalTok{(b\_context1 }\SpecialCharTok{\textgreater{}=}\NormalTok{ rope[}\DecValTok{1}\NormalTok{] }\SpecialCharTok{\&}\NormalTok{ b\_context1 }\SpecialCharTok{\textless{}=}\NormalTok{ rope[}\DecValTok{2}\NormalTok{])}
-\NormalTok{  ) }\SpecialCharTok{|\textgreater{}} 
-  \FunctionTok{pull}\NormalTok{(posterior\_ROPE)}
+\NormalTok{post\_ROPE }\OtherTok{\textless{}{-}}\NormalTok{ fit }\SpecialCharTok{|\textgreater{}} 
+  \FunctionTok{spread\_draws}\NormalTok{(b\_context1) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{summarise}\NormalTok{(}\AttributeTok{post\_ROPE =} \FunctionTok{mean}\NormalTok{(b\_context1 }\SpecialCharTok{\textgreater{}=}\NormalTok{ rope[}\DecValTok{1}\NormalTok{] }\SpecialCharTok{\&}\NormalTok{ b\_context1 }\SpecialCharTok{\textless{}=}\NormalTok{ rope[}\DecValTok{2}\NormalTok{])) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{pull}\NormalTok{()}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1086,14 +1094,14 @@ is outside of the ROPE:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{BF\_favoring\_Null }\OtherTok{\textless{}{-}}\NormalTok{ (posterior\_ROPE }\SpecialCharTok{/}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ posterior\_ROPE)) }\SpecialCharTok{/}
+\NormalTok{BF\_favoring\_Null }\OtherTok{\textless{}{-}}\NormalTok{ (post\_ROPE }\SpecialCharTok{/}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ post\_ROPE)) }\SpecialCharTok{/}
 \NormalTok{                    (prior\_ROPE }\SpecialCharTok{/}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ prior\_ROPE))}
 \NormalTok{BF\_favoring\_Null}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-[1] 0.3255951
+[1] 0.374063
 \end{verbatim}
 
 The Bayes factor in favor of the alternative hypothesis is simply the
@@ -1107,10 +1115,10 @@ inverse of this number:
 \end{Shaded}
 
 \begin{verbatim}
-[1] 3.0713
+[1] 2.673347
 \end{verbatim}
 
-With a Bayes factor of around 3.07, the data provides only anecdotal
+With a Bayes factor of around 2.67, the data provides only moderate
 evidence in favor of the alternative hypothesis that the effect of
 \texttt{context} on \texttt{pitch} is outside of the ROPE.
 
@@ -1125,7 +1133,7 @@ above, this does not seem to be the case. Rather, we see a shift that
 posterior distribution as opposed to inside of it, as compared to the
 prior. This is why, at least in direction, the BF tells us to favor the
 alternative hypothesis. However, the shift is not so very pronounced, so
-that we would only speak of anecdotal evidence in favor of the
+that we would only speak of moderate evidence in favor of the
 alternative hypothesis and not strong or decisive evidence.
 
 \subsection{\texorpdfstring{Calculating ROPE-ed Bayes factor with the
@@ -1134,11 +1142,17 @@ package}{Calculating ROPE-ed Bayes factor with the bayesfactorR package}}\label{
 
 Instead of doing these calculations by hand, we can more conveniently
 calculate the Savage Dickey ratio with the \texttt{bayesfactor\_rope()}
-function from the \texttt{bayestestR} package. (\textbf{insert reference
-for package}) The function takes as input the posterior and prior fit
-objects (you can also only provide the posterior fit, in which case the
-function will sample from the prior for you). The function then computes
-the ratio for the specified rope for the specified parameter.
+function from the \texttt{bayestestR} package
+(\citeproc{ref-MakowskiBen-Shachar2019-bayestestR}{Makowski et al.,
+2019}). The function takes as input the posterior and prior fit objects
+(you can also only provide the posterior fit, in which case the function
+will sample from the prior for you). The function then computes the
+ratio for the specified rope for the specified parameter. Notice that
+the method implemented in this package is slightly different from the
+naive one we used above, in that it uses a method that provides more
+stable and precise estimates for smaller sets of samples. (The package
+actually uses logsplines to estimate the densities of each sample, which
+is a more robust method than the naive one we used above.)
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1158,16 +1172,13 @@ Bayes Factor (Null-Interval)
 
 Parameter |   BF
 ----------------
-context1  | 3.00
+context1  | 2.79
 
 * Evidence Against The Null: [-6.000, 6.000]
 \end{verbatim}
 
 We obtain (almost) the same result in this way: the Bayes factor in
-favor of the alternative hypothesis for the given ROPE is around 3.
-
-\textbf{MF doesn't understand why we get numerically different
-results!?}
+favor of the alternative hypothesis for the given ROPE is around 2.79.
 
 \subsection{Sensitivity analysis for different priors and
 ROPEs}\label{sensitivity-analysis-for-different-priors-and-ropes}
@@ -1190,7 +1201,7 @@ that medium to strong pitch effects in either direction are plausible.
 
 \caption{Bayes Factors for a range of priors and a range of ROPEs}
 
-{\centering \includegraphics{manuscript_files/figure-pdf/visualize-raster-1.pdf}
+{\centering \pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/visualize-raster-1.pdf}}
 
 }
 
@@ -1212,7 +1223,8 @@ data do not seem very robust, as illustrated by the shift from orange to
 green. Even the smallest ROPE intervals provide only anecdotal to
 moderate evidence for the alternative. And the most conservative ROPEs,
 following Turner et al. (\citeproc{ref-turner2019perception}{2019}),
-leads to moderate to strong evidence against the alternative hypothesis.
+leads to moderate to very strong evidence against the alternative
+hypothesis.
 
 Additionally, when comparing the Bayes Factors along the x-axis, we can
 see that they are comparatively consistent for different standard
@@ -1238,14 +1250,21 @@ concluded ``that in formal speech, Korean {[}\ldots{]} female speakers
 lowered their average fundamental frequency {[}\ldots{]}.'' This
 statement is still true according to their inferential criteria, but
 thinking more deeply about the theoretical consequences of differences
-in pitch, it might be less clear that these differenecs are truly
-meaninful.
+in pitch, it might be less clear that these differences are truly
+meaningful.
 
 \subsection{BF for point hypothesis}\label{bf-for-point-hypothesis}
 
 don't lol
 
 \section{How to write things up}\label{how-to-write-things-up}
+
+\begin{itemize}
+\tightlist
+\item
+  point to Kruschke's catalog of best practices
+  (\citeproc{ref-Kruschke2021-Bayesian-Analys}{Kruschke, 2021})
+\end{itemize}
 
 \section{Some words of encouragement}\label{some-words-of-encouragement}
 
@@ -1274,58 +1293,56 @@ accessible introduction to linear models in R is Winter
 \section{References}\label{references}
 
 \begin{verbatim}
-R version 4.4.3 (2025-02-28)
-Platform: x86_64-apple-darwin20
-Running under: macOS Sequoia 15.5
+R version 4.5.1 (2025-06-13)
+Platform: aarch64-apple-darwin20
+Running under: macOS Sequoia 15.6.1
 
 Matrix products: default
-BLAS:   /Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/lib/libRblas.0.dylib 
-LAPACK: /Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+BLAS:   /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 
-time zone: Europe/Oslo
+time zone: Europe/Amsterdam
 tzcode source: internal
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] ggdist_3.3.2        rstan_2.32.6        StanHeaders_2.32.10
- [4] see_0.11.0          bayestestR_0.16.1.2 tidybayes_3.0.6    
- [7] brms_2.22.0         Rcpp_1.1.0          ggridges_0.5.6     
-[10] lubridate_1.9.4     forcats_1.0.0       stringr_1.5.1      
-[13] dplyr_1.1.4         purrr_1.1.0         readr_2.1.5        
-[16] tidyr_1.3.1         tibble_3.3.0        ggplot2_3.5.1      
-[19] tidyverse_2.0.0    
+ [1] bayestestR_0.16.1 patchwork_1.3.2   tidybayes_3.0.7   brms_2.22.0      
+ [5] Rcpp_1.1.0        ggdist_3.3.3      lubridate_1.9.4   forcats_1.0.0    
+ [9] stringr_1.5.1     dplyr_1.1.4       purrr_1.1.0       readr_2.1.5      
+[13] tidyr_1.3.1       tibble_3.3.0      ggplot2_3.5.2     tidyverse_2.0.0  
 
 loaded via a namespace (and not attached):
  [1] svUnit_1.0.6         tidyselect_1.2.1     farver_2.1.2        
  [4] loo_2.8.0            fastmap_1.2.0        tensorA_0.36.2.1    
- [7] digest_0.6.36        timechange_0.3.0     lifecycle_1.0.4     
-[10] processx_3.8.4       magrittr_2.0.3       posterior_1.6.0     
-[13] compiler_4.4.3       rlang_1.1.6          tools_4.4.3         
-[16] utf8_1.2.6           yaml_2.3.10          data.table_1.17.8   
-[19] knitr_1.48           labeling_0.4.3       bridgesampling_1.1-2
-[22] bit_4.6.0            pkgbuild_1.4.4       cmdstanr_0.8.1      
-[25] abind_1.4-5          withr_3.0.2          datawizard_1.2.0    
-[28] grid_4.4.3           stats4_4.4.3         colorspace_2.1-1    
-[31] inline_0.3.19        scales_1.3.0         insight_1.3.1.14    
-[34] cli_3.6.5            mvtnorm_1.3-1        rmarkdown_2.27      
-[37] crayon_1.5.3         generics_0.1.4       RcppParallel_5.1.8  
-[40] rstudioapi_0.16.0    tzdb_0.5.0           bayesplot_1.11.1    
-[43] parallel_4.4.3       matrixStats_1.3.0    vctrs_0.6.5         
-[46] Matrix_1.7-2         jsonlite_2.0.0       hms_1.1.3           
-[49] arrayhelpers_1.1-0   bit64_4.6.0-1        logspline_2.1.22    
-[52] glue_1.8.0           codetools_0.2-20     ps_1.7.7            
-[55] distributional_0.4.0 stringi_1.8.7        gtable_0.3.6        
-[58] QuickJSR_1.3.0       munsell_0.5.1        pillar_1.11.0       
-[61] htmltools_0.5.8.1    Brobdingnag_1.2-9    R6_2.6.1            
-[64] vroom_1.6.5          evaluate_0.24.0      lattice_0.22-6      
-[67] backports_1.5.0      rstantools_2.4.0     coda_0.19-4.1       
-[70] gridExtra_2.3        nlme_3.1-167         checkmate_2.3.1     
-[73] xfun_0.45            pkgconfig_2.0.3     
+ [7] digest_0.6.37        timechange_0.3.0     lifecycle_1.0.4     
+[10] StanHeaders_2.32.10  processx_3.8.6       magrittr_2.0.3      
+[13] posterior_1.6.1      compiler_4.5.1       rlang_1.1.6         
+[16] tools_4.5.1          utf8_1.2.6           yaml_2.3.10         
+[19] data.table_1.17.8    knitr_1.50           labeling_0.4.3      
+[22] bridgesampling_1.1-2 bit_4.6.0            pkgbuild_1.4.8      
+[25] curl_7.0.0           RColorBrewer_1.1-3   cmdstanr_0.9.0      
+[28] abind_1.4-8          withr_3.0.2          datawizard_1.2.0    
+[31] grid_4.5.1           stats4_4.5.1         inline_0.3.21       
+[34] scales_1.4.0         tinytex_0.57         insight_1.4.0       
+[37] cli_3.6.5            mvtnorm_1.3-3        rmarkdown_2.29      
+[40] crayon_1.5.3         generics_0.1.4       RcppParallel_5.1.10 
+[43] rstudioapi_0.17.1    tzdb_0.5.0           rstan_2.32.7        
+[46] bayesplot_1.13.0     parallel_4.5.1       matrixStats_1.5.0   
+[49] vctrs_0.6.5          Matrix_1.7-3         jsonlite_2.0.0      
+[52] hms_1.1.3            arrayhelpers_1.1-0   bit64_4.6.0-1       
+[55] logspline_2.1.22     glue_1.8.0           codetools_0.2-20    
+[58] ps_1.9.1             distributional_0.5.0 stringi_1.8.7       
+[61] gtable_0.3.6         QuickJSR_1.8.0       pillar_1.11.0       
+[64] htmltools_0.5.8.1    Brobdingnag_1.2-9    R6_2.6.1            
+[67] vroom_1.6.5          evaluate_1.0.4       lattice_0.22-7      
+[70] backports_1.5.0      rstantools_2.4.0     coda_0.19-4.1       
+[73] gridExtra_2.3        nlme_3.1-168         checkmate_2.3.3     
+[76] xfun_0.53            pkgconfig_2.0.3     
 \end{verbatim}
 
 \begin{verbatim}
@@ -1350,9 +1367,9 @@ doi:10.21105/joss.01541 <https://doi.org/10.21105/joss.01541>,
 <https://joss.theoj.org/papers/10.21105/joss.01541>.
 
 [[3]]
-Kay M (2023). _tidybayes: Tidy Data and Geoms for Bayesian Models_.
+Kay M (2024). _tidybayes: Tidy Data and Geoms for Bayesian Models_.
 doi:10.5281/zenodo.1308151 <https://doi.org/10.5281/zenodo.1308151>, R
-package version 3.0.6, <http://mjskay.github.io/tidybayes/>.
+package version 3.0.7, <http://mjskay.github.io/tidybayes/>.
 
 [[4]]
 Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R,
@@ -1368,9 +1385,9 @@ in the Grammar of Graphics." _IEEE Transactions on Visualization and
 Computer Graphics_, *30*(1), 414-424. doi:10.1109/TVCG.2023.3327195
 <https://doi.org/10.1109/TVCG.2023.3327195>.
 
-Kay M (2024). _ggdist: Visualizations of Distributions and
+Kay M (2025). _ggdist: Visualizations of Distributions and
 Uncertainty_. doi:10.5281/zenodo.3879620
-<https://doi.org/10.5281/zenodo.3879620>, R package version 3.3.2,
+<https://doi.org/10.5281/zenodo.3879620>, R package version 3.3.3,
 <https://mjskay.github.io/ggdist/>.
 \end{verbatim}
 
@@ -1439,6 +1456,11 @@ Kruschke, J. K. (2018). Rejecting or {Accepting Parameter Values} in
 Psychological Science}, \emph{1}(2), 270--280.
 \url{https://doi.org/10.1177/2515245918771304}
 
+\bibitem[\citeproctext]{ref-Kruschke2021-Bayesian-Analys}
+Kruschke, J. K. (2021). Bayesian analysis reporting guidelines.
+\emph{Nature Human Behaviour}, \emph{5}(10), 1282--1291.
+\url{https://doi.org/10.1038/s41562-021-01177-7}
+
 \bibitem[\citeproctext]{ref-lindley_Statistical_journalarticle_1957}
 Lindley, D. V. (1957). A {Statistical Paradox}. \emph{Biometrika},
 \emph{44}(1/2), 187--192. \url{https://doi.org/10.2307/2333251}
@@ -1447,6 +1469,12 @@ Lindley, D. V. (1957). A {Statistical Paradox}. \emph{Biometrika},
 Liu, C. (2013). Just noticeable difference of tone pitch contour change
 for english-and chinese-native listeners. \emph{The Journal of the
 Acoustical Society of America}, \emph{134}(4), 3011--3020.
+
+\bibitem[\citeproctext]{ref-MakowskiBen-Shachar2019-bayestestR}
+Makowski, D., Ben-Shachar, M. S., \& Lüdecke, D. (2019). {bayestestR:
+Describing Effects and their Uncertainty, Existence and Significance
+within the Bayesian Framework}. \emph{Journal of Open Source Software},
+\emph{4}(40), 1541. \url{https://doi.org/10.21105/joss.01541}
 
 \bibitem[\citeproctext]{ref-MoreyRomeijn2016-philosophyOfBFs}
 Morey, R. D., Romeijn, J.-W., \& Rouder, J. N. (2016). The philosophy of
