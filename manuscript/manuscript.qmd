@@ -273,15 +273,9 @@ Note that we use default priors for the other parameters for convenience here, b
 
 ```{r priors-2}
 
-# define a weakly informative prior for the critical parameter
-priors <- c(prior(normal(0, 20), 
-                  class = b, 
-                  coef = "context1"),
-            # define a weakly informative prior for the control parameter gender
-            prior(normal(0, 50), 
-                  class = b, 
-                  coef = "gender1")
-            )
+# define a weakly informative prior for context and gender
+priors <- c(prior(normal(0, 20), class = b, coef = "context1"),
+            prior(normal(0, 50), class = b, coef = "gender1"))
 
 ```
 
@@ -294,7 +288,7 @@ Let us also have a look at the predictions for the prior-only model.
 #| warning: FALSE
 #| message: FALSE
 #| 
-# run the model
+# run the prior-only model
 fit_prior <- brm(formula, prior = priors, data = polite,
            # sample prior only
            sample_prior = "only",
@@ -721,8 +715,8 @@ Notice that the method implemented in this package is slightly different from th
 (The package actually uses logsplines to estimate the densities of each sample, which is a more robust method than the naive one we used above.)
 
 ```{r BF_rope}
-#|warning: FALSE
-#|message: FALSE
+#| warning: FALSE
+#| message: FALSE
 
 BF_1 <- bayesfactor_rope(posterior = fit, 
                          prior = fit_prior,
