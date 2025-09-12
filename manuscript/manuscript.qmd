@@ -72,7 +72,7 @@ editor:
 # Introduction
 
 One of the most common scenarios in experimental research is to measure one or more (dependent) variables in an experiment with one or more predictors (independent variables).
-Usually, we then want to test statistically whether the predictors affect the measured dependent variables.
+Usually, if we are testing hypotheses, we then want to test statistically whether the predictors affect the measured dependent variables.
 Traditionally, these statistical tests have been done within the *null hypothesis significance testing* (NHST) framework.[^NHST]
 While extensions of the NHST framework exist, in its basic form, NHST only allows us to reject the null hypothesis, but not to provide evidence in favor of it.
 Over the last decade or so, however, there has been rising interest in statistical approaches within an alternative inferential framework using *Bayesian inference*.
@@ -92,21 +92,20 @@ This tutorial provides an accessible, non-technical introduction to Bayesian hyp
 
 # Motivation and intended audience
 
-This tutorial provides a very basic introduction to hypothesis testing with Bayes factors using R (R Core Team, 2025).
+This tutorial provides a very basic introduction to hypothesis testing with Savage-Dickey density ratios using R (R Core Team, 2025).
 We wrote this tutorial with a particular reader in mind.
-If you have used R before and if you have a basic understanding of linear regression, and Bayesian inference, this tutorial is for you.
+If you have used R before and if you have a basic understanding of linear regression and Bayesian inference, this tutorial is for you.
 We will remain mostly conceptual to provide you with an accessible tool to approach hypothesis testing within Bayesian inference.
 The form of hypothesis testing that we would like to introduce to you is, however, different from the traditional null hypothesis significance testing in that it requires more thinking about the quantitative nature of your data.
 This is not a bug but, at least for us, a feature that will allow you to understand both your data and what you can learn from them better.
 
 If you don’t have any experience with regression modeling, you will probably still be able to follow, but you might also want to consider doing a crash course.
-To bring you up to speed, we recommend the excellent tutorial by Bodo @winter_Linear_preprint_2013 on mixed eﬀects regression in a non-Bayesian —a.k.a.
-frequentist—paradigm.
+To bring you up to speed, we recommend the excellent tutorial by Bodo @winter_Linear_preprint_2013 on mixed eﬀects regression in a non-Bayesian paradigm.
 To then make the transition to Bayesian versions of these regression models, we shamelessly suggest our own tutorial on "Bayesian Regression for Factorial Designs" as a natural follow-up using the same data that Winter used [@franke-roettger_Bayesian_preprint_2019].
 In a sense, the present tutorial on hypothesis testing could be considered the long-awaited sequel of the series started by Winter.
 For continuity in the series, we will continue to use the original data set.
 
-To actively follow this tutorial, you should have R installed on your computer (https://www.r-project.org).
+To actively follow this tutorial, you should have @R_program installed on your computer (https://www.r-project.org).
 Unless you already have a favorite editor for tinkering with R scripts, we recommend to try out RStudio (https://www.rstudio.com).
 You will also need some packages, which you can import with the following code:
 
@@ -143,7 +142,7 @@ library(patchwork)
 # package for BF calculation and plotting
 library(bayestestR)
 
-# options for brms models 
+# options to increase efficiency of brms models (optional)
 options(brms.backend = "cmdstanr")
 options(mc.cores = parallel::detectCores())
 
@@ -151,13 +150,13 @@ options(mc.cores = parallel::detectCores())
 
 # Data, research questions & hypotheses
 
-In this section, we introduce the data set that we will use throughout this tutorial, the research question that we want to address, and how to formulate hypotheses in a way that allows us to test them with Bayes factors using ROPEs.
+In this section, we introduce the data set that we will use throughout this tutorial, the research question that we want to address, and how to formulate meaningful hypotheses in a way that allows us to test them with Bayes factors using ROPEs.
 
 ## The data set: voice pitch in Korean across social contexts
 
 This tutorial looks at a data set relevant for investigating whether voice pitch diﬀers across social contexts in Korean.
-Korean is a language in which the social distance between speakers plays a central role to the way your formualte a sentence.
-The way Korean speakers speak depends for example on whether they are in a formal context (e.g. during a job interview) or an informal context (e.g. chatting with a friend about the holidays) [@winter-grawunder_Phonetic_journalarticle_2012].
+Korean is a language in which the social distance between speakers plays a central role to the way your formulate a sentence.
+The way Korean speakers talk depends for example on whether they are in a formal context (e.g. during a job interview) or an informal context (e.g. chatting with a friend about the holidays) [@winter-grawunder_Phonetic_journalarticle_2012].
 To load and inspect the data into your R environment, run the following code:
 
 ```{r load-data}
@@ -183,17 +182,17 @@ head(polite)
 
 This data set contains anonymous identifiers for individual speakers stored in the variable `subject`. 
 Voice pitch is dependent on speakers' `gender`, which we need to take into account as well.
-Subjects produced diﬀerent `sentences`, and the experiment manipulated whether the sentences were produced in a `formal` or an `informal` social `context`. 
+Speakers produced diﬀerent `sentences`, and the experiment manipulated whether the sentences were produced in a `formal` or an `informal` social `context`. 
 Crucially, each row contains a measurement of pitch in Hz stored in the variable `pitch`.
 
 For most analyses of behavioral experiments, researchers are interested in whether an outcome variable is meaningfully affected by at least one manipulated variable and if so how the outcome variable is affected by it.
-In this case, @winter-grawunder_Phonetic_journalarticle_2012 wanted to test whether pitch is meaningfully affected by the social context of the utterance.
+In this case, @winter-grawunder_Phonetic_journalarticle_2012 wanted to test whether voice pitch is meaningfully affected by the social context of the utterance.
 
 As a first step, we can explore this question visually.
 @fig-descriptive-dataviz displays the pitch values for all utterances in the dataset across contexts (semi-transparent points).
 The solid points indicate the average pitch values across all sentences and speakers.
-Looking at the plot, we can see that voice pitch from utterances in formal contexts are on average slightly lower than those in informal contexts.
-The red distribution is slightly shifted to the left of the blue distribution by around 1.3 semitones.
+Looking at the plot, we can see that voice pitch from utterances in formal contexts are on average slightly lower than those in informal contexts:
+The red distribution is slightly shifted to the left of the blue distribution by 10-ish Hz for male speakers and 30-ish Hz for female speakers.
 In other words, speakers tend to slightly lower their voice pitch when speaking in a formal context.
 But there is also a lot of overlap between the two contexts.
 Now as Bayesians, we would like to translate the data into an expression of evidence: does the data provide evidence for our research hypotheses?
@@ -203,7 +202,7 @@ Now as Bayesians, we would like to translate the data into an expression of evid
 #| warning: FALSE
 #| echo: FALSE
 #| fig-height: 2
-#| fig-cap: "Empirical distribution of female speakers' pitch values across contexts"
+#| fig-cap: "Empirical distribution of speakers' pitch values across contexts and sex"
 #| fig-pos: "!tbph"
 #| label: fig-descriptive-dataviz
 
@@ -247,7 +246,7 @@ Using the package `brms` [@Burkner2018-Advanced-Bayesi], our first step is to sp
 ```{r model_prep}
 #| output: true
 
-# contrast code predictor
+# contrast code predictors
 contrasts(polite$context) <- c(-0.5,0.5)
 contrasts(polite$gender) <- c(-0.5,0.5)
 
@@ -263,22 +262,22 @@ formula <- bf(pitch ~ context +
 as_tibble(get_prior(formula, polite))[,1:4]
 
 # NOTE MF: make the above prettier? (how to suppress the `source` column?)
-# NOTE TR: calling individual lines is probably confusing to the reader, I suggest we just using the generic command. But yeah the column wrangling is strange. When choosing the first 4 columns it also displays most of them as flat, so something is off there. Made an attempt...
+# NOTE TR: calling individual lines is probably confusing to the reader, I suggest we just use the generic command. But yeah the column wrangling is strange. When choosing the first 4 columns it also displays most of them as flat, so something is off there. Made an attempt...
 
 ```
 
-The default priors that `brms` picks for the Intercept and the variance parameters are mostly reasonable as they are derived from the data, weakly informative and symmetrical.
+The default priors that `brms` picks for the Intercept and the variance parameters are mostly reasonable as they are derived from the data. They are weakly informative and symmetrical.
 However the prior for our critical parameter `context1` should also be weakly informative [@gelman-etal_Prior_journalarticle_2017], i.e. the prior assumption about the difference between informal and formal contexts should be that we don't know, but our best guess is that it is close to zero and equally likely to be more or less than zero.
 So we specify a normal distribution centered on zero for this parameter (and we do the same for gender).
-(NB: We use default priors for the other parameters for convenience here, but you should always critically reflect on all of your priors.)
+Note that we use default priors for the other parameters for convenience here, but you should always critically reflect on all of your priors.
 
 ```{r priors-2}
 
-# pick a weakly informative prior for the critical parameter
+# define a weakly informative prior for the critical parameter
 priors <- c(prior(normal(0, 20), 
                   class = b, 
                   coef = "context1"),
-            # pick a weakly informative prior for the control parameter gender
+            # define a weakly informative prior for the control parameter gender
             prior(normal(0, 50), 
                   class = b, 
                   coef = "gender1")
@@ -392,19 +391,17 @@ posterior_plot
 
 ```
 
-@fig-plot-posterior shows the prior (green distribution) and posterior (red distribution) probability of the effect of context on pitch.
-The distribution of posterior samples (red) suggests that the majority of plausible values after seeing the data are positive, or in other words, informal contexts elicit larger pitch values.
+@fig-plot-posterior shows the prior (red distribution) and posterior (gold distribution) probability of the effect of context on pitch.
+The distribution of posterior samples suggests that the majority of plausible values after seeing the data are positive, or in other words, informal contexts elicit larger pitch values.
 Negative values are not very plausible posterior values, but also not completely implausible.
-Compared to our prior probability (green distribution) for which roughly 50% of posteriors are negative, this decrease in plausibility of negative values is quite noteworthy already.
+Compared to our prior probability (red distribution) for which roughly 50% of posteriors are negative, this decrease in plausibility of negative values is quite noteworthy already.
 
-What we have done here should be quite familiar.
-We compare our model predictions to a reference point.
-It is a single point value: zero.
+What we have done here should be quite familiar. We make a big deal out of values being positive or negative because we compare our model predictions to a reference point: the single point value zero.
 But do we really care that much for such point hypotheses?
 Is zero really that special?
 We might think so because years of using null hypothesis significance testing has conditioned us to think that way.
 But this tutorial would like to break this cycle and move forward.
-Bear with us and let's approach hypothesis testing a bit differently today.
+Bear with us and let's approach hypothesis testing a bit differently.
 
 ## Grounding hypotheses in regions of practical equivalences
 
@@ -430,10 +427,12 @@ While these studies are hard to compare, they give us at least an idea about the
 Based on these considerations, we could interpret the original hypothesis the following way: If a pitch difference is below the JND, it is not meaningful.
 So, instead of testing against a point-valued hypothesis, we can test against a range of parameter values that are equivalent to the null value for practical purposes.
 In our case, let us begin with the lowest reported JND of the above studies on pitch perception in speech (3 Hz), but let us also be extra conservative and double the reported value to 6 Hz. We then assume that pitch values between `-6` and `6` are meaningless.
+Said differently, in order to be convinced that a difference in pitch is meaningful, it should be reliably greater than 6 Hz.
 Such ranges are sometimes called *regions of practical equivalence* (ROPEs), range of equivalence, equivalence margin, smallest effect size of interest, or good-enough belt [see @kruschke_Rejecting_journalarticle_2018].
 
 ```{r rope}
 
+# define our ROPE
 rope <- c(-6,6)
 
 ```
@@ -456,7 +455,7 @@ $$
 \text{Bayes factor in favor of hypothesis 1 over hypothesis 0} \ \  \colon\!= \ \ \frac{P(D \mid H_1)}{P(D \mid H_0)}
 $$
 
-To see how this is an objective and actually quite intuitive measure of observational evidence in scientific reasoning, consider the case of Darwinian evolution ($H_1$) versus intelligent design $H_0$ again.
+To see how this is an objective and actually quite intuitive measure of observational evidence in scientific reasoning, consider the case of Darwinian evolution ($H_1$) versus intelligent design ($H_0$) again.
 Let's take the historical case where the observed data $D$ is that the beak sizes of finches on the Galápagos islands changed over time as a functional adaptation to environmental changes.
 What is a better explanation of that observation?
 To begin with, let's notice that this observation is *not* ruled out by either hypothesis.
@@ -469,11 +468,10 @@ Concretely, a Bayes factor of 1 corresponds to the case of $P(D \mid H_1) = P(D 
 Any Bayes factor larger than 1 indicates that the data is more likely under $H_1$ than under $H_0$, and the larger the Bayes factor, the stronger the evidence in favor of $H_1$.
 Conversely, any Bayes factor smaller than 1 indicates that the data is more likely under $H_0$ than under $H_1$.
 Notice that the Bayes factor is symmetric in the sense that a Bayes factor of 3 in favor of $H_1$ over $H_0$ corresponds to a Bayes factor of 1/3 in favor of $H_0$ over $H_1$.
-There are various conventions for interpreting the strength of evidence of Bayes factors, such as to consider as "*mild evidence*" Bayes factors bigger than 3, "*strong evidence*" Bayes factors bigger than 10, and "*decisive evidence*" Bayes factors bigger than 30.
+There are various conventions for interpreting the strength of evidence of Bayes factors, such as to consider Bayes factors smaller than 3 as "*anecdotal evidence*"; Bayes factors bigger than 3 as "*moderate evidence*"; and Bayes factors bigger than 10 as "*strong evidence*".
 
 One way to interpret Bayes factors in absolute terms is this:
 A Bayes factor of $n$ in favor of $H_1$ over $H_0$ means that after seeing the data, a rational researcher who thought both hypotheses were equally likely would consider $H_1$ to be $n$ times more likely than $H_0$ after observing $D$.
-In other words, if you are maximally uncertain before, and if you then observe $D$ and that makes you weight $H_1$ $n$ times more than $H_0$, then the Bayes factor is $n$.
 
 ## Bayes factors for statistical models
 
@@ -557,7 +555,7 @@ Concretely, the encompassing model $M_e$ could be just a regression model like t
 The null model $M_0$ would then be the nested model that is obtained from $M_e$ by conditioning on $\theta^* \in I_0$, and the alternative model $M_1$ would be the nested model that is obtained from $M_e$ by conditioning on $\theta^* \not \in I_0$.
 An alternative intuition can be gained by visualizing this principle. In @fig-savage-dickey_TR, blue parts of the sampled distributions fall within the ROPE representing the null model $M_0$, grey parts fall outside the ROPE representing the alternative model $M_1$. We get a null and an alternative model for both the model before observing the data, and after observing the data.
 
-Based on this setup, the Bayes factor in favor of $M_0$ over $M_1$ can be computed as the ratio of the posterior and prior odds of $\theta^*$ being in $I_0$ versus being in $I_1$, where $I_1$ is the complement of $I_0$:
+Based on this setup, the Bayes factor in favor of $M_0$ over $M_1$ can be computed as the ratio of the posterior and prior odds of $\theta^*$ being in $I_0$ (blue parts of the distributions) versus being in $I_1$ (grey parts), where $I_1$ is the complement of $I_0$:
 
 $$
 BF_{01} = \frac{P(\theta \in I_{0} \mid D, M_{e})}{P(\theta \in I_{1} \mid D, M_{e})} \ \frac{P(\theta \in I_{1} \mid  M_{e})}{P(\theta \in I_{0} \mid M_{e})}
@@ -855,6 +853,7 @@ results_wrangled <- read_csv("../models/loop_results.csv")
 
 ```{r visualize-raster}
 #| echo: FALSE
+#| label: sensitivity_plot
 #| fig-height: 8
 #| fig-cap: "Bayes Factors for a range of priors and a range of ROPEs"
 
@@ -889,7 +888,7 @@ ggplot(results_wrangled,
 
 ```
 
-The combination of Bayes Factors is visualized in @loop-priors-for-full-models. Orange cells indicate evidence for the alternative.
+The combination of Bayes Factors is visualized in @sensitivity_plot. Orange cells indicate evidence for the alternative.
 Green cells indicate evidence for the null.
 It becomes clear that the conclusions we can draw from our data are rather dependent on the choices we made along the way.
 
@@ -905,22 +904,29 @@ Combined, we can see that the larger the ROPE and the wider the priors, the more
 In an ideal world, the evidence provided by the data should be robust across these choices.
 However, this exploration of our inference is a fantastic opportunity to assess the boundaries of our conclusions. In this case, the original conclusions by @winter-grawunder_Phonetic_journalarticle_2012 was based on the null hypothesis significance testing and traditionally tested the compatibility of the data with a point-null hypothesis. They concluded "that in formal speech, Korean [...] female speakers lowered their average fundamental frequency [...]." This statement is still true according to their inferential criteria, but thinking more deeply about the theoretical consequences of differences in pitch, it might be less clear that these differences are truly meaningful. 
 
-## BF for point hypothesis
+# How to write this inferential procedure up?
+Here is a possible way to write up our analysis, following
+Kruschke's catalog of best practices [@Kruschke2021-Bayesian-Analys]. We first have to describe our model structure, including the priors of all parameters, and then the inferential procedure combining ROPEs with Bayes Factor. 
 
-don't lol
+## Model structure
+The data were modeled using a hierarchical linear model predicting the continous variable pitch (in Hz) by both the categorical predictor gender (male vs. female, contrast-coded) and social context (informal vs. formal, contrast-coded) and the maximal random-effects structure justified by the study's design (Barr et al. 2013), including by-subject random slopes (n = 7), and by-sentence random slopes (n = 6) for social context.
+Parameter estimation and inference is performed within the Bayesian framework. The model was fit using brms [@Burkner2018-Advanced-Bayesi] in @R_program. 
+We used regularizing, weakly informative priors for the models (Gelman, Simpson, & Betancourt 2017). Concretely, we used a student_t distributed prior for the intercept (df = 3, mean = 203.9, df = 82.7), corresponding to the grand mean of the empirical data, a student_t distributed prior for all random effect variance components as well as residual variance (df = 3, mean = 0, df = 82.7) and Lewandowski-Kurowicka-Joe distribution (LKJ, shape = 1) for all correlational parameters. These priors were default priors, estimated from the data by brms. We specified a reasonable weakly informative prior for the predictor gender (normal, mean = 0, sd = 50) and specified a range of reasonable weakly informative priors for the predictor of interest: social context (normal, mean = 0, sd = [10,15,20,25,30]).
 
-# How to write things up
+We fit this model with four chains of Hamiltonian Monte Carlo sampling for the estimation of the joint posterior distribution using the No U-Turn Sampler as implemented in Stan [@carpenter2017stan], and 4000 iterations (2000 for warm-up) per chain, distributed across four processing cores and two threads in within-chain parallelization. 
 
-- point to Kruschke's catalog of best practices [@Kruschke2021-Bayesian-Analys]
+## Inferential assessment via Bayes Factor and ROPEs
+Using the Bayesian framework, we aim to quantitatively evaluate the evidence for a perceptually meaningful effect of social context on pitch values based on our data against the background of our model and chosen priors. We will combine two statistical concepts to make this evaluation: First, we define a region of practical equivalence (ROPE) that will represent a reasonable range of pitch value around zero that we consider to be not meaningful  [@kruschke_Rejecting_journalarticle_2018]. In our case the ROPE is perceptually defined by studies on just noticeable differences in pitch perception [@liu2013just;@jongman2017just;@turner2019perception].
 
+Subsequently, we calculate the Savage-Dickey density ratio [@DickeyLientz1970-The-Weighted-Li;@WagenmakersLodewyckx2010-Bayesian-hypoth], i.e. we relate the amount of evidence (the proportion of posterior samples) within the ROPE for the model based on the priors only (i.e. before seeing the data) to the amount of evidence within the ROPE for the model based on both priors and likelihood (i.e. after seeing the data) [e.g. @WetzelsGrasman2010-An-encompassing]. The Savage-Dickey method lets us assess evidence for and against a null hypothesis using Bayes Factor (BF) and is particularly suited for nested models, especially when models only differ with respect to one parameter. Since BFs can depend on both the defined ROPE and the priors of the model, we assessed the sensitivity of the results through calculating BFs for a range of (sensible) ROPE values and a range of (sensible) priors. We assumed the ROPE intervals centered on zero from 6 Hz to 40 Hz, following literature on JNDs in pitch perception [@liu2013just;@jongman2017just;@turner2019perception]. We assumed the following five prior values for the width of the context parameter (centered on zero): 10 Hz, 15 Hz, 20 Hz, 25 Hz, and 30 Hz. These are all sensible prior choices assuming reasonable pitch differences in either direction. 
 
 # Some words of encouragement
-Bayesian inference in general and this form of hypothesis testing in particular require much more thinking than we might be used to. We think this is a good thing. Many voices have criticized the lack of engagement that we behavioral scientists invest into thinking how our theoretical ideas connect to concrete predictions in the quantitative systems under investigation [e.g. @scheel2022most; @coretta2023multidimensional; @woensdregt2024lessons]. The presented form of hypothesis testing is easy to understand, but does require to think deeply about prior quantitative assumptions as well as what it means for observations to be meaningfully different. That is neither trivial nor easy. But we would like to encourage you to engage in exactly this thinking to better understand our data and how they might link with our understanding of cognition and behavior.  
+Bayesian inference in general and this form of hypothesis testing in particular require much more thinking than we might be used to. We believe this is a good thing. Many voices have criticized the lack of engagement that we behavioral scientists invest into thinking how our theoretical ideas connect to concrete predictions in the quantitative systems under investigation [e.g. @scheel2022most; @coretta2023multidimensional; @woensdregt2024lessons]. The presented form of hypothesis testing is easy to understand, but does require to think deeply about prior quantitative assumptions as well as what it means for observations to be meaningfully different. That is neither trivial nor easy. But we would like to encourage everybody to engage in exactly this thinking to better understand our data and how they might link to our understanding of cognition and behavior.  
 
 # Other Resources
-There are many fantastic resources out there to help you learn about the wonderful world of statistics. Here are a few recommendations.
+There are many fantastic resources out there to help you learn about the wonderful world of statistics in general and Bayesian inference in particular. Here are a few recommendations.
 - A very accessible introduction to linear models in R is @winter2019statistics.
-- ...
+- 
 
 
 # References
