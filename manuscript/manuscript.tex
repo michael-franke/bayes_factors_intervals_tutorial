@@ -127,15 +127,17 @@
 
 \usepackage{graphicx}
 \makeatletter
-\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
-\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
-\makeatother
-% Scale images if necessary, so that they will not overflow the page
-% margins by default, and it is still possible to overwrite the defaults
-% using explicit options in \includegraphics[width, height, ...]{}
-\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
 % Set default figure placement to htbp
-\makeatletter
 \def\fps@figure{htbp}
 \makeatother
 
@@ -264,6 +266,7 @@ Roettger, Email: \href{mailto:timo.roettger@iln.uio.no}{timo.roettger@iln.uio.no
   \renewcommand{\textfraction}{0.07}
   \renewcommand{\floatpagefraction}{0.6}
   \floatplacement{figure}{!tbp}% optional global nudge
+  \setlength{\parindent}{5pt}
 }
 \makeatletter
 \@ifpackageloaded{caption}{}{\usepackage{caption}}
@@ -352,9 +355,9 @@ Roettger, Email: \href{mailto:timo.roettger@iln.uio.no}{timo.roettger@iln.uio.no
 
 \section{Introduction}\label{introduction}
 
-One of the most common scenarios in experimental research is to measure
-one or more (dependent) variables in an experiment with one or more
-predictors (independent variables). Usually, if we are testing
+\noindent One of the most common scenarios in experimental research is
+to measure one or more (dependent) variables in an experiment with one
+or more predictors (independent variables). Usually, if we are testing
 hypotheses, we then want to test statistically whether the predictors
 affect the measured dependent variables. Traditionally, these
 statistical tests have been done within the \emph{null hypothesis
@@ -368,14 +371,14 @@ significance testing} (NHST) framework.\footnote{Not strictly necessary
   data is under the assumed null hypothesis. If the observed data are
   very unlikely, we \emph{reject} the null hypothesis and conclude that
   the predictor affects the dependent variable.} While extensions of the
-NHST framework exist, in its basic form, NHST only allows us to reject
-the null hypothesis, but not to provide evidence in favor of it. Over
-the last decade or so, however, there has been rising interest in
-statistical approaches within an alternative inferential framework using
-\emph{Bayesian inference}. One of the main reasons for this rising
-interest is that Bayesian inference allows to not only quantify evidence
-\emph{against} an assumed null hypothesis, but also to yield
-quantitative evidence \emph{in favor of} the null hypothesis.
+NHST framework exist, in its basic form, NHST only allows us to
+\emph{reject} the null hypothesis, but not to provide evidence in favor
+of it. Over the last decade or so, however, there has been rising
+interest in statistical approaches within an alternative inferential
+framework using \emph{Bayesian inference}. One of the main reasons for
+this rising interest is that Bayesian inference allows to not only
+quantify evidence \emph{against} an assumed null hypothesis, but also to
+yield quantitative evidence \emph{in favor of} the null hypothesis.
 
 Unfortunately, there are several approaches to hypothesis testing within
 the Bayesian framework, and many of them are either conceptually
@@ -408,18 +411,21 @@ using the so-called \emph{encompassing priors} approach
 Hoijtink, 2007}; \citeproc{ref-Oh2014-Bayesian-compar}{Oh, 2014};
 \citeproc{ref-WetzelsGrasman2010-An-encompassing}{Wetzels et al.,
 2010}), which is both conceptually more meaningful and computationally
-more robust than point-valued hypothesis testing. This tutorial provides
-an accessible, non-technical introduction to Bayesian hypothesis testing
-that is easy to understand, computationally cheap and widely applicable.
+more robust than point-valued hypothesis testing. This method does not
+seem to be commonly known, it is conceptually simple and easy to apply,
+e.g., through implementation in the package \texttt{bayesfactorR}. This
+tutorial provides an accessible, non-technical introduction to Bayesian
+hypothesis testing that is easy to understand, computationally cheap and
+widely applicable.
 
 \section{Motivation and intended
 audience}\label{motivation-and-intended-audience}
 
-This tutorial provides a very basic introduction to hypothesis testing
-with Savage-Dickey density ratios using R (R Core Team, 2025). We wrote
-this tutorial with a particular reader in mind. If you have used R
-before and if you have a basic understanding of linear regression and
-Bayesian inference, this tutorial is for you. We will remain mostly
+\noindent This tutorial provides a very basic introduction to hypothesis
+testing with Savage-Dickey density ratios using R (R Core Team, 2025).
+We wrote this tutorial with a particular reader in mind. If you have
+used R before and if you have a basic understanding of linear regression
+and Bayesian inference, this tutorial is for you. We will remain mostly
 conceptual to provide you with an accessible tool to approach hypothesis
 testing within Bayesian inference. The form of hypothesis testing that
 we would like to introduce to you is, however, different from the
@@ -475,16 +481,16 @@ can import with the following code:
 \section{Data, research questions \&
 hypotheses}\label{data-research-questions-hypotheses}
 
-In this section, we introduce the data set that we will use throughout
-this tutorial, the research question that we want to address, and how to
-formulate meaningful hypotheses in a way that allows us to test them
-with Bayes factors using ROPEs.
+\noindent In this section, we introduce the data set that we will use
+throughout this tutorial, the research question that we want to address,
+and how to formulate meaningful hypotheses in a way that allows us to
+test them with Bayes factors using ROPEs.
 
 \subsection{The data set: voice pitch in Korean across social
 contexts}\label{the-data-set-voice-pitch-in-korean-across-social-contexts}
 
-This tutorial looks at a data set relevant for investigating whether
-voice pitch diﬀers across social contexts in Korean. Korean is a
+\noindent This tutorial looks at a data set relevant for investigating
+whether voice pitch diﬀers across social contexts in Korean. Korean is a
 language in which the social distance between speakers plays a central
 role to the way your formulate a sentence. The way Korean speakers talk
 depends for example on whether they are in a formal context (e.g.~during
@@ -568,7 +574,7 @@ speakers' pitch values across contexts and sex}
 
 \centering{
 
-\includegraphics{manuscript_files/figure-pdf/fig-descriptive-dataviz-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-descriptive-dataviz-1.pdf}}
 
 }
 
@@ -577,8 +583,8 @@ speakers' pitch values across contexts and sex}
 \subsection{A Bayesian regression model to address our research
 question}\label{a-bayesian-regression-model-to-address-our-research-question}
 
-Let us build a Bayesian linear model to approach an answer to this
-question. Using the package \texttt{brms}
+\noindent Let us build a Bayesian linear model to approach an answer to
+this question. Using the package \texttt{brms}
 (\citeproc{ref-Burkner2018-Advanced-Bayesi}{Bürkner, 2018}), our first
 step is to specify the model formula and check which priors need to be
 specified:
@@ -645,15 +651,9 @@ always critically reflect on all of your priors.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# define a weakly informative prior for the critical parameter}
-\NormalTok{priors }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\FunctionTok{prior}\NormalTok{(}\FunctionTok{normal}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{20}\NormalTok{), }
-                  \AttributeTok{class =}\NormalTok{ b, }
-                  \AttributeTok{coef =} \StringTok{"context1"}\NormalTok{),}
-            \CommentTok{\# define a weakly informative prior for the control parameter gender}
-            \FunctionTok{prior}\NormalTok{(}\FunctionTok{normal}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{50}\NormalTok{), }
-                  \AttributeTok{class =}\NormalTok{ b, }
-                  \AttributeTok{coef =} \StringTok{"gender1"}\NormalTok{)}
-\NormalTok{            )}
+\CommentTok{\# define a weakly informative prior for context and gender}
+\NormalTok{priors }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\FunctionTok{prior}\NormalTok{(}\FunctionTok{normal}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{20}\NormalTok{), }\AttributeTok{class =}\NormalTok{ b, }\AttributeTok{coef =} \StringTok{"context1"}\NormalTok{),}
+            \FunctionTok{prior}\NormalTok{(}\FunctionTok{normal}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{50}\NormalTok{), }\AttributeTok{class =}\NormalTok{ b, }\AttributeTok{coef =} \StringTok{"gender1"}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -668,7 +668,7 @@ the prior-only model.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# run the model}
+\CommentTok{\# run the prior{-}only model}
 \NormalTok{fit\_prior }\OtherTok{\textless{}{-}} \FunctionTok{brm}\NormalTok{(formula, }\AttributeTok{prior =}\NormalTok{ priors, }\AttributeTok{data =}\NormalTok{ polite,}
            \CommentTok{\# sample prior only}
            \AttributeTok{sample\_prior =} \StringTok{"only"}\NormalTok{,}
@@ -687,7 +687,7 @@ context on pitch, i.e.~before seeing the data}
 
 \centering{
 
-\includegraphics{manuscript_files/figure-pdf/fig-plot-priors-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-plot-priors-1.pdf}}
 
 }
 
@@ -720,7 +720,7 @@ of context on pitch, i.e.~after seeing the data}
 
 \centering{
 
-\includegraphics{manuscript_files/figure-pdf/fig-plot-posterior-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-plot-posterior-1.pdf}}
 
 }
 
@@ -748,7 +748,7 @@ and let's approach hypothesis testing a bit differently.
 \subsection{Grounding hypotheses in regions of practical
 equivalences}\label{grounding-hypotheses-in-regions-of-practical-equivalences}
 
-Above we claimed that we wanted to test ``whether pitch is
+\noindent Above we claimed that we wanted to test ``whether pitch is
 \textbf{meaningfully affected} by the social context of the utterance''.
 We snuck the word ``meaningfully'' in there for a reason. But what does
 ``meaningful'' mean? This is an interesting yet deep questions and
@@ -811,22 +811,22 @@ Factor}\label{testing-hypotheses-using-bayes-factor}
 
 \subsection{What is Bayes Factor?}\label{what-is-bayes-factor}
 
-We often define two hypotheses \(H_0\) and \(H_1\) and we usually want
-to know which of these is correct. We do so by looking at some observed
-data \(D\). As Bayesians, the first most obvious thing to look at is how
-likely each hypothesis is after seeing the data, i.e., something like
-\(P(H_0 \mid D)\) and \(P(H_1 \mid D)\). Now, it turns out that these
-\emph{posterior probabilities of hypotheses} are problematic, because
-they depend on the prior probabilities of the hypotheses \(P(H_0)\) and
-\(P(H_1)\), which are often hard to justify. To see this, imagine that
-the hypotheses to compare are polarizing issues like contrasting
-Darwinian evolutionary theory and Creationist's intelligent design.
-Proponents of either view would have a hard time agreeing on priors for
-these hypotheses, but may find it much easier to agree on whether a
-given observation \(D\) is more likely under the assumption that one of
-the two hypotheses is correct, rather than the other. Therefore, Bayes
-factors are defined as the \emph{likelihood ratio} of the data given
-each hypothesis:
+\noindent We often define two hypotheses \(H_0\) and \(H_1\) and we
+usually want to know which of these is correct. We do so by looking at
+some observed data \(D\). As Bayesians, the first most obvious thing to
+look at is how likely each hypothesis is after seeing the data, i.e.,
+something like \(P(H_0 \mid D)\) and \(P(H_1 \mid D)\). Now, it turns
+out that these \emph{posterior probabilities of hypotheses} are
+problematic, because they depend on the prior probabilities of the
+hypotheses \(P(H_0)\) and \(P(H_1)\), which are often hard to justify.
+To see this, imagine that the hypotheses to compare are polarizing
+issues like contrasting Darwinian evolutionary theory and Creationist's
+intelligent design. Proponents of either view would have a hard time
+agreeing on priors for these hypotheses, but may find it much easier to
+agree on whether a given observation \(D\) is more likely under the
+assumption that one of the two hypotheses is correct, rather than the
+other. Therefore, Bayes factors are defined as the \emph{likelihood
+ratio} of the data given each hypothesis:
 
 \[
 \text{Bayes factor in favor of hypothesis 1 over hypothesis 0} \ \  \colon\!= \ \ \frac{P(D \mid H_1)}{P(D \mid H_0)}
@@ -878,11 +878,11 @@ after observing \(D\).
 \subsection{Bayes factors for statistical
 models}\label{bayes-factors-for-statistical-models}
 
-After motivating Bayes factors in general, let's have a look at the
-definition of Bayes factors in the context of statistical models in this
-section. What follows in this section is a bit more technical, so you
-can skip ahead without missing out to much information for applying
-these methods.
+\noindent After motivating Bayes factors in general, let's have a look
+at the definition of Bayes factors in the context of statistical models
+in this section. What follows in this section is a bit more technical,
+so you can skip ahead without missing out to much information for
+applying these methods.
 
 In the context of statistical models, we can use Bayes factors to
 compare two statistical models \(M_0\) and \(M_1\) that instantiate two
@@ -926,9 +926,9 @@ statistical models is:
 \subsection{Bayes factor for point-valued hypotheses (the Savage-Dickey
 method)}\label{bayes-factor-for-point-valued-hypotheses-the-savage-dickey-method}
 
-While Bayes factors are a very intuitive and useful measure of evidence,
-they are often hard to compute. There are various approximation methods,
-such as bridge sampling
+\noindent While Bayes factors are a very intuitive and useful measure of
+evidence, they are often hard to compute. There are various
+approximation methods, such as bridge sampling
 (\citeproc{ref-GronauSarafoglou2017-A-tutorial-on-b}{Gronau et al.,
 2017}), which can be used for any arbitrary pair of models, but these
 can still be computationally costly and sometimes hard to implement.
@@ -1005,9 +1005,9 @@ of values, too!
 \subsection{Bayes factors for interval-based hypotheses (like
 ROPEs)}\label{bayes-factors-for-interval-based-hypotheses-like-ropes}
 
-The Savage-Dickey density ratio can be generalized to the case where the
-null hypothesis \(H_0\) is not a point-valued hypothesis, but a
-hypothesis that the critical parameter \(\theta^*\) lies in some
+\noindent The Savage-Dickey density ratio can be generalized to the case
+where the null hypothesis \(H_0\) is not a point-valued hypothesis, but
+a hypothesis that the critical parameter \(\theta^*\) lies in some
 interval \(I_0\), such as our ROPE from above. There are several
 different ways to define the alternative hypothesis \(H_1\) in this
 case, but the most common one is to define it as the complement of
@@ -1057,7 +1057,7 @@ BF_{01} = \frac{P(\theta \in I_{0} \mid D, M_{e})}{P(\theta \in I_{1} \mid D, M_
 
 \centering{
 
-\includegraphics{manuscript_files/figure-pdf/fig-savage-dickey_TR-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-savage-dickey_TR-1.pdf}}
 
 }
 
@@ -1066,13 +1066,13 @@ BF_{01} = \frac{P(\theta \in I_{0} \mid D, M_{e})}{P(\theta \in I_{1} \mid D, M_
 \subsection{Manually calculating the Bayes factor for our ROPE
 hypothesis}\label{manually-calculating-the-bayes-factor-for-our-rope-hypothesis}
 
-To calculate the Bayes factor for our ROPE hypothesis, we can use the
-formula above using samples from the prior and the posterior based on
-our encompassing model. For the case of the Korean speech data, we
-already obtained prior samples above in the \texttt{fit\_prior} model,
-and posterior samples in the \texttt{fit} model. So, we can use these to
-extract the proportion of samples that fall inside and outside of our
-ROPE and do the calculations by hand. Let's do this first.
+\noindent To calculate the Bayes factor for our ROPE hypothesis, we can
+use the formula above using samples from the prior and the posterior
+based on our encompassing model. For the case of the Korean speech data,
+we already obtained prior samples above in the \texttt{fit\_prior}
+model, and posterior samples in the \texttt{fit} model. So, we can use
+these to extract the proportion of samples that fall inside and outside
+of our ROPE and do the calculations by hand. Let's do this first.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1102,7 +1102,7 @@ is outside of the ROPE:
 \end{Shaded}
 
 \begin{verbatim}
-[1] 0.3255951
+[1] 0.374063
 \end{verbatim}
 
 The Bayes factor in favor of the alternative hypothesis is simply the
@@ -1116,10 +1116,10 @@ inverse of this number:
 \end{Shaded}
 
 \begin{verbatim}
-[1] 3.0713
+[1] 2.673347
 \end{verbatim}
 
-With a Bayes factor of around 3.07, the data provides only moderate
+With a Bayes factor of around 2.67, the data provides only moderate
 evidence in favor of the alternative hypothesis that the effect of
 \texttt{context} on \texttt{pitch} is outside of the ROPE.
 
@@ -1141,25 +1141,22 @@ alternative hypothesis and not strong or decisive evidence.
 \texttt{bayesfactorR}
 package}{Calculating ROPE-ed Bayes factor with the bayesfactorR package}}\label{calculating-rope-ed-bayes-factor-with-the-bayesfactorr-package}
 
-Instead of doing these calculations by hand, we can more conveniently
-calculate the Savage Dickey ratio with the \texttt{bayesfactor\_rope()}
-function from the \texttt{bayestestR} package
-(\citeproc{ref-MakowskiBen-Shachar2019-bayestestR}{Makowski et al.,
-2019}). The function takes as input the posterior and prior fit objects
-(you can also only provide the posterior fit, in which case the function
-will sample from the prior for you). The function then computes the
-ratio for the specified rope for the specified parameter. Notice that
-the method implemented in this package is slightly different from the
-naive one we used above, in that it uses a method that provides more
+\noindent Instead of doing these calculations by hand, we can more
+conveniently calculate the Savage Dickey ratio with the
+\texttt{bayesfactor\_rope()} function from the \texttt{bayestestR}
+package (\citeproc{ref-MakowskiBen-Shachar2019-bayestestR}{Makowski et
+al., 2019}). The function takes as input the posterior and prior fit
+objects (you can also only provide the posterior fit, in which case the
+function will sample from the prior for you). The function then computes
+the ratio for the specified rope for the specified parameter. Notice
+that the method implemented in this package is slightly different from
+the naive one we used above, in that it uses a method that provides more
 stable and precise estimates for smaller sets of samples. (The package
 actually uses logsplines to estimate the densities of each sample, which
 is a more robust method than the naive one we used above.)
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\#|warning: FALSE}
-\CommentTok{\#|message: FALSE}
-
 \NormalTok{BF\_1 }\OtherTok{\textless{}{-}} \FunctionTok{bayesfactor\_rope}\NormalTok{(}\AttributeTok{posterior =}\NormalTok{ fit, }
                          \AttributeTok{prior =}\NormalTok{ fit\_prior,}
                          \AttributeTok{null =}\NormalTok{ rope, }
@@ -1173,36 +1170,37 @@ Bayes Factor (Null-Interval)
 
 Parameter |   BF
 ----------------
-context1  | 3.00
+context1  | 2.79
 
 * Evidence Against The Null: [-6.000, 6.000]
 \end{verbatim}
 
 We obtain (almost) the same result in this way: the Bayes factor in
-favor of the alternative hypothesis for the given ROPE is around 3.
+favor of the alternative hypothesis for the given ROPE is around 2.79.
 
 \subsection{Sensitivity analysis for different priors and
 ROPEs}\label{sensitivity-analysis-for-different-priors-and-ropes}
 
-Now as you probably have guessed already, all these probabilities are
-very much dependent on the priors of the model, so it is important to
-evaluate the robustness of our Bayes Factor-based interpretation across
-a range of sensible priors. And as long as we are not a 100\% sure about
-what a meaningful difference is, we might as well explore the robustness
-of the Bayes Factor across different ROPEs. We won't bore you with the
-code for that process, but you can follow it along in our scripts. Let
-us explore the following ROPE intervals as informed by the three studies
-cited above on pitch perception: we test a range of ROPE intervals from
-6 Hz to 40 Hz. We also assume the following five prior values for the
-width of the standard deviation of the critical parameter (centered on
-zero): 10, 15, 20, 25, 30. These are all sensible prior widths assuming
-that medium to strong pitch effects in either direction are plausible.
+\noindent Now as you probably have guessed already, all these
+probabilities are very much dependent on the priors of the model, so it
+is important to evaluate the robustness of our Bayes Factor-based
+interpretation across a range of sensible priors. And as long as we are
+not a 100\% sure about what a meaningful difference is, we might as well
+explore the robustness of the Bayes Factor across different ROPEs. We
+won't bore you with the code for that process, but you can follow it
+along in our scripts. Let us explore the following ROPE intervals as
+informed by the three studies cited above on pitch perception: we test a
+range of ROPE intervals from 6 Hz to 40 Hz. We also assume the following
+five prior values for the width of the standard deviation of the
+critical parameter (centered on zero): 10, 15, 20, 25, 30. These are all
+sensible prior widths assuming that medium to strong pitch effects in
+either direction are plausible.
 
 \begin{figure}[!tbp]
 
 \caption{Bayes Factors for a range of priors and a range of ROPEs}
 
-{\centering \includegraphics{manuscript_files/figure-pdf/sensitivity_plot-1.pdf}
+{\centering \pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/sensitivity_plot-1.pdf}}
 
 }
 
@@ -1257,8 +1255,8 @@ meaningful.
 \section{How to write this inferential procedure
 up?}\label{how-to-write-this-inferential-procedure-up}
 
-Here is a possible way to write up our analysis, following Kruschke's
-catalog of best practices
+\noindent Here is a possible way to write up our analysis, following
+Kruschke's catalog of best practices
 (\citeproc{ref-Kruschke2021-Bayesian-Analys}{Kruschke, 2021}). We first
 have to describe our model structure, including the priors of all
 parameters, and then the inferential procedure combining ROPEs with
@@ -1266,14 +1264,14 @@ Bayes Factor.
 
 \subsection{Model structure}\label{model-structure}
 
-The data were modeled using a hierarchical linear model predicting the
-continous variable pitch (in Hz) by both the categorical predictor
-gender (male vs.~female, contrast-coded) and social context (informal
-vs.~formal, contrast-coded) and the maximal random-effects structure
-justified by the study's design (Barr et al.~2013), including by-subject
-random slopes (n = 7), and by-sentence random slopes (n = 6) for social
-context. Parameter estimation and inference is performed within the
-Bayesian framework. The model was fit using brms
+\noindent The data were modeled using a hierarchical linear model
+predicting the continous variable pitch (in Hz) by both the categorical
+predictor gender (male vs.~female, contrast-coded) and social context
+(informal vs.~formal, contrast-coded) and the maximal random-effects
+structure justified by the study's design (Barr et al.~2013), including
+by-subject random slopes (n = 7), and by-sentence random slopes (n = 6)
+for social context. Parameter estimation and inference is performed
+within the Bayesian framework. The model was fit using brms
 (\citeproc{ref-Burkner2018-Advanced-Bayesi}{Bürkner, 2018}) in R Core
 Team (\citeproc{ref-R_program}{2025}). We used regularizing, weakly
 informative priors for the models (Gelman, Simpson, \& Betancourt 2017).
@@ -1299,13 +1297,13 @@ processing cores and two threads in within-chain parallelization.
 \subsection{Inferential assessment via Bayes Factor and
 ROPEs}\label{inferential-assessment-via-bayes-factor-and-ropes}
 
-Using the Bayesian framework, we aim to quantitatively evaluate the
-evidence for a perceptually meaningful effect of social context on pitch
-values based on our data against the background of our model and chosen
-priors. We will combine two statistical concepts to make this
-evaluation: First, we define a region of practical equivalence (ROPE)
-that will represent a reasonable range of pitch value around zero that
-we consider to be not meaningful
+\noindent Using the Bayesian framework, we aim to quantitatively
+evaluate the evidence for a perceptually meaningful effect of social
+context on pitch values based on our data against the background of our
+model and chosen priors. We will combine two statistical concepts to
+make this evaluation: First, we define a region of practical equivalence
+(ROPE) that will represent a reasonable range of pitch value around zero
+that we consider to be not meaningful
 (\citeproc{ref-kruschke_Rejecting_journalarticle_2018}{Kruschke, 2018}).
 In our case the ROPE is perceptually defined by studies on just
 noticeable differences in pitch perception
@@ -1341,12 +1339,12 @@ direction.
 
 \section{Some words of encouragement}\label{some-words-of-encouragement}
 
-Bayesian inference in general and this form of hypothesis testing in
-particular require much more thinking than we might be used to. We
-believe this is a good thing. Many voices have criticized the lack of
-engagement that we behavioral scientists invest into thinking how our
-theoretical ideas connect to concrete predictions in the quantitative
-systems under investigation
+\noindent Bayesian inference in general and this form of hypothesis
+testing in particular require much more thinking than we might be used
+to. We believe this is a good thing. Many voices have criticized the
+lack of engagement that we behavioral scientists invest into thinking
+how our theoretical ideas connect to concrete predictions in the
+quantitative systems under investigation
 (\citeproc{ref-coretta2023multidimensional}{Coretta et al., 2023}; e.g.
 \citeproc{ref-scheel2022most}{Scheel, 2022};
 \citeproc{ref-woensdregt2024lessons}{Woensdregt et al., 2024}). The
@@ -1359,67 +1357,65 @@ they might link to our understanding of cognition and behavior.
 
 \section{Other Resources}\label{other-resources}
 
-There are many fantastic resources out there to help you learn about the
-wonderful world of statistics in general and Bayesian inference in
-particular. Here are a few recommendations. - A very accessible
-introduction to linear models in R is Winter
+\noindent  There are many fantastic resources out there to help you
+learn about the wonderful world of statistics in general and Bayesian
+inference in particular. Here are a few recommendations. - A very
+accessible introduction to linear models in R is Winter
 (\citeproc{ref-winter2019statistics}{2019}). -
 
 \section{References}\label{references}
 
 \begin{verbatim}
-R version 4.4.3 (2025-02-28)
-Platform: x86_64-apple-darwin20
-Running under: macOS Sequoia 15.5
+R version 4.5.1 (2025-06-13)
+Platform: aarch64-apple-darwin20
+Running under: macOS Sequoia 15.6.1
 
 Matrix products: default
-BLAS:   /Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/lib/libRblas.0.dylib 
-LAPACK: /Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+BLAS:   /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 
-time zone: Europe/Oslo
+time zone: Europe/Amsterdam
 tzcode source: internal
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] ggdist_3.3.2        rstan_2.32.6        StanHeaders_2.32.10
- [4] see_0.11.0          bayestestR_0.16.1.2 tidybayes_3.0.6    
- [7] brms_2.22.0         Rcpp_1.1.0          ggridges_0.5.6     
-[10] lubridate_1.9.4     forcats_1.0.0       stringr_1.5.1      
-[13] dplyr_1.1.4         purrr_1.1.0         readr_2.1.5        
-[16] tidyr_1.3.1         tibble_3.3.0        ggplot2_3.5.1      
-[19] tidyverse_2.0.0    
+ [1] bayestestR_0.16.1 patchwork_1.3.2   tidybayes_3.0.7   brms_2.22.0      
+ [5] Rcpp_1.1.0        ggdist_3.3.3      lubridate_1.9.4   forcats_1.0.0    
+ [9] stringr_1.5.1     dplyr_1.1.4       purrr_1.1.0       readr_2.1.5      
+[13] tidyr_1.3.1       tibble_3.3.0      ggplot2_3.5.2     tidyverse_2.0.0  
 
 loaded via a namespace (and not attached):
  [1] svUnit_1.0.6         tidyselect_1.2.1     farver_2.1.2        
  [4] loo_2.8.0            fastmap_1.2.0        tensorA_0.36.2.1    
- [7] digest_0.6.36        timechange_0.3.0     lifecycle_1.0.4     
-[10] processx_3.8.4       magrittr_2.0.3       posterior_1.6.0     
-[13] compiler_4.4.3       rlang_1.1.6          tools_4.4.3         
-[16] utf8_1.2.6           yaml_2.3.10          data.table_1.17.8   
-[19] knitr_1.48           labeling_0.4.3       bridgesampling_1.1-2
-[22] bit_4.6.0            pkgbuild_1.4.4       cmdstanr_0.8.1      
-[25] abind_1.4-5          withr_3.0.2          datawizard_1.2.0    
-[28] grid_4.4.3           stats4_4.4.3         colorspace_2.1-1    
-[31] inline_0.3.19        scales_1.3.0         insight_1.3.1.14    
-[34] cli_3.6.5            mvtnorm_1.3-1        rmarkdown_2.27      
-[37] crayon_1.5.3         generics_0.1.4       RcppParallel_5.1.8  
-[40] rstudioapi_0.16.0    tzdb_0.5.0           bayesplot_1.11.1    
-[43] parallel_4.4.3       matrixStats_1.3.0    vctrs_0.6.5         
-[46] Matrix_1.7-2         jsonlite_2.0.0       hms_1.1.3           
-[49] arrayhelpers_1.1-0   bit64_4.6.0-1        logspline_2.1.22    
-[52] glue_1.8.0           codetools_0.2-20     ps_1.7.7            
-[55] distributional_0.4.0 stringi_1.8.7        gtable_0.3.6        
-[58] QuickJSR_1.3.0       munsell_0.5.1        pillar_1.11.0       
-[61] htmltools_0.5.8.1    Brobdingnag_1.2-9    R6_2.6.1            
-[64] vroom_1.6.5          evaluate_0.24.0      lattice_0.22-6      
-[67] backports_1.5.0      rstantools_2.4.0     coda_0.19-4.1       
-[70] gridExtra_2.3        nlme_3.1-167         checkmate_2.3.1     
-[73] xfun_0.45            pkgconfig_2.0.3     
+ [7] digest_0.6.37        timechange_0.3.0     lifecycle_1.0.4     
+[10] StanHeaders_2.32.10  processx_3.8.6       magrittr_2.0.3      
+[13] posterior_1.6.1      compiler_4.5.1       rlang_1.1.6         
+[16] tools_4.5.1          utf8_1.2.6           yaml_2.3.10         
+[19] data.table_1.17.8    knitr_1.50           labeling_0.4.3      
+[22] bridgesampling_1.1-2 bit_4.6.0            pkgbuild_1.4.8      
+[25] curl_7.0.0           RColorBrewer_1.1-3   cmdstanr_0.9.0      
+[28] abind_1.4-8          withr_3.0.2          datawizard_1.2.0    
+[31] grid_4.5.1           stats4_4.5.1         inline_0.3.21       
+[34] scales_1.4.0         tinytex_0.57         insight_1.4.0       
+[37] cli_3.6.5            mvtnorm_1.3-3        rmarkdown_2.29      
+[40] crayon_1.5.3         generics_0.1.4       RcppParallel_5.1.10 
+[43] rstudioapi_0.17.1    tzdb_0.5.0           rstan_2.32.7        
+[46] bayesplot_1.13.0     parallel_4.5.1       matrixStats_1.5.0   
+[49] vctrs_0.6.5          Matrix_1.7-3         jsonlite_2.0.0      
+[52] hms_1.1.3            arrayhelpers_1.1-0   bit64_4.6.0-1       
+[55] logspline_2.1.22     glue_1.8.0           codetools_0.2-20    
+[58] ps_1.9.1             distributional_0.5.0 stringi_1.8.7       
+[61] gtable_0.3.6         QuickJSR_1.8.0       pillar_1.11.0       
+[64] htmltools_0.5.8.1    Brobdingnag_1.2-9    R6_2.6.1            
+[67] vroom_1.6.5          evaluate_1.0.4       lattice_0.22-7      
+[70] backports_1.5.0      rstantools_2.4.0     coda_0.19-4.1       
+[73] gridExtra_2.3        nlme_3.1-168         checkmate_2.3.3     
+[76] xfun_0.53            pkgconfig_2.0.3     
 \end{verbatim}
 
 \begin{verbatim}
@@ -1444,9 +1440,9 @@ doi:10.21105/joss.01541 <https://doi.org/10.21105/joss.01541>,
 <https://joss.theoj.org/papers/10.21105/joss.01541>.
 
 [[3]]
-Kay M (2023). _tidybayes: Tidy Data and Geoms for Bayesian Models_.
+Kay M (2024). _tidybayes: Tidy Data and Geoms for Bayesian Models_.
 doi:10.5281/zenodo.1308151 <https://doi.org/10.5281/zenodo.1308151>, R
-package version 3.0.6, <http://mjskay.github.io/tidybayes/>.
+package version 3.0.7, <http://mjskay.github.io/tidybayes/>.
 
 [[4]]
 Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R,
@@ -1462,9 +1458,9 @@ in the Grammar of Graphics." _IEEE Transactions on Visualization and
 Computer Graphics_, *30*(1), 414-424. doi:10.1109/TVCG.2023.3327195
 <https://doi.org/10.1109/TVCG.2023.3327195>.
 
-Kay M (2024). _ggdist: Visualizations of Distributions and
+Kay M (2025). _ggdist: Visualizations of Distributions and
 Uncertainty_. doi:10.5281/zenodo.3879620
-<https://doi.org/10.5281/zenodo.3879620>, R package version 3.3.2,
+<https://doi.org/10.5281/zenodo.3879620>, R package version 3.3.3,
 <https://mjskay.github.io/ggdist/>.
 \end{verbatim}
 

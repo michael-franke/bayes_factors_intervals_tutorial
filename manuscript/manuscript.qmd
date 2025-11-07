@@ -55,6 +55,7 @@ format:
           \renewcommand{\textfraction}{0.07}
           \renewcommand{\floatpagefraction}{0.6}
           \floatplacement{figure}{!tbp}% optional global nudge
+          \setlength{\parindent}{5pt}
         }
     fig-pos: "!tbp"
 #header-includes: \usepackage{annotate-equations}
@@ -71,10 +72,11 @@ editor:
 
 # Introduction
 
+\noindent
 One of the most common scenarios in experimental research is to measure one or more (dependent) variables in an experiment with one or more predictors (independent variables).
 Usually, if we are testing hypotheses, we then want to test statistically whether the predictors affect the measured dependent variables.
 Traditionally, these statistical tests have been done within the *null hypothesis significance testing* (NHST) framework.[^NHST]
-While extensions of the NHST framework exist, in its basic form, NHST only allows us to reject the null hypothesis, but not to provide evidence in favor of it.
+While extensions of the NHST framework exist, in its basic form, NHST only allows us to *reject* the null hypothesis, but not to provide evidence in favor of it.
 Over the last decade or so, however, there has been rising interest in statistical approaches within an alternative inferential framework using *Bayesian inference*.
 One of the main reasons for this rising interest is that Bayesian inference allows to not only quantify evidence *against* an assumed null hypothesis, but also to yield quantitative evidence *in favor of* the null hypothesis.
 
@@ -88,10 +90,12 @@ Yet, for some of the most common use cases, there are some simple and computatio
 One such method is the *Savage-Dickey density ratio* [@DickeyLientz1970-The-Weighted-Li;@WagenmakersLodewyckx2010-Bayesian-hypoth].
 While prior work has prominently documented how to use this method for the case of point-valued null-hypotheses [@WagenmakersLodewyckx2010-Bayesian-hypoth], this method can be hard to estimate reliably with posterior sampling, the most prevalent method for approximating Bayesian computation at the moment. 
 This tutorial therefore focuses on the use of the Savage-Dickey density ratio for testing hypotheses that are grounded in *regions of practical equivalence* (ROPEs) [@kruschke_Rejecting_journalarticle_2018] using the so-called *encompassing priors* approach [@KlugkistKato2005-Bayesian-model;@KlugkistHoijtink2007-The-Bayes-facto;@Oh2014-Bayesian-compar;@WetzelsGrasman2010-An-encompassing], which is both conceptually more meaningful and computationally more robust than point-valued hypothesis testing.
-This tutorial provides an accessible, non-technical introduction to Bayesian hypothesis testing that is easy to understand, computationally cheap and widely applicable.
+While this method does not seem to be commonly known, it is conceptually simple and easy to apply, e.g., through implementation in the package `bayesfactorR`.
+This tutorial therefore provides an accessible, non-technical introduction to this method of Bayesian hypothesis testing, which is easy to understand, computationally cheap and widely applicable.
 
 # Motivation and intended audience
 
+\noindent
 This tutorial provides a very basic introduction to hypothesis testing with Savage-Dickey density ratios using R (R Core Team, 2025).
 We wrote this tutorial with a particular reader in mind.
 If you have used R before and if you have a basic understanding of linear regression and Bayesian inference, this tutorial is for you.
@@ -102,8 +106,8 @@ This is not a bug but, at least for us, a feature that will allow you to underst
 If you don’t have any experience with regression modeling, you will probably still be able to follow, but you might also want to consider doing a crash course.
 To bring you up to speed, we recommend the excellent tutorial by Bodo @winter_Linear_preprint_2013 on mixed eﬀects regression in a non-Bayesian paradigm.
 To then make the transition to Bayesian versions of these regression models, we shamelessly suggest our own tutorial on "Bayesian Regression for Factorial Designs" as a natural follow-up using the same data that Winter used [@franke-roettger_Bayesian_preprint_2019].
-In a sense, the present tutorial on hypothesis testing could be considered the long-awaited sequel of the series started by Winter.
-For continuity in the series, we will continue to use the original data set.
+In a sense, the present tutorial on hypothesis testing could be considered the long-awaited sequel (!?) of the series started by Winter.
+For continuity, we will use the same data set here that was also used by the previous tutorials.
 
 To actively follow this tutorial, you should have @R_program installed on your computer (https://www.r-project.org).
 Unless you already have a favorite editor for tinkering with R scripts, we recommend to try out RStudio (https://www.rstudio.com).
@@ -150,10 +154,12 @@ options(mc.cores = parallel::detectCores())
 
 # Data, research questions & hypotheses
 
+\noindent
 In this section, we introduce the data set that we will use throughout this tutorial, the research question that we want to address, and how to formulate meaningful hypotheses in a way that allows us to test them with Bayes factors using ROPEs.
 
 ## The data set: voice pitch in Korean across social contexts
 
+\noindent
 This tutorial looks at a data set relevant for investigating whether voice pitch diﬀers across social contexts in Korean.
 Korean is a language in which the social distance between speakers plays a central role to the way your formulate a sentence.
 The way Korean speakers talk depends for example on whether they are in a formal context (e.g. during a job interview) or an informal context (e.g. chatting with a friend about the holidays) [@winter-grawunder_Phonetic_journalarticle_2012].
@@ -240,6 +246,7 @@ polite |>
 
 ## A Bayesian regression model to address our research question
 
+\noindent
 Let us build a Bayesian linear model to approach an answer to this question.
 Using the package `brms` [@Burkner2018-Advanced-Bayesi], our first step is to specify the model formula and check which priors need to be specified:
 
@@ -399,6 +406,7 @@ Bear with us and let's approach hypothesis testing a bit differently.
 
 ## Grounding hypotheses in regions of practical equivalences
 
+\noindent
 Above we claimed that we wanted to test "whether pitch is **meaningfully affected** by the social context of the utterance".
 We snuck the word "meaningfully" in there for a reason.
 But what does "meaningful" mean?
@@ -437,6 +445,7 @@ With a ROPE being defined, we can now test our hypothesis "whether pitch is **me
 
 ## What is Bayes Factor?
 
+\noindent
 We often define two hypotheses $H_0$ and $H_1$ and we usually want to know which of these is correct.
 We do so by looking at some observed data $D$.
 As Bayesians, the first most obvious thing to look at is how likely each hypothesis is after seeing the data, i.e., something like $P(H_0 \mid D)$ and $P(H_1 \mid D)$.
@@ -469,6 +478,7 @@ A Bayes factor of $n$ in favor of $H_1$ over $H_0$ means that after seeing the d
 
 ## Bayes factors for statistical models
 
+\noindent
 After motivating Bayes factors in general, let's have a look at the definition of Bayes factors in the context of statistical models in this section. 
 What follows in this section is a bit more technical, so you can skip ahead without missing out to much information for applying these methods. 
 
@@ -496,6 +506,7 @@ $$
 
 ## Bayes factor for point-valued hypotheses (the Savage-Dickey method)
 
+\noindent
 While Bayes factors are a very intuitive and useful measure of evidence, they are often hard to compute.
 There are various approximation methods, such as bridge sampling [@GronauSarafoglou2017-A-tutorial-on-b], which can be used for any arbitrary pair of models, but these can still be computationally costly and sometimes hard to implement.
 However, for the special case of *nested models*, there is a simple and computationally cheap approximation method called the *Savage-Dickey density ratio* [@DickeyLientz1970-The-Weighted-Li;@WagenmakersLodewyckx2010-Bayesian-hypoth].
@@ -536,6 +547,7 @@ So you would need to estimate something like the probabilities of a very small i
 
 ## Bayes factors for interval-based hypotheses (like ROPEs)
 
+\noindent
 The Savage-Dickey density ratio can be generalized to the case where the null hypothesis $H_0$ is not a point-valued hypothesis, but a hypothesis that the critical parameter $\theta^*$ lies in some interval $I_0$, such as our ROPE from above.
 There are several different ways to define the alternative hypothesis $H_1$ in this case, but the most common one is to define it as the complement of $H_0$, i.e., that $\theta^*$ lies in the interval that contains all values that are not in $I_0$, so that:
 
@@ -645,6 +657,7 @@ density_rope + proportion_rope + plot_layout(widths = c(2, 1))
 
 ## Manually calculating the Bayes factor for our ROPE hypothesis
 
+\noindent
 To calculate the Bayes factor for our ROPE hypothesis, we can use the formula above using samples from the prior and the posterior based on our encompassing model.
 For the case of the Korean speech data, we already obtained prior samples above in the `fit_prior` model, and posterior samples in the `fit` model.
 So, we can use these to extract the proportion of samples that fall inside and outside of our ROPE and do the calculations by hand.
@@ -708,6 +721,7 @@ posterior_plot +
 
 ## Calculating ROPE-ed Bayes factor with the `bayesfactorR` package
 
+\noindent
 Instead of doing these calculations by hand, we can more conveniently calculate the Savage Dickey ratio with the `bayesfactor_rope()` function from the `bayestestR` package [@MakowskiBen-Shachar2019-bayestestR].
 The function takes as input the posterior and prior fit objects (you can also only provide the posterior fit, in which case the function will sample from the prior for you).
 The function then computes the ratio for the specified rope for the specified parameter.
@@ -730,6 +744,7 @@ We obtain (almost) the same result in this way: the Bayes factor in favor of the
 
 ## Sensitivity analysis for different priors and ROPEs
 
+\noindent
 Now as you probably have guessed already, all these probabilities are very much dependent on the priors of the model, so it is important to evaluate the robustness of our Bayes Factor-based interpretation across a range of sensible priors.
 And as long as we are not a 100% sure about what a meaningful difference is, we might as well explore the robustness of the Bayes Factor across different ROPEs.
 We won't bore you with the code for that process, but you can follow it along in our scripts.
@@ -899,10 +914,14 @@ In an ideal world, the evidence provided by the data should be robust across the
 However, this exploration of our inference is a fantastic opportunity to assess the boundaries of our conclusions. In this case, the original conclusions by @winter-grawunder_Phonetic_journalarticle_2012 was based on the null hypothesis significance testing and traditionally tested the compatibility of the data with a point-null hypothesis. They concluded "that in formal speech, Korean [...] female speakers lowered their average fundamental frequency [...]." This statement is still true according to their inferential criteria, but thinking more deeply about the theoretical consequences of differences in pitch, it might be less clear that these differences are truly meaningful. 
 
 # How to write this inferential procedure up?
+
+\noindent
 Here is a possible way to write up our analysis, following
 Kruschke's catalog of best practices [@Kruschke2021-Bayesian-Analys]. We first have to describe our model structure, including the priors of all parameters, and then the inferential procedure combining ROPEs with Bayes Factor. 
 
 ## Model structure
+
+\noindent
 The data were modeled using a hierarchical linear model predicting the continous variable pitch (in Hz) by both the categorical predictor gender (male vs. female, contrast-coded) and social context (informal vs. formal, contrast-coded) and the maximal random-effects structure justified by the study's design (Barr et al. 2013), including by-subject random slopes (n = 7), and by-sentence random slopes (n = 6) for social context.
 Parameter estimation and inference is performed within the Bayesian framework. The model was fit using brms [@Burkner2018-Advanced-Bayesi] in @R_program. 
 We used regularizing, weakly informative priors for the models (Gelman, Simpson, & Betancourt 2017). Concretely, we used a student_t distributed prior for the intercept (df = 3, mean = 203.9, df = 82.7), corresponding to the grand mean of the empirical data, a student_t distributed prior for all random effect variance components as well as residual variance (df = 3, mean = 0, df = 82.7) and Lewandowski-Kurowicka-Joe distribution (LKJ, shape = 1) for all correlational parameters. These priors were default priors, estimated from the data by brms. We specified a reasonable weakly informative prior for the predictor gender (normal, mean = 0, sd = 50) and specified a range of reasonable weakly informative priors for the predictor of interest: social context (normal, mean = 0, sd = [10,15,20,25,30]).
@@ -910,14 +929,20 @@ We used regularizing, weakly informative priors for the models (Gelman, Simpson,
 We fit this model with four chains of Hamiltonian Monte Carlo sampling for the estimation of the joint posterior distribution using the No U-Turn Sampler as implemented in Stan [@carpenter2017stan], and 4000 iterations (2000 for warm-up) per chain, distributed across four processing cores and two threads in within-chain parallelization. 
 
 ## Inferential assessment via Bayes Factor and ROPEs
+
+\noindent
 Using the Bayesian framework, we aim to quantitatively evaluate the evidence for a perceptually meaningful effect of social context on pitch values based on our data against the background of our model and chosen priors. We will combine two statistical concepts to make this evaluation: First, we define a region of practical equivalence (ROPE) that will represent a reasonable range of pitch value around zero that we consider to be not meaningful  [@kruschke_Rejecting_journalarticle_2018]. In our case the ROPE is perceptually defined by studies on just noticeable differences in pitch perception [@liu2013just;@jongman2017just;@turner2019perception].
 
 Subsequently, we calculate the Savage-Dickey density ratio [@DickeyLientz1970-The-Weighted-Li;@WagenmakersLodewyckx2010-Bayesian-hypoth], i.e. we relate the amount of evidence (the proportion of posterior samples) within the ROPE for the model based on the priors only (i.e. before seeing the data) to the amount of evidence within the ROPE for the model based on both priors and likelihood (i.e. after seeing the data) [e.g. @WetzelsGrasman2010-An-encompassing]. The Savage-Dickey method lets us assess evidence for and against a null hypothesis using Bayes Factor (BF) and is particularly suited for nested models, especially when models only differ with respect to one parameter. Since BFs can depend on both the defined ROPE and the priors of the model, we assessed the sensitivity of the results through calculating BFs for a range of (sensible) ROPE values and a range of (sensible) priors. We assumed the ROPE intervals centered on zero from 6 Hz to 40 Hz, following literature on JNDs in pitch perception [@liu2013just;@jongman2017just;@turner2019perception]. We assumed the following five prior values for the width of the context parameter (centered on zero): 10 Hz, 15 Hz, 20 Hz, 25 Hz, and 30 Hz. These are all sensible prior choices assuming reasonable pitch differences in either direction. 
 
 # Some words of encouragement
+
+\noindent
 Bayesian inference in general and this form of hypothesis testing in particular require much more thinking than we might be used to. We believe this is a good thing. Many voices have criticized the lack of engagement that we behavioral scientists invest into thinking how our theoretical ideas connect to concrete predictions in the quantitative systems under investigation [e.g. @scheel2022most; @coretta2023multidimensional; @woensdregt2024lessons]. The presented form of hypothesis testing is easy to understand, but does require to think deeply about prior quantitative assumptions as well as what it means for observations to be meaningfully different. That is neither trivial nor easy. But we would like to encourage everybody to engage in exactly this thinking to better understand our data and how they might link to our understanding of cognition and behavior.  
 
 # Other Resources
+
+\noindent 
 There are many fantastic resources out there to help you learn about the wonderful world of statistics in general and Bayesian inference in particular. Here are a few recommendations.
 - A very accessible introduction to linear models in R is @winter2019statistics.
 - 
