@@ -411,12 +411,13 @@ using the so-called \emph{encompassing priors} approach
 Hoijtink, 2007}; \citeproc{ref-Oh2014-Bayesian-compar}{Oh, 2014};
 \citeproc{ref-WetzelsGrasman2010-An-encompassing}{Wetzels et al.,
 2010}), which is both conceptually more meaningful and computationally
-more robust than point-valued hypothesis testing. This method does not
-seem to be commonly known, it is conceptually simple and easy to apply,
-e.g., through implementation in the package \texttt{bayesfactorR}. This
-tutorial provides an accessible, non-technical introduction to Bayesian
-hypothesis testing that is easy to understand, computationally cheap and
-widely applicable.
+more robust than point-valued hypothesis testing. While this method does
+not seem to be commonly known, it is conceptually simple and easy to
+apply, e.g., through implementation in the package
+\texttt{bayesfactorR}. This tutorial therefore provides an accessible,
+non-technical introduction to this method of Bayesian hypothesis
+testing, which is easy to understand, computationally cheap and widely
+applicable.
 
 \section{Motivation and intended
 audience}\label{motivation-and-intended-audience}
@@ -445,9 +446,9 @@ own tutorial on ``Bayesian Regression for Factorial Designs'' as a
 natural follow-up using the same data that Winter used
 (\citeproc{ref-franke-roettger_Bayesian_preprint_2019}{Franke \&
 Roettger, 2019}). In a sense, the present tutorial on hypothesis testing
-could be considered the long-awaited sequel of the series started by
-Winter. For continuity in the series, we will continue to use the
-original data set.
+could be considered the long-awaited sequel (!?) of the series started
+by Winter. For continuity, we will use the same data set here that was
+also used by the previous tutorials.
 
 To actively follow this tutorial, you should have R Core Team
 (\citeproc{ref-R_program}{2025}) installed on your computer
@@ -503,38 +504,27 @@ run the following code:
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{polite }\OtherTok{\textless{}{-}} 
-  \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"https://shorturl.at/F7pWU"}\NormalTok{) }\SpecialCharTok{|\textgreater{}} 
-  \CommentTok{\# transform context to factor and rename}
-  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{context =} \FunctionTok{as.factor}\NormalTok{(context),}
-         \AttributeTok{context =} \FunctionTok{recode\_factor}\NormalTok{(context,}
-                                 \StringTok{"pol"} \OtherTok{=} \StringTok{"formal"}\NormalTok{,}
-                                 \StringTok{"inf"} \OtherTok{=} \StringTok{"informal"}\NormalTok{),}
-         \AttributeTok{gender =} \FunctionTok{as.factor}\NormalTok{(gender),}
-         \AttributeTok{gender =} \FunctionTok{recode\_factor}\NormalTok{(gender,}
-                                \StringTok{"M"} \OtherTok{=} \StringTok{"male"}\NormalTok{,}
-                                \StringTok{"F"} \OtherTok{=} \StringTok{"female"}\NormalTok{))}
+  
+  \CommentTok{\# load data set \& cast strings to factors}
+  \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"https://tinyurl.com/4tn26494"}\NormalTok{, }\AttributeTok{col\_types =} \StringTok{"fffd"}\NormalTok{) }\SpecialCharTok{|\textgreater{}} 
+  \CommentTok{\# set factor reference level for factor \textasciigrave{}gender\textasciigrave{}}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{gender =} \FunctionTok{fct\_relevel}\NormalTok{(gender, }\StringTok{"male"}\NormalTok{))}
 
 \FunctionTok{head}\NormalTok{(polite)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-# A tibble: 6 x 5
-  subject gender sentence context  pitch
-  <chr>   <fct>  <chr>    <fct>    <dbl>
-1 F1      female S1       formal    213.
-2 F1      female S1       informal  204.
-3 F1      female S2       formal    285.
-4 F1      female S2       informal  260.
-5 F1      female S3       formal    204.
-6 F1      female S3       informal  287.
+# A tibble: 6 x 4
+  subject gender context  pitch
+  <fct>   <fct>  <fct>    <dbl>
+1 F1      female formal    215.
+2 F1      female informal  211.
+3 F1      female formal    285.
+4 F1      female informal  266.
+5 F1      female formal    211.
+6 F1      female informal  286.
 \end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# }\AlertTok{NOTE}\CommentTok{  if we change the column names in the source we do not have to have the wrangling in here, making the code  chunk slimmer.}
-\end{Highlighting}
-\end{Shaded}
 
 This data set contains anonymous identifiers for individual speakers
 stored in the variable \texttt{subject}. Voice pitch is dependent on
@@ -1198,19 +1188,22 @@ either direction are plausible.
 
 \begin{figure}[!tbp]
 
-\caption{Bayes Factors for a range of priors and a range of ROPEs}
+\caption{\label{fig-sensitivity_plot}Bayes Factors for a range of priors
+and a range of ROPEs}
 
-{\centering \pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/sensitivity_plot-1.pdf}}
+\centering{
+
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-sensitivity_plot-1.pdf}}
 
 }
 
 \end{figure}%
 
 The combination of Bayes Factors is visualized in
-(\citeproc{ref-sensitivity_plot}{\textbf{sensitivity\_plot?}}). Orange
-cells indicate evidence for the alternative. Green cells indicate
-evidence for the null. It becomes clear that the conclusions we can draw
-from our data are rather dependent on the choices we made along the way.
+Figure~\ref{fig-sensitivity_plot}. Orange cells indicate evidence for
+the alternative. Green cells indicate evidence for the null. It becomes
+clear that the conclusions we can draw from our data are rather
+dependent on the choices we made along the way.
 
 By comparing the Bayes Factors along the y-axis, we can see that they
 are heavily dependent on the chosen ROPE. We here chose (theoretically
@@ -1360,10 +1353,193 @@ they might link to our understanding of cognition and behavior.
 \noindent  There are many fantastic resources out there to help you
 learn about the wonderful world of statistics in general and Bayesian
 inference in particular. Here are a few recommendations. - A very
-accessible introduction to linear models in R is Winter
-(\citeproc{ref-winter2019statistics}{2019}). -
+accessible introduction to linear models in R, using a non-Bayesian
+frequentist approach, is Winter
+(\citeproc{ref-winter2019statistics}{2019}). A good and gentle general
+first introduction to Bayesian statistics is Kruschke
+(\citeproc{ref-KruschkeTextbook}{2015}), but his recommendations for
+hypothesis testing are controversial. Another accessible, but slightly
+more technical introduction is Lambert
+(\citeproc{ref-Lambert2018-A-Students-Guid}{2018}). A fairly technical
+but very comprehensive introduction to Bayesian statistics is Gelman et
+al. (\citeproc{ref-GelmanCarlin2014-Bayesian-Data-A}{2014}). If you
+already have some background in statistics, a great resource is
+McElreath (\citeproc{ref-McElreath2016-Statistical-Ret}{2016/2020}).
 
 \section{References}\label{references}
+
+\phantomsection\label{refs}
+\begin{CSLReferences}{1}{0}
+\bibitem[\citeproctext]{ref-Burkner2018-Advanced-Bayesi}
+Bürkner, P.-C. (2018). {Advanced Bayesian Multilevel Modeling with the R
+Package brms}. \emph{{The R Journal}}, \emph{10}(1), 395--411.
+\url{https://doi.org/10.32614/RJ-2018-017}
+
+\bibitem[\citeproctext]{ref-carpenter2017stan}
+Carpenter, B., Gelman, A., Hoffman, M. D., Lee, D., Goodrich, B.,
+Betancourt, M., Brubaker, M., Guo, J., Li, P., \& Riddell, A. (2017).
+Stan: A probabilistic programming language. \emph{Journal of Statistical
+Software}, \emph{76}, 1--32.
+
+\bibitem[\citeproctext]{ref-coretta2023multidimensional}
+Coretta, S., Casillas, J. V., Roessig, S., Franke, M., Ahn, B.,
+Al-Hoorie, A. H., Al-Tamimi, J., Alotaibi, N. E., AlShakhori, M. K.,
+Altmiller, R. M., et al. (2023). Multidimensional signals and analytic
+flexibility: Estimating degrees of freedom in human-speech analyses.
+\emph{Advances in Methods and Practices in Psychological Science},
+\emph{6}(3), 25152459231162567.
+
+\bibitem[\citeproctext]{ref-DickeyLientz1970-The-Weighted-Li}
+Dickey, J. M., \& Lientz, B. P. (1970). The weighted likelihood ratio,
+sharp hypotheses about chances, the order of a {M}arkov chain. \emph{The
+Annals of Mathematical Statistics}, \emph{41}(1), 214--226.
+
+\bibitem[\citeproctext]{ref-franke-roettger_Bayesian_preprint_2019}
+Franke, M., \& Roettger, T. (2019). \emph{Bayesian regression modeling
+(for factorial designs): {A} tutorial}. OSF.
+\url{https://doi.org/10.31234/osf.io/cdxv3}
+
+\bibitem[\citeproctext]{ref-GelmanCarlin2014-Bayesian-Data-A}
+Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A., \&
+Rubin, D. B. (2014). \emph{Bayesian data analysis} (3rd edition).
+Chapman; Hall.
+
+\bibitem[\citeproctext]{ref-gelman-etal_Prior_journalarticle_2017}
+Gelman, A., Simpson, D., \& Betancourt, M. (2017). The {Prior Can Often
+Only Be Understood} in the {Context} of the {Likelihood}.
+\emph{Entropy}, \emph{19}(10), 555.
+\url{https://doi.org/10.3390/e19100555}
+
+\bibitem[\citeproctext]{ref-GronauSarafoglou2017-A-tutorial-on-b}
+Gronau, Q. F., Sarafoglou, A., Matzke, D., Ly, A., Boehm, U., Marsman,
+M., Leslie, D. S., Forster, J. J., Wagenmakers, E.-J., \& Steingroever,
+H. (2017). A tutorial on bridge sampling. \emph{Journal of Mathematical
+Psychology}, \emph{81}, 80--97.
+\url{https://doi.org/doi.org/10.1016/j.jmp.2017.09.005}
+
+\bibitem[\citeproctext]{ref-jongman2017just}
+Jongman, A., Qin, Z., Zhang, J., \& Sereno, J. A. (2017). Just
+noticeable differences for pitch direction, height, and slope for
+mandarin and english listeners. \emph{The Journal of the Acoustical
+Society of America}, \emph{142}(2), EL163--EL169.
+
+\bibitem[\citeproctext]{ref-KassRaftery1995-Bayes-Factors}
+Kass, R. E., \& Raftery, A. E. (1995). Bayes factors. \emph{Journal of
+the American Statistical Association}, \emph{90}(430), 773--795.
+
+\bibitem[\citeproctext]{ref-KlugkistHoijtink2007-The-Bayes-facto}
+Klugkist, I., \& Hoijtink, H. (2007). The bayes factor for inequality
+and about equality constrained models. \emph{Computational Statistics
+and Data Analysis}, \emph{51}(12), 6367--6379.
+\url{https://doi.org/10.1016/j.csda.2007.01.024}
+
+\bibitem[\citeproctext]{ref-KlugkistKato2005-Bayesian-model}
+Klugkist, I., Kato, B., \& Hoijtink, H. (2005). Bayesian model selection
+using encompassing priors. \emph{Statistica Neelandica}, \emph{59}(1),
+57--69.
+
+\bibitem[\citeproctext]{ref-KruschkeTextbook}
+Kruschke, J. K. (2015). \emph{Doing {B}ayesian data analysis} (2nd
+edition). Academic Press.
+
+\bibitem[\citeproctext]{ref-kruschke_Rejecting_journalarticle_2018}
+Kruschke, J. K. (2018). Rejecting or {Accepting Parameter Values} in
+{Bayesian Estimation}. \emph{Advances in Methods and Practices in
+Psychological Science}, \emph{1}(2), 270--280.
+\url{https://doi.org/10.1177/2515245918771304}
+
+\bibitem[\citeproctext]{ref-Kruschke2021-Bayesian-Analys}
+Kruschke, J. K. (2021). Bayesian analysis reporting guidelines.
+\emph{Nature Human Behaviour}, \emph{5}(10), 1282--1291.
+\url{https://doi.org/10.1038/s41562-021-01177-7}
+
+\bibitem[\citeproctext]{ref-Lambert2018-A-Students-Guid}
+Lambert, B. (2018). \emph{A student's guide to bayesian statistics}.
+Sage Publications.
+
+\bibitem[\citeproctext]{ref-lindley_Statistical_journalarticle_1957}
+Lindley, D. V. (1957). A {Statistical Paradox}. \emph{Biometrika},
+\emph{44}(1/2), 187--192. \url{https://doi.org/10.2307/2333251}
+
+\bibitem[\citeproctext]{ref-liu2013just}
+Liu, C. (2013). Just noticeable difference of tone pitch contour change
+for english-and chinese-native listeners. \emph{The Journal of the
+Acoustical Society of America}, \emph{134}(4), 3011--3020.
+
+\bibitem[\citeproctext]{ref-MakowskiBen-Shachar2019-bayestestR}
+Makowski, D., Ben-Shachar, M. S., \& Lüdecke, D. (2019). {bayestestR:
+Describing Effects and their Uncertainty, Existence and Significance
+within the Bayesian Framework}. \emph{Journal of Open Source Software},
+\emph{4}(40), 1541. \url{https://doi.org/10.21105/joss.01541}
+
+\bibitem[\citeproctext]{ref-McElreath2016-Statistical-Ret}
+McElreath, R. (2016/2020). \emph{Statistical rethinking}. Chapman; Hall.
+
+\bibitem[\citeproctext]{ref-MoreyRomeijn2016-philosophyOfBFs}
+Morey, R. D., Romeijn, J.-W., \& Rouder, J. N. (2016). The philosophy of
+bayes factors and the quantification of statistical evidence.
+\emph{Journal of Mathematical Psychology}, \emph{72}, 6--18.
+\url{https://doi.org/10.1016/j.jmp.2015.11.001}
+
+\bibitem[\citeproctext]{ref-Oh2014-Bayesian-compar}
+Oh, M.-S. (2014). Bayesian comparison of models with inequality and
+equality constraints. \emph{Statistics and Probability Letters},
+\emph{84}, 176--182. \url{https://doi.org/10.1016/j.spl.2013.10.005}
+
+\bibitem[\citeproctext]{ref-R_program}
+R Core Team. (2025). \emph{R: A language and environment for statistical
+computing}. R Foundation for Statistical Computing.
+\url{https://www.R-project.org/}
+
+\bibitem[\citeproctext]{ref-scheel2022most}
+Scheel, A. M. (2022). Why most psychological research findings are not
+even wrong. \emph{Infant and Child Development}, \emph{31}(1), e2295.
+
+\bibitem[\citeproctext]{ref-turner2019perception}
+Turner, D. R., Bradlow, A. R., \& Cole, J. S. (2019). Perception of
+pitch contours in speech and nonspeech. \emph{INTERSPEECH}, 2275--2279.
+
+\bibitem[\citeproctext]{ref-VandekerckhoveMatzke2013-Model-Compariso}
+Vandekerckhove, J., Matzke, D., \& Wagenmakers, E.-J. (2015). Model
+comparison and the principle of parsimony. In J. Busemeyer, J. Townsend,
+Z. J. Wang, \& A. Eidels (Eds.), \emph{Oxford handbook of computational
+and mathematical psychology} (pp. 300--319). Oxford University Press.
+
+\bibitem[\citeproctext]{ref-WagenmakersLodewyckx2010-Bayesian-hypoth}
+Wagenmakers, E.-J., Lodewyckx, T., Kuriyal, H., \& Grasman, R. (2010).
+Bayesian hypothesis testing for psychologists: {A} tutorial on the
+{S}avage--{D}ickey method. \emph{Cognitive Psychology}, \emph{60},
+158--189.
+
+\bibitem[\citeproctext]{ref-WetzelsGrasman2010-An-encompassing}
+Wetzels, R., Grasman, R. P. P. P., \& Wagenmakers, E.-J. (2010). An
+encompassing prior generalization of the savage--dickey density ratio.
+\emph{Computational Statistics and Data Analysis}, \emph{54},
+2094--2102. \url{https://doi.org/10.1016/j.csda.2010.03.016}
+
+\bibitem[\citeproctext]{ref-winter_Linear_preprint_2013}
+Winter, B. (2013). \emph{Linear models and linear mixed effects models
+in {R} with linguistic applications} (arXiv:1308.5499). arXiv.
+\url{https://doi.org/10.48550/arXiv.1308.5499}
+
+\bibitem[\citeproctext]{ref-winter2019statistics}
+Winter, B. (2019). \emph{Statistics for linguists: An introduction using
+r}. Routledge.
+
+\bibitem[\citeproctext]{ref-winter-grawunder_Phonetic_journalarticle_2012}
+Winter, B., \& Grawunder, S. (2012). The phonetic profile of {Korean}
+formal and informal speech registers. \emph{Journal of Phonetics},
+\emph{40}(6), 808--815. \url{https://doi.org/10.1016/j.wocn.2012.08.006}
+
+\bibitem[\citeproctext]{ref-woensdregt2024lessons}
+Woensdregt, M., Fusaroli, R., Rich, P., Modrák, M., Kolokolova, A.,
+Wright, C., \& Warlaumont, A. S. (2024). Lessons for theory from
+scientific domains where evidence is sparse or indirect.
+\emph{Computational Brain \& Behavior}, \emph{7}(4), 588--607.
+
+\end{CSLReferences}
+
+\section{Session information}\label{session-information}
 
 \begin{verbatim}
 R version 4.5.1 (2025-06-13)
@@ -1463,161 +1639,6 @@ Uncertainty_. doi:10.5281/zenodo.3879620
 <https://doi.org/10.5281/zenodo.3879620>, R package version 3.3.3,
 <https://mjskay.github.io/ggdist/>.
 \end{verbatim}
-
-\phantomsection\label{refs}
-\begin{CSLReferences}{1}{0}
-\bibitem[\citeproctext]{ref-Burkner2018-Advanced-Bayesi}
-Bürkner, P.-C. (2018). {Advanced Bayesian Multilevel Modeling with the R
-Package brms}. \emph{{The R Journal}}, \emph{10}(1), 395--411.
-\url{https://doi.org/10.32614/RJ-2018-017}
-
-\bibitem[\citeproctext]{ref-carpenter2017stan}
-Carpenter, B., Gelman, A., Hoffman, M. D., Lee, D., Goodrich, B.,
-Betancourt, M., Brubaker, M., Guo, J., Li, P., \& Riddell, A. (2017).
-Stan: A probabilistic programming language. \emph{Journal of Statistical
-Software}, \emph{76}, 1--32.
-
-\bibitem[\citeproctext]{ref-coretta2023multidimensional}
-Coretta, S., Casillas, J. V., Roessig, S., Franke, M., Ahn, B.,
-Al-Hoorie, A. H., Al-Tamimi, J., Alotaibi, N. E., AlShakhori, M. K.,
-Altmiller, R. M., et al. (2023). Multidimensional signals and analytic
-flexibility: Estimating degrees of freedom in human-speech analyses.
-\emph{Advances in Methods and Practices in Psychological Science},
-\emph{6}(3), 25152459231162567.
-
-\bibitem[\citeproctext]{ref-DickeyLientz1970-The-Weighted-Li}
-Dickey, J. M., \& Lientz, B. P. (1970). The weighted likelihood ratio,
-sharp hypotheses about chances, the order of a {M}arkov chain. \emph{The
-Annals of Mathematical Statistics}, \emph{41}(1), 214--226.
-
-\bibitem[\citeproctext]{ref-franke-roettger_Bayesian_preprint_2019}
-Franke, M., \& Roettger, T. (2019). \emph{Bayesian regression modeling
-(for factorial designs): {A} tutorial}. OSF.
-\url{https://doi.org/10.31234/osf.io/cdxv3}
-
-\bibitem[\citeproctext]{ref-gelman-etal_Prior_journalarticle_2017}
-Gelman, A., Simpson, D., \& Betancourt, M. (2017). The {Prior Can Often
-Only Be Understood} in the {Context} of the {Likelihood}.
-\emph{Entropy}, \emph{19}(10), 555.
-\url{https://doi.org/10.3390/e19100555}
-
-\bibitem[\citeproctext]{ref-GronauSarafoglou2017-A-tutorial-on-b}
-Gronau, Q. F., Sarafoglou, A., Matzke, D., Ly, A., Boehm, U., Marsman,
-M., Leslie, D. S., Forster, J. J., Wagenmakers, E.-J., \& Steingroever,
-H. (2017). A tutorial on bridge sampling. \emph{Journal of Mathematical
-Psychology}, \emph{81}, 80--97.
-\url{https://doi.org/doi.org/10.1016/j.jmp.2017.09.005}
-
-\bibitem[\citeproctext]{ref-jongman2017just}
-Jongman, A., Qin, Z., Zhang, J., \& Sereno, J. A. (2017). Just
-noticeable differences for pitch direction, height, and slope for
-mandarin and english listeners. \emph{The Journal of the Acoustical
-Society of America}, \emph{142}(2), EL163--EL169.
-
-\bibitem[\citeproctext]{ref-KassRaftery1995-Bayes-Factors}
-Kass, R. E., \& Raftery, A. E. (1995). Bayes factors. \emph{Journal of
-the American Statistical Association}, \emph{90}(430), 773--795.
-
-\bibitem[\citeproctext]{ref-KlugkistHoijtink2007-The-Bayes-facto}
-Klugkist, I., \& Hoijtink, H. (2007). The bayes factor for inequality
-and about equality constrained models. \emph{Computational Statistics
-and Data Analysis}, \emph{51}(12), 6367--6379.
-\url{https://doi.org/10.1016/j.csda.2007.01.024}
-
-\bibitem[\citeproctext]{ref-KlugkistKato2005-Bayesian-model}
-Klugkist, I., Kato, B., \& Hoijtink, H. (2005). Bayesian model selection
-using encompassing priors. \emph{Statistica Neelandica}, \emph{59}(1),
-57--69.
-
-\bibitem[\citeproctext]{ref-kruschke_Rejecting_journalarticle_2018}
-Kruschke, J. K. (2018). Rejecting or {Accepting Parameter Values} in
-{Bayesian Estimation}. \emph{Advances in Methods and Practices in
-Psychological Science}, \emph{1}(2), 270--280.
-\url{https://doi.org/10.1177/2515245918771304}
-
-\bibitem[\citeproctext]{ref-Kruschke2021-Bayesian-Analys}
-Kruschke, J. K. (2021). Bayesian analysis reporting guidelines.
-\emph{Nature Human Behaviour}, \emph{5}(10), 1282--1291.
-\url{https://doi.org/10.1038/s41562-021-01177-7}
-
-\bibitem[\citeproctext]{ref-lindley_Statistical_journalarticle_1957}
-Lindley, D. V. (1957). A {Statistical Paradox}. \emph{Biometrika},
-\emph{44}(1/2), 187--192. \url{https://doi.org/10.2307/2333251}
-
-\bibitem[\citeproctext]{ref-liu2013just}
-Liu, C. (2013). Just noticeable difference of tone pitch contour change
-for english-and chinese-native listeners. \emph{The Journal of the
-Acoustical Society of America}, \emph{134}(4), 3011--3020.
-
-\bibitem[\citeproctext]{ref-MakowskiBen-Shachar2019-bayestestR}
-Makowski, D., Ben-Shachar, M. S., \& Lüdecke, D. (2019). {bayestestR:
-Describing Effects and their Uncertainty, Existence and Significance
-within the Bayesian Framework}. \emph{Journal of Open Source Software},
-\emph{4}(40), 1541. \url{https://doi.org/10.21105/joss.01541}
-
-\bibitem[\citeproctext]{ref-MoreyRomeijn2016-philosophyOfBFs}
-Morey, R. D., Romeijn, J.-W., \& Rouder, J. N. (2016). The philosophy of
-bayes factors and the quantification of statistical evidence.
-\emph{Journal of Mathematical Psychology}, \emph{72}, 6--18.
-\url{https://doi.org/10.1016/j.jmp.2015.11.001}
-
-\bibitem[\citeproctext]{ref-Oh2014-Bayesian-compar}
-Oh, M.-S. (2014). Bayesian comparison of models with inequality and
-equality constraints. \emph{Statistics and Probability Letters},
-\emph{84}, 176--182. \url{https://doi.org/10.1016/j.spl.2013.10.005}
-
-\bibitem[\citeproctext]{ref-R_program}
-R Core Team. (2025). \emph{R: A language and environment for statistical
-computing}. R Foundation for Statistical Computing.
-\url{https://www.R-project.org/}
-
-\bibitem[\citeproctext]{ref-scheel2022most}
-Scheel, A. M. (2022). Why most psychological research findings are not
-even wrong. \emph{Infant and Child Development}, \emph{31}(1), e2295.
-
-\bibitem[\citeproctext]{ref-turner2019perception}
-Turner, D. R., Bradlow, A. R., \& Cole, J. S. (2019). Perception of
-pitch contours in speech and nonspeech. \emph{INTERSPEECH}, 2275--2279.
-
-\bibitem[\citeproctext]{ref-VandekerckhoveMatzke2013-Model-Compariso}
-Vandekerckhove, J., Matzke, D., \& Wagenmakers, E.-J. (2015). Model
-comparison and the principle of parsimony. In J. Busemeyer, J. Townsend,
-Z. J. Wang, \& A. Eidels (Eds.), \emph{Oxford handbook of computational
-and mathematical psychology} (pp. 300--319). Oxford University Press.
-
-\bibitem[\citeproctext]{ref-WagenmakersLodewyckx2010-Bayesian-hypoth}
-Wagenmakers, E.-J., Lodewyckx, T., Kuriyal, H., \& Grasman, R. (2010).
-Bayesian hypothesis testing for psychologists: {A} tutorial on the
-{S}avage--{D}ickey method. \emph{Cognitive Psychology}, \emph{60},
-158--189.
-
-\bibitem[\citeproctext]{ref-WetzelsGrasman2010-An-encompassing}
-Wetzels, R., Grasman, R. P. P. P., \& Wagenmakers, E.-J. (2010). An
-encompassing prior generalization of the savage--dickey density ratio.
-\emph{Computational Statistics and Data Analysis}, \emph{54},
-2094--2102. \url{https://doi.org/10.1016/j.csda.2010.03.016}
-
-\bibitem[\citeproctext]{ref-winter_Linear_preprint_2013}
-Winter, B. (2013). \emph{Linear models and linear mixed effects models
-in {R} with linguistic applications} (arXiv:1308.5499). arXiv.
-\url{https://doi.org/10.48550/arXiv.1308.5499}
-
-\bibitem[\citeproctext]{ref-winter2019statistics}
-Winter, B. (2019). \emph{Statistics for linguists: An introduction using
-r}. Routledge.
-
-\bibitem[\citeproctext]{ref-winter-grawunder_Phonetic_journalarticle_2012}
-Winter, B., \& Grawunder, S. (2012). The phonetic profile of {Korean}
-formal and informal speech registers. \emph{Journal of Phonetics},
-\emph{40}(6), 808--815. \url{https://doi.org/10.1016/j.wocn.2012.08.006}
-
-\bibitem[\citeproctext]{ref-woensdregt2024lessons}
-Woensdregt, M., Fusaroli, R., Rich, P., Modrák, M., Kolokolova, A.,
-Wright, C., \& Warlaumont, A. S. (2024). Lessons for theory from
-scientific domains where evidence is sparse or indirect.
-\emph{Computational Brain \& Behavior}, \emph{7}(4), 588--607.
-
-\end{CSLReferences}
 
 
 

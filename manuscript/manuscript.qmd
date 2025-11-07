@@ -937,8 +937,12 @@ Bayesian inference in general and this form of hypothesis testing in particular 
 
 \noindent 
 There are many fantastic resources out there to help you learn about the wonderful world of statistics in general and Bayesian inference in particular. Here are a few recommendations.
-- A very accessible introduction to linear models in R is @winter2019statistics.
-- 
+- A very accessible introduction to linear models in R, using a non-Bayesian frequentist approach, is @winter2019statistics.
+A good and gentle general first introduction to Bayesian statistics is @KruschkeTextbook, but his recommendations for hypothesis testing are controversial.
+Another accessible, but slightly more technical introduction is @Lambert2018-A-Students-Guid.
+A fairly technical but very comprehensive introduction to Bayesian statistics is @GelmanCarlin2014-Bayesian-Data-A.
+If you already have some background in statistics, a great resource is @McElreath2016-Statistical-Ret.
+ 
 
 
 # References
