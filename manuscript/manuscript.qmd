@@ -171,7 +171,7 @@ To load and inspect the data into your R environment, run the following code:
 polite <- 
   
   # load data set & cast strings to factors
-  read_csv("https://tinyurl.com/4tn26494", col_types = "fffd") |> 
+  read_csv("https://tinyurl.com/4tn26494", col_types = "ffffd") |> 
   # set factor reference level for factor `gender`
   mutate(gender = fct_relevel(gender, "male"))
 
