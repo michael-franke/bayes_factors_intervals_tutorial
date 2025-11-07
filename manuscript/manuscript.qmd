@@ -169,20 +169,13 @@ To load and inspect the data into your R environment, run the following code:
 #| message: FALSE
 
 polite <- 
-  read_csv("https://shorturl.at/F7pWU") |> 
-  # transform context to factor and rename
-  mutate(context = as.factor(context),
-         context = recode_factor(context,
-                                 "pol" = "formal",
-                                 "inf" = "informal"),
-         gender = as.factor(gender),
-         gender = recode_factor(gender,
-                                "M" = "male",
-                                "F" = "female"))
+  
+  # load data set & cast strings to factors
+  read_csv("https://tinyurl.com/4tn26494", col_types = "fffd") |> 
+  # set factor reference level for factor `gender`
+  mutate(gender = fct_relevel(gender, "male"))
 
 head(polite)
-
-# NOTE  if we change the column names in the source we do not have to have the wrangling in here, making the code  chunk slimmer.
 
 ```
 
