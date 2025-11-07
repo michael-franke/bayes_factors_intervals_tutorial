@@ -855,7 +855,7 @@ results_wrangled <- read_csv("../models/loop_results.csv")
 
 ```{r visualize-raster}
 #| echo: FALSE
-#| label: sensitivity_plot
+#| label: fig-sensitivity_plot
 #| fig-height: 8
 #| fig-cap: "Bayes Factors for a range of priors and a range of ROPEs"
 
@@ -890,7 +890,7 @@ ggplot(results_wrangled,
 
 ```
 
-The combination of Bayes Factors is visualized in @sensitivity_plot. Orange cells indicate evidence for the alternative.
+The combination of Bayes Factors is visualized in @fig-sensitivity_plot. Orange cells indicate evidence for the alternative.
 Green cells indicate evidence for the null.
 It becomes clear that the conclusions we can draw from our data are rather dependent on the choices we made along the way.
 
@@ -943,6 +943,13 @@ There are many fantastic resources out there to help you learn about the wonderf
 
 # References
 
+<!-- References will auto-populate in the refs div below -->
+
+::: {#refs}
+:::
+
+# Session information
+
 ```{r sessionInfo}
 #| echo: FALSE
 
@@ -954,7 +961,3 @@ c("brms", "bayestestR", "tidybayes", "tidyverse", "ggdist") %>%
 
 ```
 
-<!-- References will auto-populate in the refs div below -->
-
-::: {#refs}
-:::
