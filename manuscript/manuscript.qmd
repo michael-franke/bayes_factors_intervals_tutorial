@@ -413,8 +413,9 @@ Speech is, in spoken languages at least, *the* vehicle to transmit linguistic in
 Speech is also very complex and very noisy: Not everything that can be measured in the acoustic signal matters for a listener.
 For example, if something cannot be perceived reliably, it is at least conceivable that it might play little to no role in communication.
 While the speech sciences have a rich research tradition to estimate what can and what cannot be reliably heard, exact estimation depends on a lot of moving parts.
-Such thresholds of what can be reliably heard are referred to as *Just Noticeable Differences* (JNDs) and can be used to define what constitutes meaningful differences when we look at speech data.
-
+Approximate thresholds of what can be reliably heard are often referred to as *Just Noticeable Differences* (JNDs).
+This terminology has been argued to be dangerously misleading @SanfordHalberda2023-A-Shared-Intuit as it implies a hard and absolute threshold of perceptibility, while in fact many researchers work with a more lenient and more practical conceptualization of a threshold at which the probability that our perceptual system registers a stimulus or a stimulus difference is below a given probability threshold.
+When we say "just noticeable difference" in the following we mean that latter probabilistic notion, as we would like to use the idea of regions at which the perceptual system is unlikely to register a stimulus difference as a means of justifying a region of practical equivalence.
 For example, @liu2013just report on JNDs ranging from 3 to 14 Hz. 
 @jongman2017just report on JNDs between 6 and 9 Hz. 
 @turner2019perception reported on JNDs between 17 and 25 Hz for non-speech stimuli and between 35 and 40 Hz for speech stimuli. 
