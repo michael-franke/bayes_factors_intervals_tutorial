@@ -258,28 +258,29 @@ formula <- bf(pitch ~ context +
                       (1 + context | subject) +
                       (1 + context | sentence))
 
-# get priors for this model
-as_tibble(get_prior(formula, polite))[,1:4]
-
-# NOTE MF: make the above prettier? (how to suppress the `source` column?)
-# NOTE TR: calling individual lines is probably confusing to the reader, I suggest we just use the generic command. But yeah the column wrangling is strange. When choosing the first 4 columns it also displays most of them as flat, so something is off there. Made an attempt...
+# get information about priors that are set per default for this model
+#  NB: no prior for `context1` is set per default (!)
+as_tibble(get_prior(formula, polite)) |> 
+  select(class, prior) |> filter(prior != "")
 
 ```
 
 The default priors that `brms` picks for the Intercept and the variance parameters are mostly reasonable as they are derived from the data. They are weakly informative and symmetrical.
-However the prior for our critical parameter `context1` should also be weakly informative [@gelman-etal_Prior_journalarticle_2017], i.e. the prior assumption about the difference between informal and formal contexts should be that we don't know, but our best guess is that it is close to zero and equally likely to be more or less than zero.
+However the default choice for our critical parameter `context1` is to not specify a prior at all, i.e., to assume a flat (improper) prior, so that it is not even listed in the table above. 
+Yet, there are good arguments why it should also receive a weakly informative prior [@gelman-etal_Prior_journalarticle_2017], i.e. the prior assumption about the difference between informal and formal contexts should be that we don't know, but our best guess is that it is close to zero and equally likely to be more or less than zero.
 So we specify a normal distribution centered on zero for this parameter (and we do the same for gender).
+Since we used contrast coding, the prior for `context1` reflects our prior belief about the difference between formal and informal contexts.
 Note that we use default priors for the other parameters for convenience here, but you should always critically reflect on all of your priors.
 
 ```{r priors-2}
 
 # define a weakly informative prior for context and gender
-priors <- c(prior(normal(0, 20), class = b, coef = "context1"),
-            prior(normal(0, 50), class = b, coef = "gender1"))
+priors <- c(prior(normal(0, 20), coef = "context1"),
+            prior(normal(0, 50), coef = "gender1"))
 
 ```
 
-Now we do a so-called prior predictive check, in other words we want to know what the posterior distribution looks like before having seen the data, based on the priors only.
+Now we inspect how the parameter distribution looks like *before* having seen the data, based on the priors only.
 This is a useful exercise to make sure that the priors result in reasonable quantitative assumptions.
 We usually do it for all parameters, but here we will focus only on the critical parameter `context1`, i.e. the difference between formal and informal contexts.
 Let us also have a look at the predictions for the prior-only model.
@@ -303,7 +304,7 @@ fit_prior <- brm(formula, prior = priors, data = polite,
 ```{r plot-priors}
 #| echo: FALSE
 #| fig-height: 3
-#| fig-cap: "Prior probability of the effect of context on pitch, i.e. before seeing the data"
+#| fig-cap: "Prior probability of the difference in pitch between contexts, i.e. before seeing the data"
 #| label: fig-plot-priors
 
 # extract prior samples
@@ -319,7 +320,7 @@ ggplot(prior_samples,
                     fill = NA,
                     color = NA,
                     outline_bars = FALSE) +
-  labs(x = "\n prior pitch difference between formal and informal contexts",
+  labs(x = "\n pitch difference between formal and informal contexts",
        y = "") +
   scale_x_continuous(limits =c(-70,70)) +
   theme_minimal() +
