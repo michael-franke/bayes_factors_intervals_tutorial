@@ -506,7 +506,7 @@ run the following code:
 \NormalTok{polite }\OtherTok{\textless{}{-}} 
   
   \CommentTok{\# load data set \& cast strings to factors}
-  \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"https://tinyurl.com/4tn26494"}\NormalTok{, }\AttributeTok{col\_types =} \StringTok{"fffd"}\NormalTok{) }\SpecialCharTok{|\textgreater{}} 
+  \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"https://tinyurl.com/4tn26494"}\NormalTok{, }\AttributeTok{col\_types =} \StringTok{"ffffd"}\NormalTok{) }\SpecialCharTok{|\textgreater{}} 
   \CommentTok{\# set factor reference level for factor \textasciigrave{}gender\textasciigrave{}}
   \FunctionTok{mutate}\NormalTok{(}\AttributeTok{gender =} \FunctionTok{fct\_relevel}\NormalTok{(gender, }\StringTok{"male"}\NormalTok{))}
 
@@ -515,15 +515,15 @@ run the following code:
 \end{Shaded}
 
 \begin{verbatim}
-# A tibble: 6 x 4
-  subject gender context  pitch
-  <fct>   <fct>  <fct>    <dbl>
-1 F1      female formal    215.
-2 F1      female informal  211.
-3 F1      female formal    285.
-4 F1      female informal  266.
-5 F1      female formal    211.
-6 F1      female informal  286.
+# A tibble: 6 x 5
+  subject gender sentence context  pitch
+  <fct>   <fct>  <fct>    <fct>    <dbl>
+1 F1      female S1       formal    213.
+2 F1      female S1       informal  204.
+3 F1      female S2       formal    285.
+4 F1      female S2       informal  260.
+5 F1      female S3       formal    204.
+6 F1      female S3       informal  287.
 \end{verbatim}
 
 This data set contains anonymous identifiers for individual speakers
@@ -593,68 +593,56 @@ specified:
 \NormalTok{                      (}\DecValTok{1} \SpecialCharTok{+}\NormalTok{ context }\SpecialCharTok{|}\NormalTok{ subject) }\SpecialCharTok{+}
 \NormalTok{                      (}\DecValTok{1} \SpecialCharTok{+}\NormalTok{ context }\SpecialCharTok{|}\NormalTok{ sentence))}
 
-\CommentTok{\# get priors for this model}
-\FunctionTok{as\_tibble}\NormalTok{(}\FunctionTok{get\_prior}\NormalTok{(formula, polite))[,}\DecValTok{1}\SpecialCharTok{:}\DecValTok{4}\NormalTok{]}
+\CommentTok{\# get information about priors that are set per default for this model}
+\CommentTok{\#  NB: no prior for \textasciigrave{}context1\textasciigrave{} is set per default (!)}
+\FunctionTok{as\_tibble}\NormalTok{(}\FunctionTok{get\_prior}\NormalTok{(formula, polite)) }\SpecialCharTok{|\textgreater{}} 
+  \FunctionTok{select}\NormalTok{(class, prior) }\SpecialCharTok{|\textgreater{}} \FunctionTok{filter}\NormalTok{(prior }\SpecialCharTok{!=} \StringTok{""}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-# A tibble: 15 x 4
-   prior                       class     coef        group     
-   <chr>                       <chr>     <chr>       <chr>     
- 1 ""                          b         ""          ""        
- 2 ""                          b         "context1"  ""        
- 3 ""                          b         "gender1"   ""        
- 4 "lkj(1)"                    cor       ""          ""        
- 5 ""                          cor       ""          "sentence"
- 6 ""                          cor       ""          "subject" 
- 7 "student_t(3, 203.9, 82.7)" Intercept ""          ""        
- 8 "student_t(3, 0, 82.7)"     sd        ""          ""        
- 9 ""                          sd        ""          "sentence"
-10 ""                          sd        "context1"  "sentence"
-11 ""                          sd        "Intercept" "sentence"
-12 ""                          sd        ""          "subject" 
-13 ""                          sd        "context1"  "subject" 
-14 ""                          sd        "Intercept" "subject" 
-15 "student_t(3, 0, 82.7)"     sigma     ""          ""        
+# A tibble: 4 x 2
+  class     prior                    
+  <chr>     <chr>                    
+1 cor       lkj(1)                   
+2 Intercept student_t(3, 203.9, 82.7)
+3 sd        student_t(3, 0, 82.7)    
+4 sigma     student_t(3, 0, 82.7)    
 \end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# }\AlertTok{NOTE}\CommentTok{ MF: make the above prettier? (how to suppress the \textasciigrave{}source\textasciigrave{} column?)}
-\CommentTok{\# }\AlertTok{NOTE}\CommentTok{ TR: calling individual lines is probably confusing to the reader, I suggest we just use the generic command. But yeah the column wrangling is strange. When choosing the first 4 columns it also displays most of them as flat, so something is off there. Made an attempt...}
-\end{Highlighting}
-\end{Shaded}
 
 The default priors that \texttt{brms} picks for the Intercept and the
 variance parameters are mostly reasonable as they are derived from the
-data. They are weakly informative and symmetrical. However the prior for
-our critical parameter \texttt{context1} should also be weakly
-informative (\citeproc{ref-gelman-etal_Prior_journalarticle_2017}{Gelman
-et al., 2017}), i.e.~the prior assumption about the difference between
-informal and formal contexts should be that we don't know, but our best
-guess is that it is close to zero and equally likely to be more or less
-than zero. So we specify a normal distribution centered on zero for this
-parameter (and we do the same for gender). Note that we use default
-priors for the other parameters for convenience here, but you should
-always critically reflect on all of your priors.
+data. They are weakly informative and symmetrical. However the default
+choice for our critical parameter \texttt{context1} is to not specify a
+prior at all, i.e., to assume a flat (improper) prior, so that it is not
+even listed in the table above. Yet, there are good arguments why it
+should also receive a weakly informative prior
+(\citeproc{ref-gelman-etal_Prior_journalarticle_2017}{Gelman et al.,
+2017}), i.e.~the prior assumption about the difference between informal
+and formal contexts should be that we don't know, but our best guess is
+that it is close to zero and equally likely to be more or less than
+zero. So we specify a normal distribution centered on zero for this
+parameter (and we do the same for gender). Since we used contrast
+coding, the prior for \texttt{context1} reflects our prior belief about
+the difference between formal and informal contexts. Note that we use
+default priors for the other parameters for convenience here, but you
+should always critically reflect on all of your priors.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# define a weakly informative prior for context and gender}
-\NormalTok{priors }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\FunctionTok{prior}\NormalTok{(}\FunctionTok{normal}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{20}\NormalTok{), }\AttributeTok{class =}\NormalTok{ b, }\AttributeTok{coef =} \StringTok{"context1"}\NormalTok{),}
-            \FunctionTok{prior}\NormalTok{(}\FunctionTok{normal}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{50}\NormalTok{), }\AttributeTok{class =}\NormalTok{ b, }\AttributeTok{coef =} \StringTok{"gender1"}\NormalTok{))}
+\NormalTok{priors }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\FunctionTok{prior}\NormalTok{(}\FunctionTok{normal}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{20}\NormalTok{), }\AttributeTok{coef =} \StringTok{"context1"}\NormalTok{),}
+            \FunctionTok{prior}\NormalTok{(}\FunctionTok{normal}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{50}\NormalTok{), }\AttributeTok{coef =} \StringTok{"gender1"}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
 
-Now we do a so-called prior predictive check, in other words we want to
-know what the posterior distribution looks like before having seen the
-data, based on the priors only. This is a useful exercise to make sure
-that the priors result in reasonable quantitative assumptions. We
-usually do it for all parameters, but here we will focus only on the
-critical parameter \texttt{context1}, i.e.~the difference between formal
-and informal contexts. Let us also have a look at the predictions for
-the prior-only model.
+Now we inspect how the parameter distribution looks like \emph{before}
+having seen the data, based on the priors only. This is a useful
+exercise to make sure that the priors result in reasonable quantitative
+assumptions. We usually do it for all parameters, but here we will focus
+only on the critical parameter \texttt{context1}, i.e.~the difference
+between formal and informal contexts. Let us also have a look at the
+predictions for the prior-only model.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -672,8 +660,8 @@ the prior-only model.
 
 \begin{figure}[!tbp]
 
-\caption{\label{fig-plot-priors}Prior probability of the effect of
-context on pitch, i.e.~before seeing the data}
+\caption{\label{fig-plot-priors}Prior probability of the difference in
+pitch between contexts, i.e.~before seeing the data}
 
 \centering{
 

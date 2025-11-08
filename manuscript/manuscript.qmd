@@ -436,16 +436,16 @@ rope <- c(-6,6)
 
 With a ROPE being defined, we can now test our hypothesis "whether pitch is **meaningfully affected** by the social context of the utterance" using Bayes Factors.
 
-# Testing hypotheses using Bayes Factor
+# Testing hypotheses using Bayes factors
 
-## What is Bayes Factor?
+## What are Bayes factors?
 
 \noindent
 We often define two hypotheses $H_0$ and $H_1$ and we usually want to know which of these is correct.
 We do so by looking at some observed data $D$.
 As Bayesians, the first most obvious thing to look at is how likely each hypothesis is after seeing the data, i.e., something like $P(H_0 \mid D)$ and $P(H_1 \mid D)$.
 Now, it turns out that these *posterior probabilities of hypotheses* are problematic, because they depend on the prior probabilities of the hypotheses $P(H_0)$ and $P(H_1)$, which are often hard to justify.
-To see this, imagine that the hypotheses to compare are polarizing issues like contrasting  Darwinian evolutionary theory and Creationist's intelligent design.
+To see this, imagine that the hypotheses to compare are polarizing issues like contrasting  Darwinian evolutionary theory and a dull form of creationism, referred to here as *arbitrary design*.
 Proponents of either view would have a hard time agreeing on priors for these hypotheses, but may find it much easier to agree on whether a given observation $D$ is more likely under the assumption that one of the two hypotheses is correct, rather than the other.
 Therefore, Bayes factors are defined as the *likelihood ratio* of the data given each hypothesis:
 
@@ -453,13 +453,17 @@ $$
 \text{Bayes factor in favor of hypothesis 1 over hypothesis 0} \ \  \colon\!= \ \ \frac{P(D \mid H_1)}{P(D \mid H_0)}
 $$
 
-To see how this is an objective and actually quite intuitive measure of observational evidence in scientific reasoning, consider the case of Darwinian evolution ($H_1$) versus intelligent design ($H_0$) again.
-Let's take the historical case where the observed data $D$ is that the beak sizes of finches on the Galápagos islands changed over time as a functional adaptation to environmental changes.
-What is a better explanation of that observation?
-To begin with, let's notice that this observation is *not* ruled out by either hypothesis.
-But the probability of observing $D$ (adaptively changing beak sizes) is much higher under Darwinian evolution ($H_1$) than under intelligent design ($H_0$).
-This is because the latter is compatible with many more counterfactual observations, such as beak sizes staying the same over time, or even beak sizes changing in a way that is not adaptive.
-So, the probability of the observed data is much higher under Darwinian evolution than under intelligent design, so that $P(D \mid H_1) > P(D \mid H_0)$, irrespective of what we initially believed is the more plausible hypothesis.
+To see how this is a more objective and actually quite intuitive measure of observational evidence in scientific reasoning, consider the case of Darwinian evolution ($H_1$) versus arbitrary design ($H_0$) again.
+Let's assume that the observed data $D$ consist of (i) measurements of the beak shapes of finches on two different islands, and (ii) information about the food sources available on these islands.
+Let's assume for simplicity that on island A the predominant food source are insects found deep in wood or earth, and that on island B it is insects with hard shells living on the surface.
+The beak shapes observed are that on island A, finches have long and narrow beaks, while on island B, finches have short and thick beaks.
+(This here is a crude simplification of an actual case that led Darwin to formulate his theory, but bear with us for the sake of the example.)
+What is a better explanation of data $D$, evolutionary selection or arbitrary design?
+To begin with, let's notice that $D$ is *not* ruled out by either hypothesis.
+But the probability of observing $D$ is higher under Darwinian evolution ($H_1$) than under arbitrary design ($H_0$).
+This is because, before seeing the data, a proponent of evoluationary theory $H_1$, if asked to make a prediction about beak shapes under the given food sources, would have considered it *more* likely that beaks are adapted to their function of exploiting the dominant food source, so making the actually observed data $D$ more likely *ex ante* than at least some other possible observations.
+In contrast, a proponent of arbitrary design $H_0$ would not have had any reason to expect that beak shapes are adapted to food sources, and would like to be able to rationalize *ex post* also any apparent violation of this expectation as the inscrutable way of the arbitrary designer.
+To the extent that there are many alternative observations which arbitrary design would consider reasonably likely *ex ante* but evoluationary selection would rule out (or deem very unlikely), the probability of the observed data is much higher under Darwinian evolution than under arbitrary design, so that $P(D \mid H_1) > P(D \mid H_0)$, irrespective of what we initially believed is the more plausible hypothesis.
 This is what corroborates the intuition that the observation $D$ is an argument in favor of $H_1$ over $H_0$. This intuition is exactly what the Bayes factor quantifies.
 
 Concretely, a Bayes factor of 1 corresponds to the case of $P(D \mid H_1) = P(D \mid H_0)$, i.e., the data is equally likely under both hypotheses, so the data does not provide any evidence for or against either hypothesis.
