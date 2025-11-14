@@ -580,7 +580,7 @@ specified:
 \NormalTok{                      (}\DecValTok{1} \SpecialCharTok{+}\NormalTok{ context }\SpecialCharTok{|}\NormalTok{ sentence))}
 
 \CommentTok{\# get information about priors that are set per default for this model}
-\CommentTok{\#  NB: no prior for \textasciigrave{}context1\textasciigrave{} is set per default (!)}
+\CommentTok{\# NB: no prior for \textasciigrave{}context1\textasciigrave{} is set per default (!)}
 \FunctionTok{as\_tibble}\NormalTok{(}\FunctionTok{get\_prior}\NormalTok{(formula, polite)) }\SpecialCharTok{|\textgreater{}} 
   \FunctionTok{select}\NormalTok{(class, prior) }\SpecialCharTok{|\textgreater{}} \FunctionTok{filter}\NormalTok{(prior }\SpecialCharTok{!=} \StringTok{""}\NormalTok{)}
 \end{Highlighting}
@@ -737,31 +737,36 @@ a hard and absolute threshold of perceptibility, while in fact many
 researchers work with a more lenient and more practical
 conceptualization of a threshold at which the probability that our
 perceptual system registers a stimulus or a stimulus difference is below
-a given probability threshold. When we say ``just noticeable
-difference'' in the following we mean that latter probabilistic notion,
-as we would like to use the idea of regions at which the perceptual
-system is unlikely to register a stimulus difference as a means of
-justifying a region of practical equivalence. For example, Liu
-(\citeproc{ref-liu2013just}{2013}) report on JNDs ranging from 3 to 14
-Hz. Jongman et al. (\citeproc{ref-jongman2017just}{2017}) report on JNDs
-between 6 and 9 Hz. Turner et al.
-(\citeproc{ref-turner2019perception}{2019}) reported on JNDs between 17
+a given probability threshold. By convention, the JND is often defined
+as the point where listener accuracy exceeds the arbitrary threshold of
+75\%. When we say ``just noticeable difference'' in the following we
+mean that latter probabilistic notion, as we would like to use the idea
+of regions at which the perceptual system is unlikely to register a
+stimulus difference as a means of justifying a region of practical
+equivalence. For example, while classic work by Klatt
+(\citeproc{ref-klatt1973discrimination}{1973}) suggest JNDs ranging from
+0.3 to 4 Hz, more modern treatments such as Turner et al.
+(\citeproc{ref-turner2019perception}{2019}) report on JNDs between 17
 and 25 Hz for non-speech stimuli and between 35 and 40 Hz for speech
-stimuli. While these studies are hard to compare, they give us at least
-an idea about the rough order of magnitude for JND values to work with
-when it comes to speech data like the data set at hand.
+stimuli. While these studies are hard to compare, their effect
+magnitudes are grounded in a comparable probability threshold (75\%
+accuracy). Thus, they give us at least an idea about the rough order of
+magnitude for JND values to work with when it comes to speech data like
+the data set at hand.
 
 Based on these considerations, we could interpret the original
 hypothesis the following way: If a pitch difference is below the JND, it
 is not meaningful. So, instead of testing against a point-valued
 hypothesis, we can test against a range of parameter values that are
 equivalent to the null value for practical purposes. In our case, let us
-begin with the lowest reported JND of the above studies on pitch
-perception in speech (3 Hz), but let us also be extra conservative and
-double the reported value to 6 Hz. We then assume that pitch values
-between \texttt{-6} and \texttt{6} are meaningless. Said differently, in
-order to be convinced that a difference in pitch is meaningful, it
-should be reliably greater than 6 Hz. Such ranges are sometimes called
+begin with a JND value that is somewhat conservative in relation to
+Klatt (\citeproc{ref-klatt1973discrimination}{1973}) adn somewhat
+liberal in relation to Turner et al.
+(\citeproc{ref-turner2019perception}{2019}): We assume that pitch values
+between \texttt{-10} and \texttt{10} are meaningless. Bear with us, we
+will later revisit this assumption. Said differently, in order to be
+convinced that a difference in pitch is meaningful, it should be
+reliably greater than 20 Hz. Such ranges are sometimes called
 \emph{regions of practical equivalence} (ROPEs), range of equivalence,
 equivalence margin, smallest effect size of interest, or good-enough
 belt (see
@@ -770,7 +775,7 @@ belt (see
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# define our ROPE}
-\NormalTok{rope }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{6}\NormalTok{,}\DecValTok{6}\NormalTok{)}
+\NormalTok{rope }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{10}\NormalTok{,}\DecValTok{10}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1108,9 +1113,9 @@ inverse of this number:
 [1] 3.0713
 \end{verbatim}
 
-With a Bayes factor of around 3.07, the data provides only moderate
-evidence in favor of the alternative hypothesis that the effect of
-\texttt{context} on \texttt{pitch} is outside of the ROPE.
+With a Bayes factor of around 3.07, the data provides some evidence in
+favor of the alternative hypothesis that the effect of \texttt{context}
+on \texttt{pitch} is outside of the ROPE.
 
 In Figure~\ref{fig-savage-dickey_TR}, the Bayes factor is the amount
 that the ratio between samples within the ROPE and outside the ROPE
@@ -1118,13 +1123,13 @@ shifts, when updating the prior with the data to obtain the posterior.
 So, to see evidence in favor of the null hypothesis (the ROPE), we would
 want to see the ratio of points shift in favor of the points
 \emph{inside} of the ROPE as we go from prior to posterior. In the plot
-above, this does not seem to be the case. Rather, we see a shift that
-\emph{more} probability mass is located \emph{outside} the ROPE for the
-posterior distribution as opposed to inside of it, as compared to the
-prior. This is why, at least in direction, the BF tells us to favor the
-alternative hypothesis. However, the shift is not so very pronounced, so
-that we would only speak of moderate evidence in favor of the
-alternative hypothesis and not strong or decisive evidence.
+above, this does not seem to be the case. Rather, we see a small shift
+that \emph{more} probability mass is located \emph{outside} the ROPE for
+the posterior distribution as opposed to inside of it, as compared to
+the prior. This is why, at least in direction, the BF tells us to favor
+the alternative hypothesis. However, the shift is not so very
+pronounced, so that we would only speak of moderate evidence in favor of
+the alternative hypothesis and not strong or decisive evidence.
 
 \subsection{\texorpdfstring{Calculating ROPE-ed Bayes factor with the
 \texttt{bayesfactorR}
@@ -1175,15 +1180,15 @@ probabilities are very much dependent on the priors of the model, so it
 is important to evaluate the robustness of our Bayes Factor-based
 interpretation across a range of sensible priors. And as long as we are
 not a 100\% sure about what a meaningful difference is, we might as well
-explore the robustness of the Bayes Factor across different ROPEs. We
-won't bore you with the code for that process, but you can follow it
-along in our scripts. Let us explore the following ROPE intervals as
-informed by the three studies cited above on pitch perception: we test a
-range of ROPE intervals from 6 Hz to 40 Hz. We also assume the following
-five prior values for the width of the standard deviation of the
-critical parameter (centered on zero): 10, 15, 20, 25, 30. These are all
-sensible prior widths assuming that medium to strong pitch effects in
-either direction are plausible.
+explore the robustness of the Bayes Factor across different ROPEs,
+i.e.~in our case different JNDs. We won't bore you with the code for
+that process, but you can follow it along in our scripts. Let us explore
+the following ROPE intervals as informed by the two studies cited above
+on pitch perception: we test a range of ROPE intervals from 0.3 Hz to 40
+Hz. We also assume the following five prior values for the width of the
+standard deviation of the critical parameter (centered on zero): 10, 15,
+20, 25, 30. These are all sensible prior widths assuming that medium to
+strong pitch effects in either direction are plausible.
 
 \begin{figure}[!tbp]
 
@@ -1233,16 +1238,14 @@ the more likely becomes the null hypothesis. In an ideal world, the
 evidence provided by the data should be robust across these choices.
 However, this exploration of our inference is a fantastic opportunity to
 assess the boundaries of our conclusions. In this case, the original
-conclusions by Winter and Grawunder
-(\citeproc{ref-winter-grawunder_Phonetic_journalarticle_2012}{2012}) was
-based on the null hypothesis significance testing and traditionally
-tested the compatibility of the data with a point-null hypothesis. They
-concluded ``that in formal speech, Korean {[}\ldots{]} female speakers
-lowered their average fundamental frequency {[}\ldots{]}.'' This
-statement is still true according to their inferential criteria, but
-thinking more deeply about the theoretical consequences of differences
-in pitch, it might be less clear that these differences are truly
-meaningful.
+conclusions of the educational materials from Winter
+(\citeproc{ref-winter_Linear_preprint_2013}{2013}) was based on the null
+hypothesis significance testing framework, traditionally testing the
+compatibility of the data with a point-null hypothesis. Given his
+framework, it is reasonable to conclude that in formal speech, Korean
+speakers lower their average fundamental frequency. However, thinking
+more deeply about the theoretical consequences of differences in pitch,
+it might be less clear that these differences are truly meaningful.
 
 \section{How to write this inferential procedure
 up?}\label{how-to-write-this-inferential-procedure-up}
@@ -1299,9 +1302,8 @@ that we consider to be not meaningful
 (\citeproc{ref-kruschke_Rejecting_journalarticle_2018}{Kruschke, 2018}).
 In our case the ROPE is perceptually defined by studies on just
 noticeable differences in pitch perception
-(\citeproc{ref-jongman2017just}{Jongman et al., 2017};
-\citeproc{ref-liu2013just}{Liu, 2013};
-\citeproc{ref-turner2019perception}{Turner et al., 2019}).
+{[}klatt1973discrimination;Turner et al.
+(\citeproc{ref-turner2019perception}{2019}){]}.
 
 Subsequently, we calculate the Savage-Dickey density ratio
 (\citeproc{ref-DickeyLientz1970-The-Weighted-Li}{Dickey \& Lientz,
@@ -1319,15 +1321,11 @@ nested models, especially when models only differ with respect to one
 parameter. Since BFs can depend on both the defined ROPE and the priors
 of the model, we assessed the sensitivity of the results through
 calculating BFs for a range of (sensible) ROPE values and a range of
-(sensible) priors. We assumed the ROPE intervals centered on zero from 6
-Hz to 40 Hz, following literature on JNDs in pitch perception
-(\citeproc{ref-jongman2017just}{Jongman et al., 2017};
-\citeproc{ref-liu2013just}{Liu, 2013};
-\citeproc{ref-turner2019perception}{Turner et al., 2019}). We assumed
-the following five prior values for the width of the context parameter
-(centered on zero): 10 Hz, 15 Hz, 20 Hz, 25 Hz, and 30 Hz. These are all
-sensible prior choices assuming reasonable pitch differences in either
-direction.
+(sensible) priors. We assumed the ROPE intervals centered on zero from
+0.3 Hz to 40 Hz. We assumed the following five prior values for the
+width of the context parameter (centered on zero): 10 Hz, 15 Hz, 20 Hz,
+25 Hz, and 30 Hz. These are all sensible prior choices assuming
+reasonable pitch differences in either direction.
 
 \section{Some words of encouragement}\label{some-words-of-encouragement}
 
@@ -1336,16 +1334,16 @@ testing in particular require much more thinking than we might be used
 to. We believe this is a good thing. Many voices have criticized the
 lack of engagement that we behavioral scientists invest into thinking
 how our theoretical ideas connect to concrete predictions in the
-quantitative systems under investigation
-(\citeproc{ref-coretta2023multidimensional}{Coretta et al., 2023}; e.g.
-\citeproc{ref-scheel2022most}{Scheel, 2022};
-\citeproc{ref-woensdregt2024lessons}{Woensdregt et al., 2024}). The
-presented form of hypothesis testing is easy to understand, but does
-require to think deeply about prior quantitative assumptions as well as
-what it means for observations to be meaningfully different. That is
-neither trivial nor easy. But we would like to encourage everybody to
-engage in exactly this thinking to better understand our data and how
-they might link to our understanding of cognition and behavior.
+quantitative systems under investigation {[}e.g.; Scheel
+(\citeproc{ref-scheel2022most}{2022}); Coretta et al.
+(\citeproc{ref-coretta2023multidimensional}{2023}); Woensdregt et al.
+(\citeproc{ref-woensdregt2024lessons}{2024}){]}. The presented form of
+hypothesis testing is easy to understand, but does require to think
+deeply about prior quantitative assumptions as well as what it means for
+observations to be meaningfully different. That is neither trivial nor
+easy. But we would like to encourage everybody to engage in exactly this
+thinking to better understand our data and how they might link to our
+understanding of cognition and behavior.
 
 \section{Other Resources}\label{other-resources}
 
@@ -1416,15 +1414,14 @@ H. (2017). A tutorial on bridge sampling. \emph{Journal of Mathematical
 Psychology}, \emph{81}, 80--97.
 \url{https://doi.org/doi.org/10.1016/j.jmp.2017.09.005}
 
-\bibitem[\citeproctext]{ref-jongman2017just}
-Jongman, A., Qin, Z., Zhang, J., \& Sereno, J. A. (2017). Just
-noticeable differences for pitch direction, height, and slope for
-mandarin and english listeners. \emph{The Journal of the Acoustical
-Society of America}, \emph{142}(2), EL163--EL169.
-
 \bibitem[\citeproctext]{ref-KassRaftery1995-Bayes-Factors}
 Kass, R. E., \& Raftery, A. E. (1995). Bayes factors. \emph{Journal of
 the American Statistical Association}, \emph{90}(430), 773--795.
+
+\bibitem[\citeproctext]{ref-klatt1973discrimination}
+Klatt, D. H. (1973). Discrimination of fundamental frequency contours in
+synthetic speech: Implications for models of pitch perception. \emph{The
+Journal of the Acoustical Society of America}, \emph{53}(1), 8--16.
 
 \bibitem[\citeproctext]{ref-KlugkistHoijtink2007-The-Bayes-facto}
 Klugkist, I., \& Hoijtink, H. (2007). The bayes factor for inequality
@@ -1459,11 +1456,6 @@ Sage Publications.
 \bibitem[\citeproctext]{ref-lindley_Statistical_journalarticle_1957}
 Lindley, D. V. (1957). A {Statistical Paradox}. \emph{Biometrika},
 \emph{44}(1/2), 187--192. \url{https://doi.org/10.2307/2333251}
-
-\bibitem[\citeproctext]{ref-liu2013just}
-Liu, C. (2013). Just noticeable difference of tone pitch contour change
-for english-and chinese-native listeners. \emph{The Journal of the
-Acoustical Society of America}, \emph{134}(4), 3011--3020.
 
 \bibitem[\citeproctext]{ref-MakowskiBen-Shachar2019-bayestestR}
 Makowski, D., Ben-Shachar, M. S., \& Lüdecke, D. (2019). {bayestestR:

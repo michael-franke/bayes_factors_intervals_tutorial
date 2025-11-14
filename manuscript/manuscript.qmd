@@ -307,7 +307,7 @@ fit_prior <- brm(formula, prior = priors, data = polite,
            # sample prior only
            sample_prior = "only",
            # store / load model output
-           file  = "models/fit_prior",
+           file  = "../models/fit_prior",
            # common sampling specifications
            seed = 1234, iter = 8000
            )
@@ -356,7 +356,7 @@ Now we can run the full model that integrates the likelihood (our data) with the
 
 # run the model
 fit <- brm(formula, prior = priors, data = polite,
-           file  = "models/fit",
+           file  = "../models/fit",
            seed = 1234, iter = 8000
            )
            
@@ -814,10 +814,10 @@ if (rerun) {
   names(model_list) <- paste0("xmdl_prior_", c(10,15,20,25,30))
   
   # store models
-  saveRDS(model_list, "models/model_loop.RDS")
+  saveRDS(model_list, "../models/model_loop.RDS")
   
 } else {
-  model_list <- readRDS("models/model_loop.RDS")
+  model_list <- readRDS("../models/model_loop.RDS")
 }
 
 
@@ -828,46 +828,46 @@ if (rerun) {
 #| echo: FALSE
 #| message: FALSE
 
-# specify different rope intervals
+# # specify different rope intervals
+# 
+# # Generate sequence of lower bounds
+# lower_bounds <- c(c(0.3,1), seq(2, 40, by = 2))
+# 
+# # Create list of value pairs
+# ropes <- lapply(lower_bounds, function(x) c(x, -x))
+# 
+# results <- map_dfr(names(model_list), function(model_name) {
+#   model <- model_list[[model_name]]
+# 
+#   map_dfr(ropes, function(interval) {
+#     lower <- interval[1]
+#     upper <- interval[2]
+# 
+#     bayesfactor_parameters(
+#       model,
+#       null = c(lower, upper),
+#       parameter = "b_context1"
+#     ) %>%
+#       as_tibble() %>%
+#       mutate(
+#         model = model_name,
+#         ROPE = upper,
+#         interval_range = paste0("[", lower, ", ", upper, "]")
+#       ) %>%
+#       select(model, everything())
+#   })
+# })
+# 
+# # wrangle
+# results_wrangled <- results |>
+#    filter(Parameter == "b_context1") |>
+#    separate(model, sep = "_", into = c(NA, NA, "prior_sd")) |>
+#    mutate(BF = exp(log_BF),
+#           ROPE = abs(ROPE)) |>
+#    select(prior_sd, BF, ROPE, interval_range)
 
-# Generate sequence of lower bounds
-lower_bounds <- c(c(0.3,1), seq(2, 40, by = 2))
-
-# Create list of value pairs
-ropes <- lapply(lower_bounds, function(x) c(x, -x))
-
-results <- map_dfr(names(model_list), function(model_name) {
-  model <- model_list[[model_name]]
-
-  map_dfr(ropes, function(interval) {
-    lower <- interval[1]
-    upper <- interval[2]
-
-    bayesfactor_parameters(
-      model,
-      null = c(lower, upper),
-      parameter = "b_context1"
-    ) %>%
-      as_tibble() %>%
-      mutate(
-        model = model_name,
-        ROPE = upper,
-        interval_range = paste0("[", lower, ", ", upper, "]")
-      ) %>%
-      select(model, everything())
-  })
-})
-
-# wrangle
-results_wrangled <- results |>
-   filter(Parameter == "b_context1") |>
-   separate(model, sep = "_", into = c(NA, NA, "prior_sd")) |>
-   mutate(BF = exp(log_BF),
-          ROPE = abs(ROPE)) |>
-   select(prior_sd, BF, ROPE, interval_range)
-
-write_csv(results_wrangled, "models/loop_results.csv")
-#results_wrangled <- read_csv("models/loop_results.csv")
+#write_csv(results_wrangled, "../models/loop_results.csv")
+results_wrangled <- read_csv("../models/loop_results.csv")
 
 ```
 
