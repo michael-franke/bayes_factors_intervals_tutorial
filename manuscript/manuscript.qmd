@@ -74,7 +74,7 @@ editor:
 
 \noindent
 One of the most common scenarios in experimental research is to measure one or more (dependent) variables in an experiment with one or more predictors (independent variables).
-Usually, if we are testing hypotheses, we then want to test statistically whether the predictors affect the measured dependent variables.
+Usually, if we are testing hypotheses, we want to statistically test whether the predictors affect the measured variables.
 Traditionally, these statistical tests have been done within the *null hypothesis significance testing* (NHST) framework.[^NHST]
 While extensions of the NHST framework exist, in its basic form, NHST only allows us to *reject* the null hypothesis, but not to provide evidence in favor of it.
 Over the last decade or so, however, there has been rising interest in statistical approaches within an alternative inferential framework using *Bayesian inference*.
@@ -131,6 +131,7 @@ project_colors = c(
 
 ```{r libraries}
 #| message: FALSE
+#| echo: FALSE
 
 # package for convenience functions (e.g. plotting)
 library(tidyverse)
@@ -149,6 +150,18 @@ library(bayestestR)
 # options to increase efficiency of brms models (optional)
 options(brms.backend = "cmdstanr")
 options(mc.cores = parallel::detectCores())
+
+```
+
+```{r libraries_for_reader}
+#| message: FALSE
+#| eval: FALSE
+
+# package for Bayesian regression modeling
+library(brms)
+
+# package for BF calculation and plotting
+library(bayestestR)
 
 ```
 
@@ -259,7 +272,7 @@ formula <- bf(pitch ~ context +
                       (1 + context | sentence))
 
 # get information about priors that are set per default for this model
-#  NB: no prior for `context1` is set per default (!)
+# NB: no prior for `context1` is set per default (!)
 as_tibble(get_prior(formula, polite)) |> 
   select(class, prior) |> filter(prior != "")
 
@@ -294,7 +307,7 @@ fit_prior <- brm(formula, prior = priors, data = polite,
            # sample prior only
            sample_prior = "only",
            # store / load model output
-           file  = "../models/fit_prior",
+           file  = "models/fit_prior",
            # common sampling specifications
            seed = 1234, iter = 8000
            )
@@ -322,9 +335,10 @@ ggplot(prior_samples,
                     outline_bars = FALSE) +
   labs(x = "\n pitch difference between formal and informal contexts",
        y = "") +
-  scale_x_continuous(limits =c(-70,70)) +
+  scale_x_continuous(limits =c(-75,75)) +
   theme_minimal() +
   theme(axis.text.y = element_blank())
+
 
 ```
 
@@ -342,7 +356,7 @@ Now we can run the full model that integrates the likelihood (our data) with the
 
 # run the model
 fit <- brm(formula, prior = priors, data = polite,
-           file  = "../models/fit",
+           file  = "models/fit",
            seed = 1234, iter = 8000
            )
            
@@ -378,7 +392,7 @@ posterior_plot <- posterior_samples |>
   scale_thickness_shared() +
   labs(x = "\n pitch difference between formal and informal contexts",
        y = "") +
-  scale_x_continuous(limits =c(-70,70)) +
+  scale_x_continuous(limits =c(-75,75)) +
   theme_minimal() +
   theme(axis.text.y = element_blank())
 
@@ -414,23 +428,21 @@ Speech is also very complex and very noisy: Not everything that can be measured 
 For example, if something cannot be perceived reliably, it is at least conceivable that it might play little to no role in communication.
 While the speech sciences have a rich research tradition to estimate what can and what cannot be reliably heard, exact estimation depends on a lot of moving parts.
 Approximate thresholds of what can be reliably heard are often referred to as *Just Noticeable Differences* (JNDs).
-This terminology has been argued to be dangerously misleading @SanfordHalberda2023-A-Shared-Intuit as it implies a hard and absolute threshold of perceptibility, while in fact many researchers work with a more lenient and more practical conceptualization of a threshold at which the probability that our perceptual system registers a stimulus or a stimulus difference is below a given probability threshold.
+This terminology has been argued to be dangerously misleading @SanfordHalberda2023-A-Shared-Intuit as it implies a hard and absolute threshold of perceptibility, while in fact many researchers work with a more lenient and more practical conceptualization of a threshold at which the probability that our perceptual system registers a stimulus or a stimulus difference is below a given probability threshold. By convention, the JND is often defined as the point where listener accuracy exceeds the arbitrary threshold of 75%.
 When we say "just noticeable difference" in the following we mean that latter probabilistic notion, as we would like to use the idea of regions at which the perceptual system is unlikely to register a stimulus difference as a means of justifying a region of practical equivalence.
-For example, @liu2013just report on JNDs ranging from 3 to 14 Hz. 
-@jongman2017just report on JNDs between 6 and 9 Hz. 
-@turner2019perception reported on JNDs between 17 and 25 Hz for non-speech stimuli and between 35 and 40 Hz for speech stimuli. 
-While these studies are hard to compare, they give us at least an idea about the rough order of magnitude for JND values to work with when it comes to speech data like the data set at hand. 
+For example, while classic work by @klatt1973discrimination suggest JNDs ranging from 0.3 to 4 Hz, more modern treatments such as @turner2019perception report on JNDs between 17 and 25 Hz for non-speech stimuli and between 35 and 40 Hz for speech stimuli. 
+While these studies are hard to compare, their effect magnitudes are grounded in a comparable probability threshold (75% accuracy). Thus, they give us at least an idea about the rough order of magnitude for JND values to work with when it comes to speech data like the data set at hand. 
 
 Based on these considerations, we could interpret the original hypothesis the following way: If a pitch difference is below the JND, it is not meaningful.
 So, instead of testing against a point-valued hypothesis, we can test against a range of parameter values that are equivalent to the null value for practical purposes.
-In our case, let us begin with the lowest reported JND of the above studies on pitch perception in speech (3 Hz), but let us also be extra conservative and double the reported value to 6 Hz. We then assume that pitch values between `-6` and `6` are meaningless.
-Said differently, in order to be convinced that a difference in pitch is meaningful, it should be reliably greater than 6 Hz.
+In our case, let us begin with a JND value that is somewhat conservative in relation to @klatt1973discrimination adn somewhat liberal in relation to @turner2019perception: We assume that pitch values between `-10` and `10` are meaningless. Bear with us, we will later revisit this assumption.
+Said differently, in order to be convinced that a difference in pitch is meaningful, it should be reliably greater than 20 Hz.
 Such ranges are sometimes called *regions of practical equivalence* (ROPEs), range of equivalence, equivalence margin, smallest effect size of interest, or good-enough belt [see @kruschke_Rejecting_journalarticle_2018].
 
 ```{r rope}
 
 # define our ROPE
-rope <- c(-6,6)
+rope <- c(-10,10)
 
 ```
 
@@ -578,9 +590,9 @@ tibble(
   encompassing = dnorm(delta)
 ) %>%
   mutate(
-    null = ifelse(-0.1 <= delta & delta <= 0.1,
+    null = ifelse(-0.6 <= delta & delta <= 0.6,
                   encompassing, 0),
-    alt  = ifelse(-0.1 >= delta | delta >= 0.1,
+    alt  = ifelse(-0.6 >= delta | delta >= 0.6,
                   encompassing, 0)
   ) %>%
   mutate(
@@ -619,7 +631,7 @@ all_samples <- full_join(prior_samples,posterior_samples)
 # plot density ropes  
 density_rope <- all_samples |> 
   ggplot(aes(x = b_context1)) + 
-  stat_halfeye(aes(fill = after_stat(x > -6 & x < 6)),
+  stat_halfeye(aes(fill = after_stat(x > -10 & x < 10)),
                  interval_colour = NA) +
   facet_grid(.~ factor(model, levels = c("prior", "posterior"))) +
   scale_fill_manual(values = c("grey","lightblue")) +
@@ -628,13 +640,13 @@ density_rope <- all_samples |>
              lty = "dashed") +
   labs(x = "\n pitch difference between formal and informal contexts",
        y = "") +
-  scale_x_continuous(limits =c(-70,70)) +
+  scale_x_continuous(limits =c(-75,75)) +
   theme_minimal() +
   theme(axis.text.y = element_blank(),
         legend.position = "none")
 
 proportion_rope <- all_samples |> 
-  mutate(in_rope = ifelse(b_context1 < -6 | b_context1 > 6, "outside", "inside")) |> 
+  mutate(in_rope = ifelse(b_context1 < -10 | b_context1 > 10, "outside", "inside")) |> 
   group_by(model,in_rope) |> 
   summarise(n = n()) %>%
   mutate(freq = n / sum(n)) |> 
@@ -693,12 +705,12 @@ BF_favoring_Alt
 
 ```
 
-With a Bayes factor of around `{r} round(BF_favoring_Alt, 2)`, the data provides only moderate evidence in favor of the alternative hypothesis that the effect of `context` on `pitch` is outside of the ROPE.
+With a Bayes factor of around `{r} round(BF_favoring_Alt, 2)`, the data provides some evidence in favor of the alternative hypothesis that the effect of `context` on `pitch` is outside of the ROPE.
 
 In @fig-savage-dickey_TR, the Bayes factor is the amount that the ratio between samples within the ROPE and outside the ROPE shifts, when updating the prior with the data to obtain the posterior.
 So, to see evidence in favor of the null hypothesis (the ROPE), we would want to see the ratio of points shift in favor of the points *inside* of the ROPE as we go from prior to posterior. 
 In the plot above, this does not seem to be the case.
-Rather, we see a shift that *more* probability mass is located *outside* the ROPE for the posterior distribution as opposed to inside of it, as compared to the prior.
+Rather, we see a small shift that *more* probability mass is located *outside* the ROPE for the posterior distribution as opposed to inside of it, as compared to the prior.
 This is why, at least in direction, the BF tells us to favor the alternative hypothesis.
 However, the shift is not so very pronounced, so that we would only speak of moderate evidence in favor of the alternative hypothesis and not strong or decisive evidence.
 
@@ -745,9 +757,9 @@ We obtain (almost) the same result in this way: the Bayes factor in favor of the
 
 \noindent
 Now as you probably have guessed already, all these probabilities are very much dependent on the priors of the model, so it is important to evaluate the robustness of our Bayes Factor-based interpretation across a range of sensible priors.
-And as long as we are not a 100% sure about what a meaningful difference is, we might as well explore the robustness of the Bayes Factor across different ROPEs.
+And as long as we are not a 100% sure about what a meaningful difference is, we might as well explore the robustness of the Bayes Factor across different ROPEs, i.e. in our case different JNDs.
 We won't bore you with the code for that process, but you can follow it along in our scripts.
-Let us explore the following ROPE intervals as informed by the three studies cited above on pitch perception: we test a range of ROPE intervals from 6 Hz to 40 Hz.
+Let us explore the following ROPE intervals as informed by the two studies cited above on pitch perception: we test a range of ROPE intervals from 0.3 Hz to 40 Hz.
 We also assume the following five prior values for the width of the standard deviation of the critical parameter (centered on zero): 10, 15, 20, 25, 30.
 These are all sensible prior widths assuming that medium to strong pitch effects in either direction are plausible.
 
@@ -802,10 +814,10 @@ if (rerun) {
   names(model_list) <- paste0("xmdl_prior_", c(10,15,20,25,30))
   
   # store models
-  saveRDS(model_list, "../models/model_loop.RDS")
+  saveRDS(model_list, "models/model_loop.RDS")
   
 } else {
-  model_list <- readRDS("../models/model_loop.RDS")
+  model_list <- readRDS("models/model_loop.RDS")
 }
 
 
@@ -819,7 +831,7 @@ if (rerun) {
 # specify different rope intervals
 
 # Generate sequence of lower bounds
-lower_bounds <- seq(6, 40, by = 2)
+lower_bounds <- c(c(0.3,1), seq(2, 40, by = 2))
 
 # Create list of value pairs
 ropes <- lapply(lower_bounds, function(x) c(x, -x))
@@ -854,8 +866,8 @@ results_wrangled <- results |>
           ROPE = abs(ROPE)) |>
    select(prior_sd, BF, ROPE, interval_range)
 
-#write_csv(results_wrangled, "models/loop_results.csv")
-results_wrangled <- read_csv("../models/loop_results.csv")
+write_csv(results_wrangled, "models/loop_results.csv")
+#results_wrangled <- read_csv("models/loop_results.csv")
 
 ```
 
@@ -910,7 +922,7 @@ This is not surprising and a known phenomenon, often discussed under the Jeffrey
 
 Combined, we can see that the larger the ROPE and the wider the priors, the more likely becomes the null hypothesis.
 In an ideal world, the evidence provided by the data should be robust across these choices.
-However, this exploration of our inference is a fantastic opportunity to assess the boundaries of our conclusions. In this case, the original conclusions by @winter-grawunder_Phonetic_journalarticle_2012 was based on the null hypothesis significance testing and traditionally tested the compatibility of the data with a point-null hypothesis. They concluded "that in formal speech, Korean [...] female speakers lowered their average fundamental frequency [...]." This statement is still true according to their inferential criteria, but thinking more deeply about the theoretical consequences of differences in pitch, it might be less clear that these differences are truly meaningful. 
+However, this exploration of our inference is a fantastic opportunity to assess the boundaries of our conclusions. In this case, the original conclusions of the educational materials from @winter_Linear_preprint_2013 was based on the null hypothesis significance testing framework, traditionally testing the compatibility of the data with a point-null hypothesis. Given his framework, it is reasonable to conclude that in formal speech, Korean speakers lower their average fundamental frequency. However, thinking more deeply about the theoretical consequences of differences in pitch, it might be less clear that these differences are truly meaningful. 
 
 # How to write this inferential procedure up?
 
@@ -930,14 +942,14 @@ We fit this model with four chains of Hamiltonian Monte Carlo sampling for the e
 ## Inferential assessment via Bayes Factor and ROPEs
 
 \noindent
-Using the Bayesian framework, we aim to quantitatively evaluate the evidence for a perceptually meaningful effect of social context on pitch values based on our data against the background of our model and chosen priors. We will combine two statistical concepts to make this evaluation: First, we define a region of practical equivalence (ROPE) that will represent a reasonable range of pitch value around zero that we consider to be not meaningful  [@kruschke_Rejecting_journalarticle_2018]. In our case the ROPE is perceptually defined by studies on just noticeable differences in pitch perception [@liu2013just;@jongman2017just;@turner2019perception].
+Using the Bayesian framework, we aim to quantitatively evaluate the evidence for a perceptually meaningful effect of social context on pitch values based on our data against the background of our model and chosen priors. We will combine two statistical concepts to make this evaluation: First, we define a region of practical equivalence (ROPE) that will represent a reasonable range of pitch value around zero that we consider to be not meaningful  [@kruschke_Rejecting_journalarticle_2018]. In our case the ROPE is perceptually defined by studies on just noticeable differences in pitch perception [klatt1973discrimination;@turner2019perception].
 
-Subsequently, we calculate the Savage-Dickey density ratio [@DickeyLientz1970-The-Weighted-Li;@WagenmakersLodewyckx2010-Bayesian-hypoth], i.e. we relate the amount of evidence (the proportion of posterior samples) within the ROPE for the model based on the priors only (i.e. before seeing the data) to the amount of evidence within the ROPE for the model based on both priors and likelihood (i.e. after seeing the data) [e.g. @WetzelsGrasman2010-An-encompassing]. The Savage-Dickey method lets us assess evidence for and against a null hypothesis using Bayes Factor (BF) and is particularly suited for nested models, especially when models only differ with respect to one parameter. Since BFs can depend on both the defined ROPE and the priors of the model, we assessed the sensitivity of the results through calculating BFs for a range of (sensible) ROPE values and a range of (sensible) priors. We assumed the ROPE intervals centered on zero from 6 Hz to 40 Hz, following literature on JNDs in pitch perception [@liu2013just;@jongman2017just;@turner2019perception]. We assumed the following five prior values for the width of the context parameter (centered on zero): 10 Hz, 15 Hz, 20 Hz, 25 Hz, and 30 Hz. These are all sensible prior choices assuming reasonable pitch differences in either direction. 
+Subsequently, we calculate the Savage-Dickey density ratio [@DickeyLientz1970-The-Weighted-Li;@WagenmakersLodewyckx2010-Bayesian-hypoth], i.e. we relate the amount of evidence (the proportion of posterior samples) within the ROPE for the model based on the priors only (i.e. before seeing the data) to the amount of evidence within the ROPE for the model based on both priors and likelihood (i.e. after seeing the data) [e.g. @WetzelsGrasman2010-An-encompassing]. The Savage-Dickey method lets us assess evidence for and against a null hypothesis using Bayes Factor (BF) and is particularly suited for nested models, especially when models only differ with respect to one parameter. Since BFs can depend on both the defined ROPE and the priors of the model, we assessed the sensitivity of the results through calculating BFs for a range of (sensible) ROPE values and a range of (sensible) priors. We assumed the ROPE intervals centered on zero from 0.3 Hz to 40 Hz. We assumed the following five prior values for the width of the context parameter (centered on zero): 10 Hz, 15 Hz, 20 Hz, 25 Hz, and 30 Hz. These are all sensible prior choices assuming reasonable pitch differences in either direction. 
 
 # Some words of encouragement
 
 \noindent
-Bayesian inference in general and this form of hypothesis testing in particular require much more thinking than we might be used to. We believe this is a good thing. Many voices have criticized the lack of engagement that we behavioral scientists invest into thinking how our theoretical ideas connect to concrete predictions in the quantitative systems under investigation [e.g. @scheel2022most; @coretta2023multidimensional; @woensdregt2024lessons]. The presented form of hypothesis testing is easy to understand, but does require to think deeply about prior quantitative assumptions as well as what it means for observations to be meaningfully different. That is neither trivial nor easy. But we would like to encourage everybody to engage in exactly this thinking to better understand our data and how they might link to our understanding of cognition and behavior.  
+Bayesian inference in general and this form of hypothesis testing in particular require much more thinking than we might be used to. We believe this is a good thing. Many voices have criticized the lack of engagement that we behavioral scientists invest into thinking how our theoretical ideas connect to concrete predictions in the quantitative systems under investigation [e.g.; @scheel2022most; @coretta2023multidimensional; @woensdregt2024lessons]. The presented form of hypothesis testing is easy to understand, but does require to think deeply about prior quantitative assumptions as well as what it means for observations to be meaningfully different. That is neither trivial nor easy. But we would like to encourage everybody to engage in exactly this thinking to better understand our data and how they might link to our understanding of cognition and behavior.  
 
 # Other Resources
 

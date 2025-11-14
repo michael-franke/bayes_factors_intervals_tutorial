@@ -127,17 +127,15 @@
 
 \usepackage{graphicx}
 \makeatletter
-\newsavebox\pandoc@box
-\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
-  \sbox\pandoc@box{#1}%
-  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
-  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
-  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
-  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
-  \else\usebox{\pandoc@box}%
-  \fi%
-}
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
 % Set default figure placement to htbp
+\makeatletter
 \def\fps@figure{htbp}
 \makeatother
 
@@ -358,27 +356,27 @@ Roettger, Email: \href{mailto:timo.roettger@iln.uio.no}{timo.roettger@iln.uio.no
 \noindent One of the most common scenarios in experimental research is
 to measure one or more (dependent) variables in an experiment with one
 or more predictors (independent variables). Usually, if we are testing
-hypotheses, we then want to test statistically whether the predictors
-affect the measured dependent variables. Traditionally, these
-statistical tests have been done within the \emph{null hypothesis
-significance testing} (NHST) framework.\footnote{Not strictly necessary
-  for this tutorial but, in case you need a reminder, the logic of NHST
-  goes something like this: we assume ---for the sake of argument---
-  that a null hypothesis is correct, i.e., that there is no effect of a
-  relevant predictor. We then ask ourselves how likely different
-  observations would be based on that assumption, and use this so-called
-  \emph{sampling distribution} to quantify how surprising the observed
-  data is under the assumed null hypothesis. If the observed data are
-  very unlikely, we \emph{reject} the null hypothesis and conclude that
-  the predictor affects the dependent variable.} While extensions of the
-NHST framework exist, in its basic form, NHST only allows us to
-\emph{reject} the null hypothesis, but not to provide evidence in favor
-of it. Over the last decade or so, however, there has been rising
-interest in statistical approaches within an alternative inferential
-framework using \emph{Bayesian inference}. One of the main reasons for
-this rising interest is that Bayesian inference allows to not only
-quantify evidence \emph{against} an assumed null hypothesis, but also to
-yield quantitative evidence \emph{in favor of} the null hypothesis.
+hypotheses, we want to statistically test whether the predictors affect
+the measured variables. Traditionally, these statistical tests have been
+done within the \emph{null hypothesis significance testing} (NHST)
+framework.\footnote{Not strictly necessary for this tutorial but, in
+  case you need a reminder, the logic of NHST goes something like this:
+  we assume ---for the sake of argument--- that a null hypothesis is
+  correct, i.e., that there is no effect of a relevant predictor. We
+  then ask ourselves how likely different observations would be based on
+  that assumption, and use this so-called \emph{sampling distribution}
+  to quantify how surprising the observed data is under the assumed null
+  hypothesis. If the observed data are very unlikely, we \emph{reject}
+  the null hypothesis and conclude that the predictor affects the
+  dependent variable.} While extensions of the NHST framework exist, in
+its basic form, NHST only allows us to \emph{reject} the null
+hypothesis, but not to provide evidence in favor of it. Over the last
+decade or so, however, there has been rising interest in statistical
+approaches within an alternative inferential framework using
+\emph{Bayesian inference}. One of the main reasons for this rising
+interest is that Bayesian inference allows to not only quantify evidence
+\emph{against} an assumed null hypothesis, but also to yield
+quantitative evidence \emph{in favor of} the null hypothesis.
 
 Unfortunately, there are several approaches to hypothesis testing within
 the Bayesian framework, and many of them are either conceptually
@@ -459,23 +457,11 @@ can import with the following code:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# package for convenience functions (e.g. plotting)}
-\FunctionTok{library}\NormalTok{(tidyverse)}
-\FunctionTok{library}\NormalTok{(ggdist)}
-
 \CommentTok{\# package for Bayesian regression modeling}
 \FunctionTok{library}\NormalTok{(brms)}
 
-\CommentTok{\# package for posterior wrangling and plotting}
-\FunctionTok{library}\NormalTok{(tidybayes)}
-\FunctionTok{library}\NormalTok{(patchwork)}
-
 \CommentTok{\# package for BF calculation and plotting}
 \FunctionTok{library}\NormalTok{(bayestestR)}
-
-\CommentTok{\# options to increase efficiency of brms models (optional)}
-\FunctionTok{options}\NormalTok{(}\AttributeTok{brms.backend =} \StringTok{"cmdstanr"}\NormalTok{)}
-\FunctionTok{options}\NormalTok{(}\AttributeTok{mc.cores =}\NormalTok{ parallel}\SpecialCharTok{::}\FunctionTok{detectCores}\NormalTok{())}
 \end{Highlighting}
 \end{Shaded}
 
@@ -564,7 +550,7 @@ speakers' pitch values across contexts and sex}
 
 \centering{
 
-\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-descriptive-dataviz-1.pdf}}
+\includegraphics{manuscript_files/figure-pdf/fig-descriptive-dataviz-1.pdf}
 
 }
 
@@ -665,7 +651,7 @@ pitch between contexts, i.e.~before seeing the data}
 
 \centering{
 
-\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-plot-priors-1.pdf}}
+\includegraphics{manuscript_files/figure-pdf/fig-plot-priors-1.pdf}
 
 }
 
@@ -698,7 +684,7 @@ of context on pitch, i.e.~after seeing the data}
 
 \centering{
 
-\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-plot-posterior-1.pdf}}
+\includegraphics{manuscript_files/figure-pdf/fig-plot-posterior-1.pdf}
 
 }
 
@@ -742,20 +728,28 @@ listener. For example, if something cannot be perceived reliably, it is
 at least conceivable that it might play little to no role in
 communication. While the speech sciences have a rich research tradition
 to estimate what can and what cannot be reliably heard, exact estimation
-depends on a lot of moving parts. Such thresholds of what can be
-reliably heard are referred to as \emph{Just Noticeable Differences}
-(JNDs) and can be used to define what constitutes meaningful differences
-when we look at speech data.
-
-For example, Liu (\citeproc{ref-liu2013just}{2013}) report on JNDs
-ranging from 3 to 14 Hz. Jongman et al.
-(\citeproc{ref-jongman2017just}{2017}) report on JNDs between 6 and 9
-Hz. Turner et al. (\citeproc{ref-turner2019perception}{2019}) reported
-on JNDs between 17 and 25 Hz for non-speech stimuli and between 35 and
-40 Hz for speech stimuli. While these studies are hard to compare, they
-give us at least an idea about the rough order of magnitude for JND
-values to work with when it comes to speech data like the data set at
-hand.
+depends on a lot of moving parts. Approximate thresholds of what can be
+reliably heard are often referred to as \emph{Just Noticeable
+Differences} (JNDs). This terminology has been argued to be dangerously
+misleading Sanford and Halberda
+(\citeproc{ref-SanfordHalberda2023-A-Shared-Intuit}{2023}) as it implies
+a hard and absolute threshold of perceptibility, while in fact many
+researchers work with a more lenient and more practical
+conceptualization of a threshold at which the probability that our
+perceptual system registers a stimulus or a stimulus difference is below
+a given probability threshold. When we say ``just noticeable
+difference'' in the following we mean that latter probabilistic notion,
+as we would like to use the idea of regions at which the perceptual
+system is unlikely to register a stimulus difference as a means of
+justifying a region of practical equivalence. For example, Liu
+(\citeproc{ref-liu2013just}{2013}) report on JNDs ranging from 3 to 14
+Hz. Jongman et al. (\citeproc{ref-jongman2017just}{2017}) report on JNDs
+between 6 and 9 Hz. Turner et al.
+(\citeproc{ref-turner2019perception}{2019}) reported on JNDs between 17
+and 25 Hz for non-speech stimuli and between 35 and 40 Hz for speech
+stimuli. While these studies are hard to compare, they give us at least
+an idea about the rough order of magnitude for JND values to work with
+when it comes to speech data like the data set at hand.
 
 Based on these considerations, we could interpret the original
 hypothesis the following way: If a pitch difference is below the JND, it
@@ -785,9 +779,9 @@ pitch is \textbf{meaningfully affected} by the social context of the
 utterance'' using Bayes Factors.
 
 \section{Testing hypotheses using Bayes
-Factor}\label{testing-hypotheses-using-bayes-factor}
+factors}\label{testing-hypotheses-using-bayes-factors}
 
-\subsection{What is Bayes Factor?}\label{what-is-bayes-factor}
+\subsection{What are Bayes factors?}\label{what-are-bayes-factors}
 
 \noindent We often define two hypotheses \(H_0\) and \(H_1\) and we
 usually want to know which of these is correct. We do so by looking at
@@ -798,38 +792,55 @@ out that these \emph{posterior probabilities of hypotheses} are
 problematic, because they depend on the prior probabilities of the
 hypotheses \(P(H_0)\) and \(P(H_1)\), which are often hard to justify.
 To see this, imagine that the hypotheses to compare are polarizing
-issues like contrasting Darwinian evolutionary theory and Creationist's
-intelligent design. Proponents of either view would have a hard time
-agreeing on priors for these hypotheses, but may find it much easier to
-agree on whether a given observation \(D\) is more likely under the
-assumption that one of the two hypotheses is correct, rather than the
-other. Therefore, Bayes factors are defined as the \emph{likelihood
-ratio} of the data given each hypothesis:
+issues like contrasting Darwinian evolutionary theory and a dull form of
+creationism, referred to here as \emph{arbitrary design}. Proponents of
+either view would have a hard time agreeing on priors for these
+hypotheses, but may find it much easier to agree on whether a given
+observation \(D\) is more likely under the assumption that one of the
+two hypotheses is correct, rather than the other. Therefore, Bayes
+factors are defined as the \emph{likelihood ratio} of the data given
+each hypothesis:
 
 \[
 \text{Bayes factor in favor of hypothesis 1 over hypothesis 0} \ \  \colon\!= \ \ \frac{P(D \mid H_1)}{P(D \mid H_0)}
 \]
 
-To see how this is an objective and actually quite intuitive measure of
-observational evidence in scientific reasoning, consider the case of
-Darwinian evolution (\(H_1\)) versus intelligent design (\(H_0\)) again.
-Let's take the historical case where the observed data \(D\) is that the
-beak sizes of finches on the Galápagos islands changed over time as a
-functional adaptation to environmental changes. What is a better
-explanation of that observation? To begin with, let's notice that this
-observation is \emph{not} ruled out by either hypothesis. But the
-probability of observing \(D\) (adaptively changing beak sizes) is much
-higher under Darwinian evolution (\(H_1\)) than under intelligent design
-(\(H_0\)). This is because the latter is compatible with many more
-counterfactual observations, such as beak sizes staying the same over
-time, or even beak sizes changing in a way that is not adaptive. So, the
-probability of the observed data is much higher under Darwinian
-evolution than under intelligent design, so that
-\(P(D \mid H_1) > P(D \mid H_0)\), irrespective of what we initially
-believed is the more plausible hypothesis. This is what corroborates the
-intuition that the observation \(D\) is an argument in favor of \(H_1\)
-over \(H_0\). This intuition is exactly what the Bayes factor
-quantifies.
+To see how this is a more objective and actually quite intuitive measure
+of observational evidence in scientific reasoning, consider the case of
+Darwinian evolution (\(H_1\)) versus arbitrary design (\(H_0\)) again.
+Let's assume that the observed data \(D\) consist of (i) measurements of
+the beak shapes of finches on two different islands, and (ii)
+information about the food sources available on these islands. Let's
+assume for simplicity that on island A the predominant food source are
+insects found deep in wood or earth, and that on island B it is insects
+with hard shells living on the surface. The beak shapes observed are
+that on island A, finches have long and narrow beaks, while on island B,
+finches have short and thick beaks. (This here is a crude simplification
+of an actual case that led Darwin to formulate his theory, but bear with
+us for the sake of the example.) What is a better explanation of data
+\(D\), evolutionary selection or arbitrary design? To begin with, let's
+notice that \(D\) is \emph{not} ruled out by either hypothesis. But the
+probability of observing \(D\) is higher under Darwinian evolution
+(\(H_1\)) than under arbitrary design (\(H_0\)). This is because, before
+seeing the data, a proponent of evoluationary theory \(H_1\), if asked
+to make a prediction about beak shapes under the given food sources,
+would have considered it \emph{more} likely that beaks are adapted to
+their function of exploiting the dominant food source, so making the
+actually observed data \(D\) more likely \emph{ex ante} than at least
+some other possible observations. In contrast, a proponent of arbitrary
+design \(H_0\) would not have had any reason to expect that beak shapes
+are adapted to food sources, and would like to be able to rationalize
+\emph{ex post} also any apparent violation of this expectation as the
+inscrutable way of the arbitrary designer. To the extent that there are
+many alternative observations which arbitrary design would consider
+reasonably likely \emph{ex ante} but evoluationary selection would rule
+out (or deem very unlikely), the probability of the observed data is
+much higher under Darwinian evolution than under arbitrary design, so
+that \(P(D \mid H_1) > P(D \mid H_0)\), irrespective of what we
+initially believed is the more plausible hypothesis. This is what
+corroborates the intuition that the observation \(D\) is an argument in
+favor of \(H_1\) over \(H_0\). This intuition is exactly what the Bayes
+factor quantifies.
 
 Concretely, a Bayes factor of 1 corresponds to the case of
 \(P(D \mid H_1) = P(D \mid H_0)\), i.e., the data is equally likely
@@ -1035,7 +1046,7 @@ BF_{01} = \frac{P(\theta \in I_{0} \mid D, M_{e})}{P(\theta \in I_{1} \mid D, M_
 
 \centering{
 
-\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-savage-dickey_TR-1.pdf}}
+\includegraphics{manuscript_files/figure-pdf/fig-savage-dickey_TR-1.pdf}
 
 }
 
@@ -1080,7 +1091,7 @@ is outside of the ROPE:
 \end{Shaded}
 
 \begin{verbatim}
-[1] 0.374063
+[1] 0.3255951
 \end{verbatim}
 
 The Bayes factor in favor of the alternative hypothesis is simply the
@@ -1094,10 +1105,10 @@ inverse of this number:
 \end{Shaded}
 
 \begin{verbatim}
-[1] 2.673347
+[1] 3.0713
 \end{verbatim}
 
-With a Bayes factor of around 2.67, the data provides only moderate
+With a Bayes factor of around 3.07, the data provides only moderate
 evidence in favor of the alternative hypothesis that the effect of
 \texttt{context} on \texttt{pitch} is outside of the ROPE.
 
@@ -1148,13 +1159,13 @@ Bayes Factor (Null-Interval)
 
 Parameter |   BF
 ----------------
-context1  | 2.79
+context1  | 3.00
 
 * Evidence Against The Null: [-6.000, 6.000]
 \end{verbatim}
 
 We obtain (almost) the same result in this way: the Bayes factor in
-favor of the alternative hypothesis for the given ROPE is around 2.79.
+favor of the alternative hypothesis for the given ROPE is around 3.
 
 \subsection{Sensitivity analysis for different priors and
 ROPEs}\label{sensitivity-analysis-for-different-priors-and-ropes}
@@ -1181,7 +1192,7 @@ and a range of ROPEs}
 
 \centering{
 
-\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-sensitivity_plot-1.pdf}}
+\includegraphics{manuscript_files/figure-pdf/fig-sensitivity_plot-1.pdf}
 
 }
 
@@ -1479,6 +1490,12 @@ R Core Team. (2025). \emph{R: A language and environment for statistical
 computing}. R Foundation for Statistical Computing.
 \url{https://www.R-project.org/}
 
+\bibitem[\citeproctext]{ref-SanfordHalberda2023-A-Shared-Intuit}
+Sanford, E. M., \& Halberda, J. (2023). A shared intuitive
+(mis)understanding of psychophysical law leads both novices and educated
+students to believe in a just noticeable difference (JND). \emph{Open
+Mind}, \emph{7}, 785--801. \url{https://doi.org/10.1162/opmi_a_00108}
+
 \bibitem[\citeproctext]{ref-scheel2022most}
 Scheel, A. M. (2022). Why most psychological research findings are not
 even wrong. \emph{Infant and Child Development}, \emph{31}(1), e2295.
@@ -1530,56 +1547,58 @@ scientific domains where evidence is sparse or indirect.
 \section{Session information}\label{session-information}
 
 \begin{verbatim}
-R version 4.5.1 (2025-06-13)
-Platform: aarch64-apple-darwin20
-Running under: macOS Sequoia 15.6.1
+R version 4.4.3 (2025-02-28)
+Platform: x86_64-apple-darwin20
+Running under: macOS Sequoia 15.5
 
 Matrix products: default
-BLAS:   /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRblas.0.dylib 
-LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+BLAS:   /Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 
-time zone: Europe/Amsterdam
+time zone: Europe/Oslo
 tzcode source: internal
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] bayestestR_0.16.1 patchwork_1.3.2   tidybayes_3.0.7   brms_2.22.0      
- [5] Rcpp_1.1.0        ggdist_3.3.3      lubridate_1.9.4   forcats_1.0.0    
- [9] stringr_1.5.1     dplyr_1.1.4       purrr_1.1.0       readr_2.1.5      
-[13] tidyr_1.3.1       tibble_3.3.0      ggplot2_3.5.2     tidyverse_2.0.0  
+ [1] ggdist_3.3.2        rstan_2.32.6        StanHeaders_2.32.10
+ [4] see_0.11.0          bayestestR_0.16.1.2 tidybayes_3.0.6    
+ [7] brms_2.22.0         Rcpp_1.1.0          ggridges_0.5.6     
+[10] lubridate_1.9.4     forcats_1.0.0       stringr_1.5.1      
+[13] dplyr_1.1.4         purrr_1.1.0         readr_2.1.5        
+[16] tidyr_1.3.1         tibble_3.3.0        ggplot2_3.5.1      
+[19] tidyverse_2.0.0    
 
 loaded via a namespace (and not attached):
  [1] svUnit_1.0.6         tidyselect_1.2.1     farver_2.1.2        
  [4] loo_2.8.0            fastmap_1.2.0        tensorA_0.36.2.1    
- [7] digest_0.6.37        timechange_0.3.0     lifecycle_1.0.4     
-[10] StanHeaders_2.32.10  processx_3.8.6       magrittr_2.0.3      
-[13] posterior_1.6.1      compiler_4.5.1       rlang_1.1.6         
-[16] tools_4.5.1          utf8_1.2.6           yaml_2.3.10         
-[19] data.table_1.17.8    knitr_1.50           labeling_0.4.3      
-[22] bridgesampling_1.1-2 bit_4.6.0            pkgbuild_1.4.8      
-[25] curl_7.0.0           RColorBrewer_1.1-3   cmdstanr_0.9.0      
-[28] abind_1.4-8          withr_3.0.2          datawizard_1.2.0    
-[31] grid_4.5.1           stats4_4.5.1         inline_0.3.21       
-[34] scales_1.4.0         tinytex_0.57         insight_1.4.0       
-[37] cli_3.6.5            mvtnorm_1.3-3        rmarkdown_2.29      
-[40] crayon_1.5.3         generics_0.1.4       RcppParallel_5.1.10 
-[43] rstudioapi_0.17.1    tzdb_0.5.0           rstan_2.32.7        
-[46] bayesplot_1.13.0     parallel_4.5.1       matrixStats_1.5.0   
-[49] vctrs_0.6.5          Matrix_1.7-3         jsonlite_2.0.0      
-[52] hms_1.1.3            arrayhelpers_1.1-0   bit64_4.6.0-1       
-[55] logspline_2.1.22     glue_1.8.0           codetools_0.2-20    
-[58] ps_1.9.1             distributional_0.5.0 stringi_1.8.7       
-[61] gtable_0.3.6         QuickJSR_1.8.0       pillar_1.11.0       
-[64] htmltools_0.5.8.1    Brobdingnag_1.2-9    R6_2.6.1            
-[67] vroom_1.6.5          evaluate_1.0.4       lattice_0.22-7      
-[70] backports_1.5.0      rstantools_2.4.0     coda_0.19-4.1       
-[73] gridExtra_2.3        nlme_3.1-168         checkmate_2.3.3     
-[76] xfun_0.53            pkgconfig_2.0.3     
+ [7] digest_0.6.36        timechange_0.3.0     lifecycle_1.0.4     
+[10] processx_3.8.4       magrittr_2.0.3       posterior_1.6.0     
+[13] compiler_4.4.3       rlang_1.1.6          tools_4.4.3         
+[16] utf8_1.2.6           yaml_2.3.10          data.table_1.17.8   
+[19] knitr_1.48           labeling_0.4.3       bridgesampling_1.1-2
+[22] bit_4.6.0            pkgbuild_1.4.4       cmdstanr_0.8.1      
+[25] abind_1.4-5          withr_3.0.2          datawizard_1.2.0    
+[28] grid_4.4.3           stats4_4.4.3         colorspace_2.1-1    
+[31] inline_0.3.19        scales_1.3.0         insight_1.3.1.14    
+[34] cli_3.6.5            mvtnorm_1.3-1        rmarkdown_2.27      
+[37] crayon_1.5.3         generics_0.1.4       RcppParallel_5.1.8  
+[40] rstudioapi_0.16.0    tzdb_0.5.0           bayesplot_1.11.1    
+[43] parallel_4.4.3       matrixStats_1.3.0    vctrs_0.6.5         
+[46] Matrix_1.7-2         jsonlite_2.0.0       hms_1.1.3           
+[49] arrayhelpers_1.1-0   bit64_4.6.0-1        logspline_2.1.22    
+[52] glue_1.8.0           codetools_0.2-20     ps_1.7.7            
+[55] distributional_0.4.0 stringi_1.8.7        gtable_0.3.6        
+[58] QuickJSR_1.3.0       munsell_0.5.1        pillar_1.11.0       
+[61] htmltools_0.5.8.1    Brobdingnag_1.2-9    R6_2.6.1            
+[64] vroom_1.6.5          evaluate_0.24.0      lattice_0.22-6      
+[67] backports_1.5.0      rstantools_2.4.0     coda_0.19-4.1       
+[70] gridExtra_2.3        nlme_3.1-167         checkmate_2.3.1     
+[73] xfun_0.45            pkgconfig_2.0.3     
 \end{verbatim}
 
 \begin{verbatim}
@@ -1604,9 +1623,9 @@ doi:10.21105/joss.01541 <https://doi.org/10.21105/joss.01541>,
 <https://joss.theoj.org/papers/10.21105/joss.01541>.
 
 [[3]]
-Kay M (2024). _tidybayes: Tidy Data and Geoms for Bayesian Models_.
+Kay M (2023). _tidybayes: Tidy Data and Geoms for Bayesian Models_.
 doi:10.5281/zenodo.1308151 <https://doi.org/10.5281/zenodo.1308151>, R
-package version 3.0.7, <http://mjskay.github.io/tidybayes/>.
+package version 3.0.6, <http://mjskay.github.io/tidybayes/>.
 
 [[4]]
 Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R,
@@ -1622,9 +1641,9 @@ in the Grammar of Graphics." _IEEE Transactions on Visualization and
 Computer Graphics_, *30*(1), 414-424. doi:10.1109/TVCG.2023.3327195
 <https://doi.org/10.1109/TVCG.2023.3327195>.
 
-Kay M (2025). _ggdist: Visualizations of Distributions and
+Kay M (2024). _ggdist: Visualizations of Distributions and
 Uncertainty_. doi:10.5281/zenodo.3879620
-<https://doi.org/10.5281/zenodo.3879620>, R package version 3.3.3,
+<https://doi.org/10.5281/zenodo.3879620>, R package version 3.3.2,
 <https://mjskay.github.io/ggdist/>.
 \end{verbatim}
 
