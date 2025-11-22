@@ -1,6 +1,6 @@
 ---
 title: "Meaningful results for meaningful hypotheses: A tutorial on hypothesis testing with Bayes factors using ROPEs"
-shorttitle: ""
+shorttitle: "Meaningful results for meaningful hypotheses"
 number-sections: true
 author:
   - name: Timo B. Roettger
@@ -32,7 +32,6 @@ author-note:
     conflict-of-interest: The authors have no conflict of interest to declare.
     financial-support: null
     gratitude: null
-    #authorship-agreements: Conceptionalization, Methodology, Validation, Formal Analysis, Review & Editing of Manuscript, Data Curation - TBR. & DLJE; Software, Investigation - DLJE; Writing of Original Draft, Visualization, Supervision - TBR.
 abstract: "Recent times have seen an increase of interest in Bayesian inference across the behavioral sciences. However, the process of testing hypotheses is often conceptually challenging or computationally costly. This tutorial provides an accessible, non-technical introduction to a technique that is both conceptually easy to understand and computationally cheap, and that also covers many common scenarios in the experimental sciences: Quantifying the relative evidence for a pair of interval-based hypotheses using Bayes factors through the Savage Dickey approximation."
 keywords: [statistics, Bayes, Bayes factor, Savage Dickey, hypothesis testing, ROPE]
 bibliography: bibliography.bib
@@ -64,7 +63,7 @@ execute:
   warning: false
   message: false
   error: false
-  cache: true
+  cache: false
 editor: 
   markdown: 
     wrap: sentence
@@ -302,6 +301,7 @@ Let us also have a look at the predictions for the prior-only model.
 ```{r priors-model}
 #| warning: FALSE
 #| message: FALSE
+#| output: FALSE
 #| 
 # run the prior-only model
 fit_prior <- brm(formula, prior = priors, data = polite,
@@ -704,14 +704,14 @@ BF_favoring_Alt
 
 ```
 
-With a Bayes factor of around `{r} round(BF_favoring_Alt, 2)`, the data provides some evidence in favor of the alternative hypothesis that the effect of `context` on `pitch` is outside of the ROPE.
+With a Bayes factor of around `{r} round(BF_favoring_Alt, 2)`, the data does not provide noteworthy evidence in favor of the alternative hypothesis that the effect of `context` on `pitch` is outside of the ROPE.
 
 In @fig-savage-dickey_TR, the Bayes factor is the amount of change between (i) the ratio of samples *within* and *outside* the ROPE in the prior, and (ii) the same quantity for the posterior.
 So, to see evidence in favor of the null hypothesis (the ROPE), we would want to see the ratio of points shift in favor of the points *inside* of the ROPE as we go from prior to posterior. 
 In the plot above, this does not seem to be the case.
 Rather, we see a small shift that *more* probability mass is located *outside* the ROPE for the posterior distribution as opposed to inside of it, as compared to the prior.
 This is why, at least in direction, the BF tells us to favor the alternative hypothesis.
-However, the shift is not so very pronounced, so that we would only speak of moderate evidence in favor of the alternative hypothesis and not strong or decisive evidence.
+However, the shift is not so very pronounced, so that we would not speak of noteworthy evidence in favor of the alternative hypothesis, let alone strong or decisive evidence.
 
 ```{r plot-ropes}
 #| warning: FALSE
