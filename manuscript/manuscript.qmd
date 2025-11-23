@@ -72,7 +72,7 @@ editor:
 # Introduction
 
 \noindent
-One of the most common scenarios in experimental research is to measure one or more (dependent) variables in an experiment with one or more predictors (independent variables).
+One of the most common scenarios in experimental research is to measure one or more outcomes (dependent variables) in an experiment with one or more predictors (independent variables).
 Usually, if we are testing hypotheses, we want to statistically test whether the predictors affect the measured variables.
 Traditionally, these statistical tests have been done within the *null hypothesis significance testing* (NHST) framework.[^NHST]
 While extensions of the NHST framework exist, in its basic form, NHST only allows us to *reject* the null hypothesis, but not to provide evidence in favor of it.
@@ -104,8 +104,8 @@ This is not a bug but, at least for us, a feature that will allow you to underst
 
 If you don’t have any experience with regression modeling, you will probably still be able to follow, but you might also want to consider doing a crash course.
 To bring you up to speed, we recommend the excellent tutorial by Bodo @winter_Linear_preprint_2013 on mixed eﬀects regression in a non-Bayesian paradigm.
-To then make the transition to Bayesian versions of these regression models, we shamelessly suggest our own tutorial on "Bayesian Regression for Factorial Designs" [@franke-roettger_Bayesian_preprint_2019].
-In a sense, the present tutorial on hypothesis testing could be considered the long-awaited sequel (!?) of the series started by Winter, as all three tutorials use the same data set.
+To then make the transition to Bayesian versions of these regression models, we shamelessly suggest our own tutorial on "Bayesian Regression for Factorial Designs" [@franke-roettger_Bayesian_preprint_2019] which uses the same example data set as Winter's tutorial.
+In a sense, the present tutorial on hypothesis testing could be considered the long-awaited sequel (!?) of the series started by Winter.
 
 To actively follow this tutorial, you find all code and data in this repository: https://github.com/michael-franke/bayes_factors_intervals_tutorial.
 You should have R [@R_program] installed on your computer (https://www.r-project.org).
@@ -175,7 +175,7 @@ In this section, we introduce the data set that we will use throughout this tuto
 This tutorial looks at a data set relevant for investigating whether voice pitch diﬀers across social contexts in Korean.
 Korean is a language in which the social distance between speakers plays a central role to the way utterances are pronounced.
 The way Korean speakers talk depends for example on whether they are in a formal context (e.g. during a job interview) or an informal context (e.g. chatting with a friend about the holidays).
-Toe investigate this, our data set contains pitch measurements of utterances in different social contexts [@winter-grawunder_Phonetic_journalarticle_2012].
+To investigate this phenomenon, our data set contains pitch measurements of utterances in different social contexts [@winter-grawunder_Phonetic_journalarticle_2012].
 To load and inspect the data into your R environment, run the following code:
 
 ```{r load-data}
@@ -184,7 +184,7 @@ To load and inspect the data into your R environment, run the following code:
 polite <- 
   
   # load data set & cast strings to factors
-  read_csv("https://tinyurl.com/4tn26494", col_types = "ffffd") |> 
+  read_csv("https://tinyurl.com/yu5zskbp", col_types = "ffffd") |> 
   # set factor reference level for factor `gender`
   mutate(gender = fct_relevel(gender, "male"))
 
@@ -192,9 +192,9 @@ head(polite)
 
 ```
 
-This data set contains anonymous identifiers for individual speakers stored in the variable `subject`. 
+This data set contains anonymous identifiers for 16 individual speakers stored in the variable `subject`. 
 Voice pitch is dependent on speakers' `gender`, which we need to take into account as well.
-Speakers produced diﬀerent `sentences`, and the experiment manipulated whether the sentences were produced in a `formal` or an `informal` social `context`. 
+Speakers produced 7 diﬀerent `sentences`, and the experiment manipulated whether the sentences were produced in a `formal` or an `informal` social `context`. 
 Crucially, each row contains a measurement of pitch in Hz stored in the variable `pitch`.
 
 For most analyses of behavioral experiments, researchers are interested in whether an outcome variable is meaningfully affected by at least one manipulated variable and if so how the outcome variable is affected by it.
@@ -243,10 +243,10 @@ polite |>
                     values = c(project_colors[1], project_colors[3])) +
   facet_grid(~gender, scale = "free") +
   labs(x = "\npitch in Hz",
-       y = "social context\n") +
+       y = "\n") +
   theme_minimal() +
   theme(legend.position = "none",
-        panel.border = element_rect(color = "lightgrey", fill = NA, size = 1))
+        panel.border = element_rect(color = "lightgrey", fill = NA, linewidth = 1))
 
 ```
 
@@ -289,7 +289,7 @@ Note that we use default priors for the other parameters for convenience here, b
 
 # define a weakly informative prior for context and gender
 priors <- c(prior(normal(0, 20), coef = "context1"),
-            prior(normal(0, 50), coef = "gender1"))
+            prior(normal(0, 100), coef = "gender1"))
 
 ```
 
@@ -326,18 +326,23 @@ prior_samples <-
   
 # plot  
 ggplot(prior_samples,
-       aes(x = b_context1)) + 
-  stat_histinterval(slab_color = project_colors[3],
-                    slab_fill = alpha(project_colors[3], 0.5),
-                    fill = NA,
-                    color = NA,
-                    outline_bars = FALSE) +
+       aes(x = b_context1)) +
+  geom_step(
+    stat = "bin", bins = 100,
+    lwd = 2,
+    color = project_colors[3],
+    direction = "mid"
+  ) +
+  geom_histogram(
+    bins = 100, alpha = 0.3, 
+    colour = NA, fill = alpha(project_colors[3], 0.5),
+    position = "identity"
+  ) +
   labs(x = "\n pitch difference between formal and informal contexts",
        y = "") +
   scale_x_continuous(limits =c(-75,75)) +
   theme_minimal() +
   theme(axis.text.y = element_blank())
-
 
 ```
 
@@ -377,16 +382,26 @@ posterior_samples <-
 # plot prior and posterior
 posterior_plot <- posterior_samples |> 
   ggplot(aes(x = b_context1)) + 
-    stat_histinterval(data = prior_samples,
-                     slab_color = project_colors[3],
-                     slab_fill = alpha(project_colors[3], 0.5),
-                     fill = NA,
-                     color = NA,
-                     outline_bars = FALSE) +
-    stat_histinterval(slab_color = project_colors[10],
-                      slab_fill = alpha(project_colors[10], 0.5),
-                      color = NA,
-                      outline_bars = FALSE) +
+  geom_step(data = prior_samples,
+    stat = "bin", bins = 100,
+    lwd = 2,
+    color = project_colors[3],
+    direction = "mid"
+  ) +
+  geom_histogram(data = prior_samples,
+    bins = 100, alpha = 0.3, 
+    colour = NA, fill = alpha(project_colors[3], 0.5),
+    position = "identity"
+  ) +
+  geom_step(stat = "bin", bins = 100,
+    lwd = 2,
+    color = project_colors[10],
+    direction = "mid"
+  ) +
+  geom_histogram(bins = 100, alpha = 0.3, 
+    colour = NA, fill = alpha(project_colors[10], 0.5),
+    position = "identity"
+  ) +
   scale_thickness_shared() +
   labs(x = "\n pitch difference between formal and informal contexts",
        y = "") +
@@ -426,7 +441,7 @@ Speech is also very complex and very noisy: Not everything that can be measured 
 For example, if something cannot be perceived reliably, it is at least conceivable that it might play little to no role in communication.
 While the speech sciences have a rich research tradition to estimate what can and what cannot be reliably heard, exact estimation depends on a lot of moving parts.
 Approximate thresholds of what can be reliably heard are often referred to as *Just Noticeable Differences* (JNDs).
-This terminology has been argued to be dangerously misleading [@SanfordHalberda2023-A-Shared-Intuit] as it implies a hard and absolute threshold of perceptibility, while in fact many researchers work with a more lenient and more practical conceptualization of a threshold at which the probability that our perceptual system registers a stimulus or a stimulus difference is below a given probability threshold. By convention, the JND is often defined as the point where listener accuracy exceeds the arbitrary threshold of 75%.
+This terminology has been argued to be dangerously misleading [@SanfordHalberda2023-A-Shared-Intuit] as it implies a hard and absolute threshold of perceptibility. However, many researchers work with a more lenient and more practical conceptualization of a threshold: The JND is traditionally defined as the point at which the probability that our perceptual system registers a stimulus or a stimulus difference reaches as certain value. By convention, the JND is often defined as the point where listener accuracy exceeds the arbitrary threshold of 75%.
 When we say "just noticeable difference" in the following we mean that latter probabilistic notion, as we would like to use the idea of regions at which the perceptual system is unlikely to reliably register a stimulus difference as a means of justifying a Region of Practical Equivalence (ROPE).
 For example, while classic work by @klatt1973discrimination suggest JNDs ranging from 0.3 to 4 Hz, more modern treatments such as @turner2019perception report on JNDs between 17 and 25 Hz for non-speech stimuli and between 35 and 40 Hz for speech stimuli. 
 While these studies are hard to compare, their effect magnitudes are grounded in a comparable probability threshold (75% accuracy). Thus, they give us at least an idea about the rough order of magnitude for JND values to work with when it comes to speech data like the data set at hand. 
@@ -435,7 +450,7 @@ Based on these considerations, we could interpret the original hypothesis the fo
 So, instead of testing against a point-valued hypothesis, we can test against a range of parameter values that are equivalent to the null value for practical purposes.
 In our case, let us begin with a JND value that is somewhat conservative in relation to @klatt1973discrimination and somewhat liberal in relation to @turner2019perception: We assume that pitch values between `-10` and `10` are negligible. 
 Bear with us, we will later revisit this assumption.
-Said differently, in order to be convinced that a difference in pitch is meaningful, it should be reliably greater than 20 Hz.
+Said differently, in order to be convinced that a difference in pitch is meaningful, it should be reliably greater than 10 Hz.
 Such ranges are sometimes called *Regions of Practical Equivalence* (ROPEs), range of equivalence, equivalence margin, smallest effect size of interest, or good-enough belt [see @kruschke_Rejecting_journalarticle_2018].
 
 ```{r rope}
@@ -577,46 +592,6 @@ $$
 BF_{01} = \frac{P(\theta \in I_{0} \mid D, M_{e})}{P(\theta \in I_{1} \mid D, M_{e})} \ \frac{P(\theta \in I_{1} \mid  M_{e})}{P(\theta \in I_{0} \mid M_{e})}
 $$
 
-```{r Savage-Dickey-visualization}
-#| echo: FALSE
-#| label: fig-savage-dickey
-#| include: FALSE
-
-# NOTE: make me pretty, please!
-
-tibble(
-  delta = seq(-3,3,length.out = 1000),
-  encompassing = dnorm(delta)
-) %>%
-  mutate(
-    null = ifelse(-0.6 <= delta & delta <= 0.6,
-                  encompassing, 0),
-    alt  = ifelse(-0.6 >= delta | delta >= 0.6,
-                  encompassing, 0)
-  ) %>%
-  mutate(
-    encompassing = encompassing / sum(encompassing),
-    null = null / sum(null),
-    alt = alt / sum(alt)
-  ) %>%
-  pivot_longer(cols = -delta, names_to = "model", values_to = "density") %>%
-  mutate(model = factor(model, ordered = T, levels = c("encompassing", "null", "alt"))) %>%
-  ggplot(aes(x = delta, y = density)) +
-  #geom_line() +
-  geom_area(fill = "gray") +
-  facet_wrap(. ~ model, nrow = 3, scales = "free") +
-  labs(
-    x = "", y = ""
-  ) +
-  guides(fill = F) +
-  theme_minimal() +
-  theme(
-    axis.text.y  = element_blank(),
-    axis.ticks.y = element_blank()
-  )
-
-
-```
 
 ```{r Savage-Dickey-visualization_alternative}
 #| echo: FALSE
@@ -639,7 +614,8 @@ density_rope <- all_samples |>
              lty = "dashed") +
   labs(x = "\n pitch difference between formal and informal contexts",
        y = "") +
-  scale_x_continuous(limits =c(-75,75)) +
+  scale_x_continuous(limits =c(-75,75),
+                    breaks = c(-40,0,40)) +
   theme_minimal() +
   theme(axis.text.y = element_blank(),
         legend.position = "none")
@@ -736,7 +712,7 @@ Instead of doing these calculations by hand, we can more conveniently calculate 
 The function takes as input the posterior and prior fit objects (you can also only provide the posterior fit, in which case the function will sample from the prior for you).
 The function then computes the ratio for the specified rope for the specified parameter.
 Notice that the method implemented in this package is slightly different from the naive one we used above, in that it uses a method that provides more stable and precise estimates for smaller sets of samples.
-(The package actually uses logsplines to estimate the densities of each sample, which is a more robust method than the naive one we used above.)
+(The package uses logsplines.)
 
 ```{r BF_rope}
 #| warning: FALSE
@@ -768,7 +744,7 @@ These are all sensible prior widths assuming that medium to strong pitch effects
 #| label: loop-priors-for-full-models
 
 # pick a weakly informative prior for the control parameter gender
-priors = prior(normal(0, 50), 
+priors = prior(normal(0, 100), 
                  class = b, 
                  coef = "gender1")
 
@@ -864,8 +840,8 @@ if (rerun) {
 #    mutate(BF = exp(log_BF),
 #           ROPE = abs(ROPE)) |>
 #    select(prior_sd, BF, ROPE, interval_range)
-
-#write_csv(results_wrangled, "../models/loop_results.csv")
+# 
+#  write_csv(results_wrangled, "models/loop_results.csv")
 results_wrangled <- read_csv("../models/loop_results.csv")
 
 ```
@@ -920,8 +896,9 @@ However, we can also see that the Bayes factors decrease with the width of the p
 This is not surprising and a known phenomenon, often discussed under the Jeffreys-Lindley paradox [@lindley_Statistical_journalarticle_1957]: The more diffuse the priors are (i.e. wider priors), the larger is the probability that a specific parameter values is not compatible with the data.
 
 Combined, we can see that the larger the ROPE and the wider the priors, the more likely becomes the null hypothesis.
-In an ideal world, the evidence provided by the data should be robust across these choices.
-However, this exploration of our inference is a fantastic opportunity to assess the boundaries of our conclusions. In this case, the original conclusions of the educational materials from @winter_Linear_preprint_2013 was based on the null hypothesis significance testing framework, traditionally testing the compatibility of the data with a point-null hypothesis. Given his framework, it is reasonable to conclude that in formal speech, Korean speakers lower their average fundamental frequency. However, thinking more deeply about the theoretical consequences of differences in pitch, it might be less clear that these differences are truly meaningful. 
+In an ideal world, the evidence provided by the data should be robust across these choices. 
+
+This exploration of our inference is a fantastic opportunity to assess the boundaries of our conclusions. In this case, the conclusions of the original study @winter-grawunder_Phonetic_journalarticle_2012 was based on the null hypothesis significance testing framework, traditionally testing the compatibility of the data with a point-null hypothesis. Given his framework, it is reasonable to conclude that in formal speech, Korean speakers lower their average fundamental frequency. However, thinking more deeply about the theoretical consequences of differences in pitch, it might be less clear that these differences are truly meaningful. Given our proposed assumptions about what constitutes a meaningful effect, our analyses suggest that we neither find robust evidence for nor against the hypothesis that Korean speakers meaningfully lower their average fundamental frequency in formal speech.
 
 # How to write this inferential procedure up?
 
@@ -932,25 +909,24 @@ Kruschke's catalog of best practices [@Kruschke2021-Bayesian-Analys]. We first h
 ## Model structure
 
 \noindent
-The data were modeled using a hierarchical linear model predicting the continous variable pitch (in Hz) by both the categorical predictor gender (male vs.
+The data were modeled using a hierarchical linear model predicting the continuous variable pitch (in Hz) by both the categorical predictor gender (male vs.
 female, contrast-coded) and social context (informal vs.
-formal, contrast-coded) and the maximal random-effects structure justified by the study's design (Barr et al.
-2013), including by-subject random slopes (n = 7), and by-sentence random slopes (n = 6) for social context.
+formal, contrast-coded) and the maximal random-effects structure justified by the study's design [@barr2013random], including by-subject random slopes (n = 16), and by-sentence random slopes (n = 7) for social context.
 Parameter estimation and inference is performed within the Bayesian framework.
 The model was fit using `brms` [@Burkner2018-Advanced-Bayesi] in R [@R_program].
-We used regularizing, weakly informative priors for the models (Gelman, Simpson, & Betancourt 2017).
-Concretely, we used a Student's *t* distribution for the prior for the intercept (df = 3, mean = 203.9, df = 82.7), corresponding to the grand mean of the empirical data, a Student's *t* distribution for the prior for all random effect variance components as well as residual variance (df = 3, mean = 0, df = 82.7), and a Lewandowski-Kurowicka-Joe distribution (LKJ, shape = 1) for all correlational parameters.
+We used regularizing, weakly informative priors for the models [@gelman-etal_Prior_journalarticle_2017].
+Concretely, we used a Student's *t* distribution for the prior for the intercept (df = 3, mean = 211.6, df = 80.2), corresponding to the grand mean of the empirical data, a Student's *t* distribution for the prior for all random effect variance components as well as residual variance (df = 3, mean = 0, df = 80.2), and a Lewandowski-Kurowicka-Joe distribution (LKJ, shape = 1) for all correlation parameters.
 These priors were default priors, estimated from the data by brms.
-We specified a reasonable weakly informative prior for the predictor gender (normal, mean = 0, sd = 50) and specified a range of reasonable weakly informative priors for the predictor of interest: social context (normal, mean = 0, sd = [10,15,20,25,30]).
+We specified a reasonable weakly informative prior for the predictor gender (normal, mean = 0, sd = 100) and specified a range of reasonable weakly informative priors for the predictor of interest: social context (normal, mean = 0, sd = [10,15,20,25,30]).
 
-We fit this model with four chains of Hamiltonian Monte Carlo sampling for the estimation of the joint posterior distribution using the No U-Turn Sampler as implemented in Stan [@carpenter2017stan], and 8000 iterations (of which 4000 for warm-up) per chain, distributed across four processing cores and two threads in within-chain parallelization.
+We fit this model with four chains of Hamiltonian Monte Carlo sampling for the estimation of the joint posterior distribution using the No U-Turn Sampler as implemented in Stan [@carpenter2017stan], and 8000 iterations (of which 4000 for warm-up) per chain.
 
 
 ## Inferential assessment via Bayes factor and ROPEs
 
 \noindent
 Using the Bayesian framework, we aim to quantitatively evaluate the evidence for a perceptually meaningful effect of social context on pitch values based on our data against the background of our model and chosen priors.
-We will combine two statistical concepts to make this evaluation: First, we define a region of practical equivalence (ROPE) that will represent a reasonable range of pitch value around zero that we consider to be not meaningful  [@kruschke_Rejecting_journalarticle_2018].
+We will combine two statistical concepts to make this evaluation: First, we define a region of practical equivalence (ROPE) that will represent a reasonable range of pitch values around zero that we consider to be not meaningful  [@kruschke_Rejecting_journalarticle_2018].
 In our case, the ROPE is perceptually defined by studies on just noticeable differences in pitch perception [@klatt1973discrimination;@turner2019perception].
 
 Subsequently, we calculate the Savage-Dickey density ratio [@DickeyLientz1970-The-Weighted-Li;@WagenmakersLodewyckx2010-Bayesian-hypoth], i.e., we relate the amount of evidence (the proportion of posterior samples) within the ROPE for the model based on the priors only (i.e., before seeing the data) to the amount of evidence within the ROPE for the model based on both priors and likelihood (i.e., after seeing the data) [e.g.
