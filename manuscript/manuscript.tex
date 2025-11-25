@@ -127,15 +127,17 @@
 
 \usepackage{graphicx}
 \makeatletter
-\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
-\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
-\makeatother
-% Scale images if necessary, so that they will not overflow the page
-% margins by default, and it is still possible to overwrite the defaults
-% using explicit options in \includegraphics[width, height, ...]{}
-\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
 % Set default figure placement to htbp
-\makeatletter
 \def\fps@figure{htbp}
 \makeatother
 
@@ -496,9 +498,7 @@ run the following code:
 \NormalTok{polite }\OtherTok{\textless{}{-}} 
   
   \CommentTok{\# load data set \& cast strings to factors}
-  \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"https://tinyurl.com/yu5zskbp"}\NormalTok{, }\AttributeTok{col\_types =} \StringTok{"ffffd"}\NormalTok{) }\SpecialCharTok{|\textgreater{}} 
-  \CommentTok{\# set factor reference level for factor \textasciigrave{}gender\textasciigrave{}}
-  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{gender =} \FunctionTok{fct\_relevel}\NormalTok{(gender, }\StringTok{"male"}\NormalTok{))}
+  \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"https://tinyurl.com/yu5zskbp"}\NormalTok{, }\AttributeTok{col\_types =} \StringTok{"ffffd"}\NormalTok{) }
 
 \FunctionTok{head}\NormalTok{(polite)}
 \end{Highlighting}
@@ -554,7 +554,7 @@ speakers' pitch values across contexts and sex}
 
 \centering{
 
-\includegraphics{manuscript_files/figure-pdf/fig-descriptive-dataviz-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-descriptive-dataviz-1.pdf}}
 
 }
 
@@ -608,7 +608,7 @@ prior at all, i.e., to assume a flat (improper) prior, so that it is not
 even listed in the table above. Yet, there are good arguments why it
 should also receive a weakly informative prior
 (\citeproc{ref-gelman-etal_Prior_journalarticle_2017}{Gelman et al.,
-2017}), i.e.~the prior assumption about the difference between informal
+2017}), i.e., the prior assumption about the difference between informal
 and formal contexts should be that we don't know, but our best guess is
 that it is zero in expectation and equally likely to be more or less
 than zero. So we specify a normal distribution centered on zero for this
@@ -630,7 +630,7 @@ Now we inspect how the parameter distribution looks like \emph{before}
 having seen the data, based on the priors only. This is a useful
 exercise to make sure that the priors result in reasonable quantitative
 assumptions. We usually do it for all parameters, but here we will focus
-only on the critical parameter \texttt{context1}, i.e.~the difference
+only on the critical parameter \texttt{context1}, i.e., the difference
 between formal and informal contexts. Let us also have a look at the
 predictions for the prior-only model.
 
@@ -641,25 +641,24 @@ predictions for the prior-only model.
            \CommentTok{\# sample prior only}
            \AttributeTok{sample\_prior =} \StringTok{"only"}\NormalTok{,}
            \CommentTok{\# common sampling specifications}
-           \AttributeTok{seed =} \DecValTok{1234}\NormalTok{, }\AttributeTok{iter =} \DecValTok{8000}
-\NormalTok{           )}
+           \AttributeTok{seed =} \DecValTok{1234}\NormalTok{, }\AttributeTok{iter =} \DecValTok{8000}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{figure}[!tbp]
 
 \caption{\label{fig-plot-priors}Prior probability of the difference in
-pitch between contexts, i.e.~before seeing the data}
+pitch between contexts, i.e., before seeing the data}
 
 \centering{
 
-\includegraphics{manuscript_files/figure-pdf/fig-plot-priors-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-plot-priors-1.pdf}}
 
 }
 
 \end{figure}%
 
-Looking at the distribution in Figure~\ref{fig-plot-priors}, the priors
+Looking at the distribution in Figure~\ref{fig-plot-priors}, the prior
 for the effect of context on pitch seems sensible. The most plausible
 value is zero. Values that are smaller or larger than zero become less
 plausible the further they are away from zero and values being smaller
@@ -673,19 +672,18 @@ parameter.
 \begin{Highlighting}[]
 \CommentTok{\# run the model}
 \NormalTok{fit }\OtherTok{\textless{}{-}} \FunctionTok{brm}\NormalTok{(formula, }\AttributeTok{prior =}\NormalTok{ priors, }\AttributeTok{data =}\NormalTok{ polite,}
-           \AttributeTok{seed =} \DecValTok{1234}\NormalTok{, }\AttributeTok{iter =} \DecValTok{8000}
-\NormalTok{           )}
+           \AttributeTok{seed =} \DecValTok{1234}\NormalTok{, }\AttributeTok{iter =} \DecValTok{8000}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{figure}[!tbp]
 
 \caption{\label{fig-plot-posterior}Posterior probability of the effect
-of context on pitch, i.e.~after seeing the data}
+of context on pitch, i.e., after seeing the data}
 
 \centering{
 
-\includegraphics{manuscript_files/figure-pdf/fig-plot-posterior-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-plot-posterior-1.pdf}}
 
 }
 
@@ -1049,7 +1047,7 @@ BF_{01} = \frac{P(\theta \in I_{0} \mid D, M_{e})}{P(\theta \in I_{1} \mid D, M_
 
 \centering{
 
-\includegraphics{manuscript_files/figure-pdf/fig-savage-dickey_TR-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-savage-dickey_TR-1.pdf}}
 
 }
 
@@ -1094,7 +1092,7 @@ is outside of the ROPE:
 \end{Shaded}
 
 \begin{verbatim}
-[1] 0.6196436
+[1] 0.6211577
 \end{verbatim}
 
 The Bayes factor in favor of the alternative hypothesis is simply the
@@ -1108,7 +1106,7 @@ inverse of this number:
 \end{Shaded}
 
 \begin{verbatim}
-[1] 1.613831
+[1] 1.609897
 \end{verbatim}
 
 With a Bayes factor of around 1.61, the data does not provide noteworthy
@@ -1161,13 +1159,13 @@ Bayes Factor (Null-Interval)
 
 Parameter |   BF
 ----------------
-context1  | 1.61
+context1  | 1.64
 
 * Evidence Against The Null: [-10.000, 10.000]
 \end{verbatim}
 
 We obtain (almost) the same result in this way: the Bayes factor in
-favor of the alternative hypothesis for the given ROPE is around 1.61.
+favor of the alternative hypothesis for the given ROPE is around 1.64.
 
 \subsection{Sensitivity analysis for different priors and
 ROPEs}\label{sensitivity-analysis-for-different-priors-and-ropes}
@@ -1177,11 +1175,11 @@ probabilities are very much dependent on the priors of the model, so it
 is important to evaluate the robustness of our Bayes factor-based
 interpretation across a range of sensible priors. And as long as we are
 not a 100\% sure about what a meaningful difference is, we might as well
-explore the robustness of the Bayes factor across different ROPEs,
-i.e.~in our case different JNDs. We won't bore you with the code for
-that process, but you can follow it along in our scripts. Let us explore
-the following ROPE intervals as informed by the two studies cited above
-on pitch perception: we test a range of ROPE intervals from 0.3 Hz to 40
+explore the robustness of the Bayes factor across different ROPEs, i.e.,
+in our case different JNDs. We won't bore you with the code for that
+process, but you can follow it along in our scripts. Let us explore the
+following ROPE intervals as informed by the two studies cited above on
+pitch perception: we test a range of ROPE intervals from 0.3 Hz to 40
 Hz. We also assume the following five prior values for the standard
 deviation of the critical parameter (centered on zero): 10, 15, 20, 25,
 30. These are all sensible prior widths assuming that medium to strong
@@ -1194,7 +1192,7 @@ and a range of ROPEs}
 
 \centering{
 
-\includegraphics{manuscript_files/figure-pdf/fig-sensitivity_plot-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-sensitivity_plot-1.pdf}}
 
 }
 
@@ -1223,12 +1221,12 @@ Additionally, when comparing the Bayes factors along the x-axis, we can
 see that they are comparatively consistent for different standard
 deviations of the critical prior. However, we can also see that the
 Bayes factors decrease with the width of the priors (from left to
-right). This is not surprising and a known phenomenon, often discussed
-under the Jeffreys-Lindley paradox
+right). * {[} {]} This is not surprising and a known phenomenon, often
+discussed under the Jeffreys-Lindley paradox
 (\citeproc{ref-lindley_Statistical_journalarticle_1957}{Lindley, 1957}):
-The more diffuse the priors are (i.e.~wider priors), the larger is the
-probability that a specific parameter values is not compatible with the
-data.
+The more diffuse the priors are (i.e., wider priors), the more
+probability they put on extreme values that (usually) tend to make the
+data extremely unlikely.
 
 Combined, we can see that the larger the ROPE and the wider the priors,
 the more likely becomes the null hypothesis. In an ideal world, the
@@ -1236,7 +1234,7 @@ evidence provided by the data should be robust across these choices.
 
 This exploration of our inference is a fantastic opportunity to assess
 the boundaries of our conclusions. In this case, the conclusions of the
-original study Winter and Grawunder
+original study by Winter and Grawunder
 (\citeproc{ref-winter-grawunder_Phonetic_journalarticle_2012}{2012}) was
 based on the null hypothesis significance testing framework,
 traditionally testing the compatibility of the data with a point-null
@@ -1299,10 +1297,10 @@ ROPEs}\label{inferential-assessment-via-bayes-factor-and-ropes}
 \noindent Using the Bayesian framework, we aim to quantitatively
 evaluate the evidence for a perceptually meaningful effect of social
 context on pitch values based on our data against the background of our
-model and chosen priors. We will combine two statistical concepts to
-make this evaluation: First, we define a region of practical equivalence
-(ROPE) that will represent a reasonable range of pitch values around
-zero that we consider to be not meaningful
+model and chosen priors. We combine two statistical concepts to make
+this evaluation: First, we define a region of practical equivalence
+(ROPE) that represents a reasonable range of pitch values around zero
+that we consider to be not meaningful
 (\citeproc{ref-kruschke_Rejecting_journalarticle_2018}{Kruschke, 2018}).
 In our case, the ROPE is perceptually defined by studies on just
 noticeable differences in pitch perception
@@ -1317,7 +1315,7 @@ al., 2010}), i.e., we relate the amount of evidence (the proportion of
 posterior samples) within the ROPE for the model based on the priors
 only (i.e., before seeing the data) to the amount of evidence within the
 ROPE for the model based on both priors and likelihood (i.e., after
-seeing the data) (e.g.
+seeing the data) (e.g.,
 \citeproc{ref-WetzelsGrasman2010-An-encompassing}{Wetzels et al.,
 2010}). The Savage-Dickey method lets us assess evidence for and against
 a null hypothesis using Bayes factor (BF), since we are dealing with
@@ -1329,6 +1327,13 @@ calculating BFs for a range of (sensible) ROPE values and a range of
 width of the context parameter (centered on zero): 10 Hz, 15 Hz, 20 Hz,
 25 Hz, and 30 Hz. These are all sensible prior choices assuming
 reasonable pitch differences in either direction.
+
+Based on this setup, we consider each pair of ROPE and prior. For each
+pair, we speak of moderate evidence for either hypothesis if the Bayes
+factor in its favor is as least 3. The overall conclusion from this
+sensitivity analysis is a nuanced assessment of the interplay of ROPE
+and prior, drawing on empirical knowledge of the magnitudes involved
+(here: pitch).
 
 \section{Some words of encouragement}\label{some-words-of-encouragement}
 
@@ -1546,58 +1551,56 @@ scientific domains where evidence is sparse or indirect.
 \section{Session information}\label{session-information}
 
 \begin{verbatim}
-R version 4.4.3 (2025-02-28)
-Platform: x86_64-apple-darwin20
-Running under: macOS Sequoia 15.6
+R version 4.5.1 (2025-06-13)
+Platform: aarch64-apple-darwin20
+Running under: macOS Sequoia 15.6.1
 
 Matrix products: default
-BLAS:   /Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/lib/libRblas.0.dylib 
-LAPACK: /Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+BLAS:   /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 
-time zone: Europe/Oslo
+time zone: Europe/Berlin
 tzcode source: internal
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] rstan_2.32.6        StanHeaders_2.32.10 bayestestR_0.16.1.2
- [4] patchwork_1.3.1     tidybayes_3.0.6     brms_2.22.0        
- [7] Rcpp_1.1.0          ggdist_3.3.3        lubridate_1.9.4    
-[10] forcats_1.0.0       stringr_1.5.1       dplyr_1.1.4        
-[13] purrr_1.1.0         readr_2.1.5         tidyr_1.3.1        
-[16] tibble_3.3.0        ggplot2_4.0.1       tidyverse_2.0.0    
+ [1] bayestestR_0.16.1 patchwork_1.3.2   tidybayes_3.0.7   brms_2.23.0      
+ [5] Rcpp_1.1.0        ggdist_3.3.3      lubridate_1.9.4   forcats_1.0.1    
+ [9] stringr_1.5.2     dplyr_1.1.4       purrr_1.1.0       readr_2.1.5      
+[13] tidyr_1.3.1       tibble_3.3.0      ggplot2_4.0.0     tidyverse_2.0.0  
 
 loaded via a namespace (and not attached):
- [1] svUnit_1.0.6         tidyselect_1.2.1     farver_2.1.2        
- [4] loo_2.8.0            S7_0.2.1             fastmap_1.2.0       
- [7] tensorA_0.36.2.1     digest_0.6.36        timechange_0.3.0    
-[10] lifecycle_1.0.4      processx_3.8.4       magrittr_2.0.3      
-[13] posterior_1.6.0      compiler_4.4.3       rlang_1.1.6         
-[16] tools_4.4.3          utf8_1.2.6           yaml_2.3.10         
-[19] data.table_1.17.8    knitr_1.48           labeling_0.4.3      
-[22] bridgesampling_1.1-2 bit_4.6.0            pkgbuild_1.4.4      
-[25] curl_6.4.0           RColorBrewer_1.1-3   cmdstanr_0.8.1      
-[28] abind_1.4-5          withr_3.0.2          datawizard_1.2.0    
-[31] grid_4.4.3           stats4_4.4.3         colorspace_2.1-1    
-[34] inline_0.3.19        scales_1.4.0         insight_1.3.1.14    
-[37] cli_3.6.5            mvtnorm_1.3-1        rmarkdown_2.30      
-[40] crayon_1.5.3         generics_0.1.4       RcppParallel_5.1.8  
-[43] rstudioapi_0.16.0    tzdb_0.5.0           bayesplot_1.11.1    
-[46] parallel_4.4.3       matrixStats_1.3.0    vctrs_0.6.5         
-[49] Matrix_1.7-2         jsonlite_2.0.0       hms_1.1.3           
-[52] arrayhelpers_1.1-0   bit64_4.6.0-1        archive_1.1.12      
-[55] logspline_2.1.22     glue_1.8.0           codetools_0.2-20    
-[58] ps_1.7.7             distributional_0.4.0 stringi_1.8.7       
-[61] gtable_0.3.6         QuickJSR_1.3.0       pillar_1.11.0       
-[64] htmltools_0.5.8.1    Brobdingnag_1.2-9    R6_2.6.1            
-[67] vroom_1.6.5          evaluate_0.24.0      lattice_0.22-6      
-[70] backports_1.5.0      rstantools_2.4.0     coda_0.19-4.1       
-[73] gridExtra_2.3        nlme_3.1-167         checkmate_2.3.1     
-[76] xfun_0.53            pkgconfig_2.0.3     
+ [1] svUnit_1.0.6          tidyselect_1.2.1      farver_2.1.2         
+ [4] loo_2.8.0             S7_0.2.0              fastmap_1.2.0        
+ [7] tensorA_0.36.2.1      digest_0.6.37         timechange_0.3.0     
+[10] lifecycle_1.0.4       StanHeaders_2.32.10   processx_3.8.6       
+[13] magrittr_2.0.4        posterior_1.6.1       compiler_4.5.1       
+[16] rlang_1.1.6           tools_4.5.1           utf8_1.2.6           
+[19] yaml_2.3.10           data.table_1.17.8     knitr_1.50           
+[22] labeling_0.4.3        bridgesampling_1.1-2  bit_4.6.0            
+[25] pkgbuild_1.4.8        curl_7.0.0            RColorBrewer_1.1-3   
+[28] cmdstanr_0.9.0        abind_1.4-8           withr_3.0.2          
+[31] datawizard_1.2.0      grid_4.5.1            stats4_4.5.1         
+[34] inline_0.3.21         scales_1.4.0          tinytex_0.57         
+[37] insight_1.4.0         cli_3.6.5             mvtnorm_1.3-3        
+[40] rmarkdown_2.30        crayon_1.5.3          generics_0.1.4       
+[43] RcppParallel_5.1.11-1 rstudioapi_0.17.1     tzdb_0.5.0           
+[46] rstan_2.32.7          bayesplot_1.14.0      parallel_4.5.1       
+[49] matrixStats_1.5.0     vctrs_0.6.5           Matrix_1.7-3         
+[52] jsonlite_2.0.0        hms_1.1.4             arrayhelpers_1.1-0   
+[55] bit64_4.6.0-1         logspline_2.1.22      glue_1.8.0           
+[58] codetools_0.2-20      ps_1.9.1              distributional_0.5.0 
+[61] stringi_1.8.7         gtable_0.3.6          QuickJSR_1.8.1       
+[64] pillar_1.11.1         htmltools_0.5.8.1     Brobdingnag_1.2-9    
+[67] R6_2.6.1              vroom_1.6.6           evaluate_1.0.5       
+[70] lattice_0.22-7        backports_1.5.0       rstantools_2.5.0     
+[73] gridExtra_2.3         coda_0.19-4.1         nlme_3.1-168         
+[76] checkmate_2.3.3       xfun_0.53             pkgconfig_2.0.3      
 \end{verbatim}
 
 \begin{verbatim}
@@ -1622,9 +1625,9 @@ doi:10.21105/joss.01541 <https://doi.org/10.21105/joss.01541>,
 <https://joss.theoj.org/papers/10.21105/joss.01541>.
 
 [[3]]
-Kay M (2023). _tidybayes: Tidy Data and Geoms for Bayesian Models_.
+Kay M (2024). _tidybayes: Tidy Data and Geoms for Bayesian Models_.
 doi:10.5281/zenodo.1308151 <https://doi.org/10.5281/zenodo.1308151>, R
-package version 3.0.6, <http://mjskay.github.io/tidybayes/>.
+package version 3.0.7, <http://mjskay.github.io/tidybayes/>.
 
 [[4]]
 Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R,

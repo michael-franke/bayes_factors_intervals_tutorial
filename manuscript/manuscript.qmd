@@ -184,9 +184,7 @@ To load and inspect the data into your R environment, run the following code:
 polite <- 
   
   # load data set & cast strings to factors
-  read_csv("https://tinyurl.com/yu5zskbp", col_types = "ffffd") |> 
-  # set factor reference level for factor `gender`
-  mutate(gender = fct_relevel(gender, "male"))
+  read_csv("https://tinyurl.com/yu5zskbp", col_types = "ffffd") 
 
 head(polite)
 
@@ -280,7 +278,7 @@ as_tibble(get_prior(formula, polite)) |>
 
 The default priors that `brms` picks for the Intercept and the variance parameters are mostly reasonable as they are derived from the data. They are weakly informative and symmetrical.
 However the default choice for our critical parameter `context1` is to not specify a prior at all, i.e., to assume a flat (improper) prior, so that it is not even listed in the table above. 
-Yet, there are good arguments why it should also receive a weakly informative prior [@gelman-etal_Prior_journalarticle_2017], i.e. the prior assumption about the difference between informal and formal contexts should be that we don't know, but our best guess is that it is zero in expectation and equally likely to be more or less than zero.
+Yet, there are good arguments why it should also receive a weakly informative prior [@gelman-etal_Prior_journalarticle_2017], i.e., the prior assumption about the difference between informal and formal contexts should be that we don't know, but our best guess is that it is zero in expectation and equally likely to be more or less than zero.
 So we specify a normal distribution centered on zero for this parameter (and we do the same for gender).
 Since we used contrast coding, the prior for `context1` reflects our prior belief about the difference between formal and informal contexts.
 Note that we use default priors for the other parameters for convenience here, but you should always critically reflect on all of your priors.
@@ -295,7 +293,7 @@ priors <- c(prior(normal(0, 20), coef = "context1"),
 
 Now we inspect how the parameter distribution looks like *before* having seen the data, based on the priors only.
 This is a useful exercise to make sure that the priors result in reasonable quantitative assumptions.
-We usually do it for all parameters, but here we will focus only on the critical parameter `context1`, i.e. the difference between formal and informal contexts.
+We usually do it for all parameters, but here we will focus only on the critical parameter `context1`, i.e., the difference between formal and informal contexts.
 Let us also have a look at the predictions for the prior-only model.
 
 ```{r priors-model}
@@ -308,15 +306,14 @@ fit_prior <- brm(formula, prior = priors, data = polite,
            # sample prior only
            sample_prior = "only",
            # common sampling specifications
-           seed = 1234, iter = 8000
-           )
+           seed = 1234, iter = 8000)
            
 ```
 
 ```{r plot-priors}
 #| echo: FALSE
 #| fig-height: 3
-#| fig-cap: "Prior probability of the difference in pitch between contexts, i.e. before seeing the data"
+#| fig-cap: "Prior probability of the difference in pitch between contexts, i.e., before seeing the data"
 #| label: fig-plot-priors
 
 # extract prior samples
@@ -346,7 +343,7 @@ ggplot(prior_samples,
 
 ```
 
-Looking at the distribution in @fig-plot-priors, the priors for the effect of context on pitch seems sensible.
+Looking at the distribution in @fig-plot-priors, the prior for the effect of context on pitch seems sensible.
 The most plausible value is zero.
 Values that are smaller or larger than zero become less plausible the further they are away from zero and values being smaller or larger than zero are equally likely.
 Good.
@@ -360,8 +357,7 @@ Now we can run the full model that integrates the likelihood (our data) with the
 
 # run the model
 fit <- brm(formula, prior = priors, data = polite,
-           seed = 1234, iter = 8000
-           )
+           seed = 1234, iter = 8000)
            
 ```
 
@@ -370,7 +366,7 @@ fit <- brm(formula, prior = priors, data = polite,
 #| message: FALSE
 #| echo: FALSE
 #| fig-height: 4
-#| fig-cap: "Posterior probability of the effect of context on pitch, i.e. after seeing the data"
+#| fig-cap: "Posterior probability of the effect of context on pitch, i.e., after seeing the data"
 #| label: fig-plot-posterior
 
 
@@ -732,7 +728,7 @@ We obtain (almost) the same result in this way: the Bayes factor in favor of the
 
 \noindent
 Now as you probably have guessed already, all these probabilities are very much dependent on the priors of the model, so it is important to evaluate the robustness of our Bayes factor-based interpretation across a range of sensible priors.
-And as long as we are not a 100% sure about what a meaningful difference is, we might as well explore the robustness of the Bayes factor across different ROPEs, i.e. in our case different JNDs.
+And as long as we are not a 100% sure about what a meaningful difference is, we might as well explore the robustness of the Bayes factor across different ROPEs, i.e., in our case different JNDs.
 We won't bore you with the code for that process, but you can follow it along in our scripts.
 Let us explore the following ROPE intervals as informed by the two studies cited above on pitch perception: we test a range of ROPE intervals from 0.3 Hz to 40 Hz.
 We also assume the following five prior values for the standard deviation of the critical parameter (centered on zero): 10, 15, 20, 25, 30.
@@ -893,12 +889,16 @@ In light of this range of possible definitions of what constitutes meaningful di
 
 Additionally, when comparing the Bayes factors along the x-axis, we can see that they are comparatively consistent for different standard deviations of the critical prior.
 However, we can also see that the Bayes factors decrease with the width of the priors (from left to right).
-This is not surprising and a known phenomenon, often discussed under the Jeffreys-Lindley paradox [@lindley_Statistical_journalarticle_1957]: The more diffuse the priors are (i.e. wider priors), the larger is the probability that a specific parameter values is not compatible with the data.
+  * [ ] This is not surprising and a known phenomenon, often discussed under the Jeffreys-Lindley paradox [@lindley_Statistical_journalarticle_1957]: The more diffuse the priors are (i.e., wider priors), the more probability they put on extreme values that (usually) tend to make the data extremely unlikely.
 
 Combined, we can see that the larger the ROPE and the wider the priors, the more likely becomes the null hypothesis.
 In an ideal world, the evidence provided by the data should be robust across these choices. 
 
-This exploration of our inference is a fantastic opportunity to assess the boundaries of our conclusions. In this case, the conclusions of the original study @winter-grawunder_Phonetic_journalarticle_2012 was based on the null hypothesis significance testing framework, traditionally testing the compatibility of the data with a point-null hypothesis. Given his framework, it is reasonable to conclude that in formal speech, Korean speakers lower their average fundamental frequency. However, thinking more deeply about the theoretical consequences of differences in pitch, it might be less clear that these differences are truly meaningful. Given our proposed assumptions about what constitutes a meaningful effect, our analyses suggest that we neither find robust evidence for nor against the hypothesis that Korean speakers meaningfully lower their average fundamental frequency in formal speech.
+This exploration of our inference is a fantastic opportunity to assess the boundaries of our conclusions.
+In this case, the conclusions of the original study by @winter-grawunder_Phonetic_journalarticle_2012 was based on the null hypothesis significance testing framework, traditionally testing the compatibility of the data with a point-null hypothesis.
+Given his framework, it is reasonable to conclude that in formal speech, Korean speakers lower their average fundamental frequency.
+However, thinking more deeply about the theoretical consequences of differences in pitch, it might be less clear that these differences are truly meaningful.
+Given our proposed assumptions about what constitutes a meaningful effect, our analyses suggest that we neither find robust evidence for nor against the hypothesis that Korean speakers meaningfully lower their average fundamental frequency in formal speech.
 
 # How to write this inferential procedure up?
 
@@ -926,16 +926,19 @@ We fit this model with four chains of Hamiltonian Monte Carlo sampling for the e
 
 \noindent
 Using the Bayesian framework, we aim to quantitatively evaluate the evidence for a perceptually meaningful effect of social context on pitch values based on our data against the background of our model and chosen priors.
-We will combine two statistical concepts to make this evaluation: First, we define a region of practical equivalence (ROPE) that will represent a reasonable range of pitch values around zero that we consider to be not meaningful  [@kruschke_Rejecting_journalarticle_2018].
+We combine two statistical concepts to make this evaluation: First, we define a region of practical equivalence (ROPE) that represents a reasonable range of pitch values around zero that we consider to be not meaningful  [@kruschke_Rejecting_journalarticle_2018].
 In our case, the ROPE is perceptually defined by studies on just noticeable differences in pitch perception [@klatt1973discrimination;@turner2019perception].
 
-Subsequently, we calculate the Savage-Dickey density ratio [@DickeyLientz1970-The-Weighted-Li;@WagenmakersLodewyckx2010-Bayesian-hypoth], i.e., we relate the amount of evidence (the proportion of posterior samples) within the ROPE for the model based on the priors only (i.e., before seeing the data) to the amount of evidence within the ROPE for the model based on both priors and likelihood (i.e., after seeing the data) [e.g.
-@WetzelsGrasman2010-An-encompassing].
+Subsequently, we calculate the Savage-Dickey density ratio [@DickeyLientz1970-The-Weighted-Li;@WagenmakersLodewyckx2010-Bayesian-hypoth], i.e., we relate the amount of evidence (the proportion of posterior samples) within the ROPE for the model based on the priors only (i.e., before seeing the data) to the amount of evidence within the ROPE for the model based on both priors and likelihood (i.e., after seeing the data) [e.g., @WetzelsGrasman2010-An-encompassing].
 The Savage-Dickey method lets us assess evidence for and against a null hypothesis using Bayes factor (BF), since we are dealing with nested models.
 Since BFs can depend on both the defined ROPE and the priors of the model, we assessed the sensitivity of the results through calculating BFs for a range of (sensible) ROPE values and a range of (sensible) priors.
 We assumed the ROPE intervals centered on zero from 0.3 Hz to 40 Hz.
 We assumed the following five prior values for the width of the context parameter (centered on zero): 10 Hz, 15 Hz, 20 Hz, 25 Hz, and 30 Hz.
 These are all sensible prior choices assuming reasonable pitch differences in either direction.
+
+Based on this setup, we consider each pair of ROPE and prior.
+For each pair, we speak of moderate evidence for either hypothesis if the Bayes factor in its favor is as least 3.
+The overall conclusion from this sensitivity analysis is a nuanced assessment of the interplay of ROPE and prior, drawing on empirical knowledge of the magnitudes involved (here: pitch).
 
 
 # Some words of encouragement
