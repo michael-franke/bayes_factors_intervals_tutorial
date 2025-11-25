@@ -888,8 +888,9 @@ We here chose (theoretically speaking) a quite large range of ROPEs, all of whic
 In light of this range of possible definitions of what constitutes meaningful differences, our data do not seem very robust, as illustrated by the shift from orange to green. Even the smallest ROPE intervals provide only anecdotal to moderate evidence for the alternative. And the most conservative ROPEs, following @turner2019perception, leads to moderate to very strong evidence against the alternative hypothesis. 
 
 Additionally, when comparing the Bayes factors along the x-axis, we can see that they are comparatively consistent for different standard deviations of the critical prior.
-However, we can also see that the Bayes factors decrease with the width of the priors (from left to right).
-  * [ ] This is not surprising and a known phenomenon, often discussed under the Jeffreys-Lindley paradox [@lindley_Statistical_journalarticle_1957]: The more diffuse the priors are (i.e., wider priors), the more probability they put on extreme values that (usually) tend to make the data extremely unlikely.
+However, we can also see that the Bayes factors decrease with the width of the priors (from left to right).[^jeffreys-lindley]
+
+[^jeffreys-lindley]: This is not surprising and a known phenomenon, often discussed under the Jeffreys-Lindley paradox [@lindley_Statistical_journalarticle_1957]: The more diffuse the priors are (i.e., wider priors), the more probability they put on extreme values that (usually) tend to make the data extremely unlikely.
 
 Combined, we can see that the larger the ROPE and the wider the priors, the more likely becomes the null hypothesis.
 In an ideal world, the evidence provided by the data should be robust across these choices. 
@@ -972,10 +973,10 @@ If you already have some background in statistics, a great resource is [@McElrea
 ::: {#refs}
 :::
 
-# Session information
 
 ```{r sessionInfo}
 #| echo: FALSE
+#| eval: FALSE
 
 sessionInfo()
 

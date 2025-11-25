@@ -127,17 +127,15 @@
 
 \usepackage{graphicx}
 \makeatletter
-\newsavebox\pandoc@box
-\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
-  \sbox\pandoc@box{#1}%
-  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
-  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
-  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
-  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
-  \else\usebox{\pandoc@box}%
-  \fi%
-}
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
 % Set default figure placement to htbp
+\makeatletter
 \def\fps@figure{htbp}
 \makeatother
 
@@ -554,7 +552,7 @@ speakers' pitch values across contexts and sex}
 
 \centering{
 
-\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-descriptive-dataviz-1.pdf}}
+\includegraphics{manuscript_files/figure-pdf/fig-descriptive-dataviz-1.pdf}
 
 }
 
@@ -652,7 +650,7 @@ pitch between contexts, i.e., before seeing the data}
 
 \centering{
 
-\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-plot-priors-1.pdf}}
+\includegraphics{manuscript_files/figure-pdf/fig-plot-priors-1.pdf}
 
 }
 
@@ -683,7 +681,7 @@ of context on pitch, i.e., after seeing the data}
 
 \centering{
 
-\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-plot-posterior-1.pdf}}
+\includegraphics{manuscript_files/figure-pdf/fig-plot-posterior-1.pdf}
 
 }
 
@@ -1047,7 +1045,7 @@ BF_{01} = \frac{P(\theta \in I_{0} \mid D, M_{e})}{P(\theta \in I_{1} \mid D, M_
 
 \centering{
 
-\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-savage-dickey_TR-1.pdf}}
+\includegraphics{manuscript_files/figure-pdf/fig-savage-dickey_TR-1.pdf}
 
 }
 
@@ -1092,7 +1090,7 @@ is outside of the ROPE:
 \end{Shaded}
 
 \begin{verbatim}
-[1] 0.6211577
+[1] 0.6159867
 \end{verbatim}
 
 The Bayes factor in favor of the alternative hypothesis is simply the
@@ -1106,10 +1104,10 @@ inverse of this number:
 \end{Shaded}
 
 \begin{verbatim}
-[1] 1.609897
+[1] 1.623412
 \end{verbatim}
 
-With a Bayes factor of around 1.61, the data does not provide noteworthy
+With a Bayes factor of around 1.62, the data does not provide noteworthy
 evidence in favor of the alternative hypothesis that the effect of
 \texttt{context} on \texttt{pitch} is outside of the ROPE.
 
@@ -1159,13 +1157,13 @@ Bayes Factor (Null-Interval)
 
 Parameter |   BF
 ----------------
-context1  | 1.64
+context1  | 1.60
 
 * Evidence Against The Null: [-10.000, 10.000]
 \end{verbatim}
 
 We obtain (almost) the same result in this way: the Bayes factor in
-favor of the alternative hypothesis for the given ROPE is around 1.64.
+favor of the alternative hypothesis for the given ROPE is around 1.6.
 
 \subsection{Sensitivity analysis for different priors and
 ROPEs}\label{sensitivity-analysis-for-different-priors-and-ropes}
@@ -1192,7 +1190,7 @@ and a range of ROPEs}
 
 \centering{
 
-\pandocbounded{\includegraphics[keepaspectratio]{manuscript_files/figure-pdf/fig-sensitivity_plot-1.pdf}}
+\includegraphics{manuscript_files/figure-pdf/fig-sensitivity_plot-1.pdf}
 
 }
 
@@ -1221,12 +1219,12 @@ Additionally, when comparing the Bayes factors along the x-axis, we can
 see that they are comparatively consistent for different standard
 deviations of the critical prior. However, we can also see that the
 Bayes factors decrease with the width of the priors (from left to
-right). * {[} {]} This is not surprising and a known phenomenon, often
-discussed under the Jeffreys-Lindley paradox
-(\citeproc{ref-lindley_Statistical_journalarticle_1957}{Lindley, 1957}):
-The more diffuse the priors are (i.e., wider priors), the more
-probability they put on extreme values that (usually) tend to make the
-data extremely unlikely.
+right).\footnote{This is not surprising and a known phenomenon, often
+  discussed under the Jeffreys-Lindley paradox
+  (\citeproc{ref-lindley_Statistical_journalarticle_1957}{Lindley,
+  1957}): The more diffuse the priors are (i.e., wider priors), the more
+  probability they put on extreme values that (usually) tend to make the
+  data extremely unlikely.}
 
 Combined, we can see that the larger the ROPE and the wider the priors,
 the more likely becomes the null hypothesis. In an ideal world, the
@@ -1378,6 +1376,7 @@ If you already have some background in statistics, a great resource is
 Barr, D. J., Levy, R., Scheepers, C., \& Tily, H. J. (2013). Random
 effects structure for confirmatory hypothesis testing: Keep it maximal.
 \emph{Journal of Memory and Language}, \emph{68}(3), 255--278.
+\url{https://doi.org/10.1016/j.jml.2012.11.001}
 
 \bibitem[\citeproctext]{ref-Burkner2018-Advanced-Bayesi}
 Bürkner, P.-C. (2018). {Advanced Bayesian Multilevel Modeling with the R
@@ -1388,7 +1387,7 @@ Package brms}. \emph{{The R Journal}}, \emph{10}(1), 395--411.
 Carpenter, B., Gelman, A., Hoffman, M. D., Lee, D., Goodrich, B.,
 Betancourt, M., Brubaker, M., Guo, J., Li, P., \& Riddell, A. (2017).
 Stan: A probabilistic programming language. \emph{Journal of Statistical
-Software}, \emph{76}, 1--32.
+Software}, \emph{76}, 1--32. \url{https://doi.org/10.18637/jss.v076.i01}
 
 \bibitem[\citeproctext]{ref-coretta2023multidimensional}
 Coretta, S., Casillas, J. V., Roessig, S., Franke, M., Ahn, B.,
@@ -1396,7 +1395,7 @@ Al-Hoorie, A. H., Al-Tamimi, J., Alotaibi, N. E., AlShakhori, M. K.,
 Altmiller, R. M., et al. (2023). Multidimensional signals and analytic
 flexibility: Estimating degrees of freedom in human-speech analyses.
 \emph{Advances in Methods and Practices in Psychological Science},
-\emph{6}(3), 25152459231162567.
+\emph{6}(3). \url{https://doi.org/10.1177/25152459231162567}
 
 \bibitem[\citeproctext]{ref-DickeyLientz1970-The-Weighted-Li}
 Dickey, J. M., \& Lientz, B. P. (1970). The weighted likelihood ratio,
@@ -1429,11 +1428,13 @@ Psychology}, \emph{81}, 80--97.
 \bibitem[\citeproctext]{ref-KassRaftery1995-Bayes-Factors}
 Kass, R. E., \& Raftery, A. E. (1995). Bayes factors. \emph{Journal of
 the American Statistical Association}, \emph{90}(430), 773--795.
+\url{https://doi.org/10.1080/01621459.1995.10476572}
 
 \bibitem[\citeproctext]{ref-klatt1973discrimination}
 Klatt, D. H. (1973). Discrimination of fundamental frequency contours in
 synthetic speech: Implications for models of pitch perception. \emph{The
 Journal of the Acoustical Society of America}, \emph{53}(1), 8--16.
+\url{https://doi.org/10.1121/1.1913333}
 
 \bibitem[\citeproctext]{ref-KlugkistHoijtink2007-The-Bayes-facto}
 Klugkist, I., \& Hoijtink, H. (2007). The bayes factor for inequality
@@ -1444,7 +1445,7 @@ and Data Analysis}, \emph{51}(12), 6367--6379.
 \bibitem[\citeproctext]{ref-KlugkistKato2005-Bayesian-model}
 Klugkist, I., Kato, B., \& Hoijtink, H. (2005). Bayesian model selection
 using encompassing priors. \emph{Statistica Neelandica}, \emph{59}(1),
-57--69.
+57--69. \url{https://doi.org/10.1111/j.1467-9574.2005.00279.x}
 
 \bibitem[\citeproctext]{ref-KruschkeTextbook}
 Kruschke, J. K. (2015). \emph{Doing {B}ayesian data analysis} (2nd
@@ -1503,10 +1504,12 @@ Mind}, \emph{7}, 785--801. \url{https://doi.org/10.1162/opmi_a_00108}
 \bibitem[\citeproctext]{ref-scheel2022most}
 Scheel, A. M. (2022). Why most psychological research findings are not
 even wrong. \emph{Infant and Child Development}, \emph{31}(1), e2295.
+\url{https://doi.org/10.1002/icd.2295}
 
 \bibitem[\citeproctext]{ref-turner2019perception}
 Turner, D. R., Bradlow, A. R., \& Cole, J. S. (2019). Perception of
-pitch contours in speech and nonspeech. \emph{INTERSPEECH}, 2275--2279.
+pitch contours in speech and nonspeech. \emph{Interspeech}, 2275--2279.
+\url{https://doi.org/10.21437/Interspeech.2019-2619}
 
 \bibitem[\citeproctext]{ref-VandekerckhoveMatzke2013-Model-Compariso}
 Vandekerckhove, J., Matzke, D., \& Wagenmakers, E.-J. (2015). Model
@@ -1518,7 +1521,7 @@ and mathematical psychology} (pp. 300--319). Oxford University Press.
 Wagenmakers, E.-J., Lodewyckx, T., Kuriyal, H., \& Grasman, R. (2010).
 Bayesian hypothesis testing for psychologists: {A} tutorial on the
 {S}avage--{D}ickey method. \emph{Cognitive Psychology}, \emph{60},
-158--189.
+158--189. \url{https://doi.org/10.1016/j.cogpsych.2009.12.001}
 
 \bibitem[\citeproctext]{ref-WetzelsGrasman2010-An-encompassing}
 Wetzels, R., Grasman, R. P. P. P., \& Wagenmakers, E.-J. (2010). An
@@ -1545,109 +1548,9 @@ Woensdregt, M., Fusaroli, R., Rich, P., Modrák, M., Kolokolova, A.,
 Wright, C., \& Warlaumont, A. S. (2024). Lessons for theory from
 scientific domains where evidence is sparse or indirect.
 \emph{Computational Brain \& Behavior}, \emph{7}(4), 588--607.
+\url{https://doi.org/10.1007/s42113-024-00214-8}
 
 \end{CSLReferences}
-
-\section{Session information}\label{session-information}
-
-\begin{verbatim}
-R version 4.5.1 (2025-06-13)
-Platform: aarch64-apple-darwin20
-Running under: macOS Sequoia 15.6.1
-
-Matrix products: default
-BLAS:   /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRblas.0.dylib 
-LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
-
-locale:
-[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
-
-time zone: Europe/Berlin
-tzcode source: internal
-
-attached base packages:
-[1] stats     graphics  grDevices utils     datasets  methods   base     
-
-other attached packages:
- [1] bayestestR_0.16.1 patchwork_1.3.2   tidybayes_3.0.7   brms_2.23.0      
- [5] Rcpp_1.1.0        ggdist_3.3.3      lubridate_1.9.4   forcats_1.0.1    
- [9] stringr_1.5.2     dplyr_1.1.4       purrr_1.1.0       readr_2.1.5      
-[13] tidyr_1.3.1       tibble_3.3.0      ggplot2_4.0.0     tidyverse_2.0.0  
-
-loaded via a namespace (and not attached):
- [1] svUnit_1.0.6          tidyselect_1.2.1      farver_2.1.2         
- [4] loo_2.8.0             S7_0.2.0              fastmap_1.2.0        
- [7] tensorA_0.36.2.1      digest_0.6.37         timechange_0.3.0     
-[10] lifecycle_1.0.4       StanHeaders_2.32.10   processx_3.8.6       
-[13] magrittr_2.0.4        posterior_1.6.1       compiler_4.5.1       
-[16] rlang_1.1.6           tools_4.5.1           utf8_1.2.6           
-[19] yaml_2.3.10           data.table_1.17.8     knitr_1.50           
-[22] labeling_0.4.3        bridgesampling_1.1-2  bit_4.6.0            
-[25] pkgbuild_1.4.8        curl_7.0.0            RColorBrewer_1.1-3   
-[28] cmdstanr_0.9.0        abind_1.4-8           withr_3.0.2          
-[31] datawizard_1.2.0      grid_4.5.1            stats4_4.5.1         
-[34] inline_0.3.21         scales_1.4.0          tinytex_0.57         
-[37] insight_1.4.0         cli_3.6.5             mvtnorm_1.3-3        
-[40] rmarkdown_2.30        crayon_1.5.3          generics_0.1.4       
-[43] RcppParallel_5.1.11-1 rstudioapi_0.17.1     tzdb_0.5.0           
-[46] rstan_2.32.7          bayesplot_1.14.0      parallel_4.5.1       
-[49] matrixStats_1.5.0     vctrs_0.6.5           Matrix_1.7-3         
-[52] jsonlite_2.0.0        hms_1.1.4             arrayhelpers_1.1-0   
-[55] bit64_4.6.0-1         logspline_2.1.22      glue_1.8.0           
-[58] codetools_0.2-20      ps_1.9.1              distributional_0.5.0 
-[61] stringi_1.8.7         gtable_0.3.6          QuickJSR_1.8.1       
-[64] pillar_1.11.1         htmltools_0.5.8.1     Brobdingnag_1.2-9    
-[67] R6_2.6.1              vroom_1.6.6           evaluate_1.0.5       
-[70] lattice_0.22-7        backports_1.5.0       rstantools_2.5.0     
-[73] gridExtra_2.3         coda_0.19-4.1         nlme_3.1-168         
-[76] checkmate_2.3.3       xfun_0.53             pkgconfig_2.0.3      
-\end{verbatim}
-
-\begin{verbatim}
-[[1]]
-Bürkner P (2017). "brms: An R Package for Bayesian Multilevel Models
-Using Stan." _Journal of Statistical Software_, *80*(1), 1-28.
-doi:10.18637/jss.v080.i01 <https://doi.org/10.18637/jss.v080.i01>.
-
-Bürkner P (2018). "Advanced Bayesian Multilevel Modeling with the R
-Package brms." _The R Journal_, *10*(1), 395-411.
-doi:10.32614/RJ-2018-017 <https://doi.org/10.32614/RJ-2018-017>.
-
-Bürkner P (2021). "Bayesian Item Response Modeling in R with brms and
-Stan." _Journal of Statistical Software_, *100*(5), 1-54.
-doi:10.18637/jss.v100.i05 <https://doi.org/10.18637/jss.v100.i05>.
-
-[[2]]
-Makowski D, Ben-Shachar M, Lüdecke D (2019). "bayestestR: Describing
-Effects and their Uncertainty, Existence and Significance within the
-Bayesian Framework." _Journal of Open Source Software_, *4*(40), 1541.
-doi:10.21105/joss.01541 <https://doi.org/10.21105/joss.01541>,
-<https://joss.theoj.org/papers/10.21105/joss.01541>.
-
-[[3]]
-Kay M (2024). _tidybayes: Tidy Data and Geoms for Bayesian Models_.
-doi:10.5281/zenodo.1308151 <https://doi.org/10.5281/zenodo.1308151>, R
-package version 3.0.7, <http://mjskay.github.io/tidybayes/>.
-
-[[4]]
-Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R,
-Grolemund G, Hayes A, Henry L, Hester J, Kuhn M, Pedersen TL, Miller E,
-Bache SM, Müller K, Ooms J, Robinson D, Seidel DP, Spinu V, Takahashi
-K, Vaughan D, Wilke C, Woo K, Yutani H (2019). "Welcome to the
-tidyverse." _Journal of Open Source Software_, *4*(43), 1686.
-doi:10.21105/joss.01686 <https://doi.org/10.21105/joss.01686>.
-
-[[5]]
-Kay M (2024). "ggdist: Visualizations of Distributions and Uncertainty
-in the Grammar of Graphics." _IEEE Transactions on Visualization and
-Computer Graphics_, *30*(1), 414-424. doi:10.1109/TVCG.2023.3327195
-<https://doi.org/10.1109/TVCG.2023.3327195>.
-
-Kay M (2025). _ggdist: Visualizations of Distributions and
-Uncertainty_. doi:10.5281/zenodo.3879620
-<https://doi.org/10.5281/zenodo.3879620>, R package version 3.3.3,
-<https://mjskay.github.io/ggdist/>.
-\end{verbatim}
 
 
 
