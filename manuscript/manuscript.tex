@@ -412,11 +412,10 @@ Hoijtink, 2007}; \citeproc{ref-Oh2014-Bayesian-compar}{Oh, 2014};
 2010}), which is both conceptually more meaningful and computationally
 more robust than point-valued hypothesis testing. While this method does
 not seem to be widely known, it is conceptually simple and easy to
-apply, e.g., through implementation in the package
-\texttt{bayesfactorR}. This tutorial therefore provides an accessible,
-non-technical introduction to this method of Bayesian hypothesis
-testing, which is easy to understand, computationally cheap and widely
-applicable.
+apply, e.g., through implementation in the package \texttt{bayestestR}.
+This tutorial therefore provides an accessible, non-technical
+introduction to this method of Bayesian hypothesis testing, which is
+easy to understand, computationally cheap and widely applicable.
 
 \section{Motivation and intended
 audience}\label{motivation-and-intended-audience}
@@ -1126,8 +1125,8 @@ pronounced, so that we would not speak of noteworthy evidence in favor
 of the alternative hypothesis, let alone strong or decisive evidence.
 
 \subsection{\texorpdfstring{Calculating ROPE-ed Bayes factor with the
-\texttt{bayesfactorR}
-package}{Calculating ROPE-ed Bayes factor with the bayesfactorR package}}\label{calculating-rope-ed-bayes-factor-with-the-bayesfactorr-package}
+\texttt{bayestestR}
+package}{Calculating ROPE-ed Bayes factor with the bayestestR package}}\label{calculating-rope-ed-bayes-factor-with-the-bayestestr-package}
 
 \noindent Instead of doing these calculations by hand, we can more
 conveniently calculate the Savage Dickey ratio with the
@@ -1347,10 +1346,17 @@ quantitative systems under investigation
 presented form of hypothesis testing is easy to understand, but does
 require to think deeply about prior quantitative assumptions as well as
 what it means for observations to be meaningfully different. That is
-neither trivial nor easy. But we would like to encourage everybody to
-engage in exactly this thinking to better understand the relevant data
-in front of us and how it might link to our understanding of cognition
-and behavior.
+neither trivial nor easy. When it comes to what it means for a
+difference to be meaningful (and thus how to delimit the ROPE), a useful
+concept that has received increasing attention across behavioral and
+clinical sciences is the smallest effect size of interest (SESOI). The
+SESOI is the smallest effect size that a researcher considers to be
+meaningful and therefore anything smaller than it is not of interest
+regardless of the statistical significance of the finding (however
+defined) (\citeproc{ref-lakens2017equivalence}{Lakens, 2017}). We would
+like to encourage everybody to engage in exactly these reflections to
+better understand the relevant data in front of us and how it might link
+to our understanding of cognition and behavior.
 
 \section{Other Resources}\label{other-resources}
 
@@ -1461,6 +1467,12 @@ Psychological Science}, \emph{1}(2), 270--280.
 Kruschke, J. K. (2021). Bayesian analysis reporting guidelines.
 \emph{Nature Human Behaviour}, \emph{5}(10), 1282--1291.
 \url{https://doi.org/10.1038/s41562-021-01177-7}
+
+\bibitem[\citeproctext]{ref-lakens2017equivalence}
+Lakens, D. (2017). Equivalence tests: A practical primer for t tests,
+correlations, and meta-analyses. \emph{Social Psychological and
+Personality Science}, \emph{8}(4), 355--362.
+\url{https://doi.org/10.1177/1948550617697177}
 
 \bibitem[\citeproctext]{ref-Lambert2018-A-Students-Guid}
 Lambert, B. (2018). \emph{A student's guide to bayesian statistics}.

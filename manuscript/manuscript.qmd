@@ -89,7 +89,7 @@ Yet, for some of the most common use cases, there are some simple and computatio
 One such method is the *Savage-Dickey density ratio* [@DickeyLientz1970-The-Weighted-Li;@WagenmakersLodewyckx2010-Bayesian-hypoth].
 While prior work has prominently documented how to use this method for the case of point-valued null-hypotheses [@WagenmakersLodewyckx2010-Bayesian-hypoth], this method can be hard to estimate reliably with posterior sampling, which is the most prevalent method for approximating Bayesian computation at the moment. 
 This tutorial therefore focuses on the use of the Savage-Dickey density ratio for testing hypotheses that are grounded in *regions of practical equivalence* (ROPEs) [@kruschke_Rejecting_journalarticle_2018] using the so-called *encompassing priors* approach [@KlugkistKato2005-Bayesian-model;@KlugkistHoijtink2007-The-Bayes-facto;@Oh2014-Bayesian-compar;@WetzelsGrasman2010-An-encompassing], which is both conceptually more meaningful and computationally more robust than point-valued hypothesis testing.
-While this method does not seem to be widely known, it is conceptually simple and easy to apply, e.g., through implementation in the package `bayesfactorR`.
+While this method does not seem to be widely known, it is conceptually simple and easy to apply, e.g., through implementation in the package `bayestestR`.
 This tutorial therefore provides an accessible, non-technical introduction to this method of Bayesian hypothesis testing, which is easy to understand, computationally cheap and widely applicable.
 
 # Motivation and intended audience
@@ -701,7 +701,7 @@ posterior_plot +
 ```
 
 
-## Calculating ROPE-ed Bayes factor with the `bayesfactorR` package
+## Calculating ROPE-ed Bayes factor with the `bayestestR` package
 
 \noindent
 Instead of doing these calculations by hand, we can more conveniently calculate the Savage Dickey ratio with the `bayesfactor_rope()` function from the `bayestestR` package [@MakowskiBen-Shachar2019-bayestestR].
@@ -949,9 +949,8 @@ Bayesian inference in general and this form of hypothesis testing in particular 
 We believe this is a good thing.
 Many voices have criticized the lack of engagement that we behavioral scientists invest into thinking how our theoretical ideas connect to concrete predictions in the quantitative systems under investigation [@scheel2022most; @coretta2023multidimensional; @woensdregt2024lessons].
 The presented form of hypothesis testing is easy to understand, but does require to think deeply about prior quantitative assumptions as well as what it means for observations to be meaningfully different.
-That is neither trivial nor easy.
-But we would like to encourage everybody to engage in exactly this thinking to better understand the relevant data in front of us and how it might link to our understanding of cognition and behavior.
-
+That is neither trivial nor easy. When it comes to what it means for a difference to be meaningful (and thus how to delimit the ROPE), a useful concept that has received increasing attention across behavioral and clinical sciences is the smallest effect size of interest (SESOI). The SESOI is the smallest effect size that a researcher considers to be meaningful and therefore anything smaller than it is not of interest regardless of the statistical significance of the finding (however defined) [@lakens2017equivalence]. 
+We would like to encourage everybody to engage in exactly these reflections to better understand the relevant data in front of us and how it might link to our understanding of cognition and behavior.
 
 # Other Resources
 
